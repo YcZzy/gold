@@ -1,0 +1,7 @@
+# 微信开发者工具本地私有配置（含个人本地设置，不入库）
+project.private.config.json
+
+# 依赖与临时文件
+node_modules/
+.DS_Store
+*.log

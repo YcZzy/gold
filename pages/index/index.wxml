@@ -1,0 +1,96 @@
+<view class="page">
+  <view class="hero">
+    <view>
+      <view class="hero-title">金价行情</view>
+      <view class="hero-sub">{{updatedAtText}} · 下拉刷新</view>
+    </view>
+    <view class="hero-actions">
+      <view class="refresh" bindtap="openAlert">提醒</view>
+      <view class="refresh" bindtap="refreshAll">刷新</view>
+    </view>
+  </view>
+
+  <view wx:if="{{errorText}}" class="error-bar">{{errorText}}</view>
+
+  <view class="cards">
+    <!-- 沪金主卡 -->
+    <view class="card card-main">
+      <view class="card-head">
+        <text class="card-name">沪金 Au99.99</text>
+        <text class="card-unit">上海黄金交易所 · 元/克</text>
+      </view>
+      <view class="card-price {{au.cls}}">{{au.priceText}}</view>
+      <view class="card-chg {{au.cls}}">
+        <text>{{au.changeText}}</text>
+        <text class="chg-pill {{au.cls}}">{{au.pctText}}</text>
+      </view>
+      <view class="card-sub">开 {{au.openText}} · 高 {{au.highText}} · 低 {{au.lowText}}</view>
+
+      <!-- 国际参考（折算元/克） -->
+      <view class="intl-row">
+        <text class="intl-label">国际参考</text>
+        <text class="intl-item">{{intl.usdText}} 美元/盎司</text>
+        <text class="intl-item">折算 {{intl.cnyText}} 元/克</text>
+        <text class="intl-item">{{intl.premiumText}}</text>
+      </view>
+      <view class="card-source">{{au.source}} · 国际 {{intl.source}} · {{intl.rateText}}</view>
+    </view>
+  </view>
+
+  <view class="panel">
+    <view class="tabs">
+      <view
+        wx:for="{{periods}}"
+        wx:key="value"
+        class="tab {{period === item.value ? 'tab-on' : ''}}"
+        data-period="{{item.value}}"
+        bindtap="switchPeriod"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="chart-box">
+      <canvas
+        type="2d"
+        id="kline"
+        class="kline"
+        bindtouchstart="onTouch"
+        bindtouchmove="onTouch"
+        bindtouchend="onTouchEnd"
+      ></canvas>
+    </view>
+
+    <view class="legend">
+      <block wx:if="{{period === 'intraday'}}">
+        <text class="lg lg-price">价格线</text>
+        <text class="lg lg-ma10">均价线</text>
+        <text class="lg">昨收虚线</text>
+      </block>
+      <block wx:else>
+        <text class="lg lg-ma5">MA5</text>
+        <text class="lg lg-ma10">MA10</text>
+      </block>
+      <text class="lg lg-up">涨（红）</text>
+      <text class="lg lg-down">跌（绿）</text>
+      <text class="lg-tip">点按图表查看细节</text>
+    </view>
+
+    <view wx:if="{{intradayInfo}}" class="ohlc">
+      <text>{{intradayInfo.time}}</text>
+      <text>价 {{intradayInfo.price}}</text>
+      <text>均价 {{intradayInfo.avg}}</text>
+      <text class="{{intradayInfo.cls}}">{{intradayInfo.pctText}}</text>
+    </view>
+
+    <view wx:if="{{candleInfo}}" class="ohlc">
+      <text>{{candleInfo.time}}</text>
+      <text>开 {{candleInfo.o}}</text>
+      <text>高 {{candleInfo.h}}</text>
+      <text>低 {{candleInfo.l}}</text>
+      <text>收 {{candleInfo.c}}</text>
+    </view>
+
+    <view class="foot">
+      数据来源：{{chartSource}}。免费公开接口，仅供参考，不构成投资建议。
+    </view>
+  </view>
+</view>

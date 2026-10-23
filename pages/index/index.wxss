@@ -1,0 +1,248 @@
+.page {
+  padding: 24rpx 28rpx 48rpx;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 4rpx 24rpx;
+}
+
+.hero-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: #2c2c2a;
+}
+
+.hero-sub {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #9b968c;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14rpx;
+}
+
+.refresh {
+  padding: 12rpx 28rpx;
+  font-size: 24rpx;
+  color: #2c2c2a;
+  background: #ffffff;
+  border: 1rpx solid rgba(44, 44, 42, 0.12);
+  border-radius: 28rpx;
+}
+
+.error-bar {
+  margin-bottom: 20rpx;
+  padding: 16rpx 22rpx;
+  font-size: 24rpx;
+  color: #9a4b12;
+  background: #faeeda;
+  border-radius: 16rpx;
+}
+
+/* 报价卡片 */
+.cards {
+  display: block;
+}
+
+.card {
+  padding: 26rpx 24rpx 22rpx;
+  background: #ffffff;
+  border: 1rpx solid rgba(44, 44, 42, 0.08);
+  border-radius: 28rpx;
+}
+
+.card-main {
+  border-color: rgba(176, 118, 140, 0.4);
+  box-shadow: 0 6rpx 24rpx rgba(176, 118, 140, 0.12);
+}
+
+/* 国际参考行 */
+.intl-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8rpx 18rpx;
+  margin-top: 16rpx;
+  padding: 14rpx 18rpx;
+  font-size: 20rpx;
+  color: #8a857b;
+  background: rgba(176, 118, 140, 0.06);
+  border-radius: 18rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.intl-label {
+  padding: 2rpx 12rpx;
+  font-size: 18rpx;
+  color: #b0768c;
+  border: 1rpx solid rgba(176, 118, 140, 0.35);
+  border-radius: 12rpx;
+}
+
+.intl-item {
+  color: #6f6a61;
+}
+
+.card-main .card-price {
+  font-size: 68rpx;
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.card-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2c2c2a;
+}
+
+.card-unit {
+  font-size: 20rpx;
+  color: #9b968c;
+}
+
+.card-price {
+  margin-top: 18rpx;
+  font-size: 52rpx;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-chg {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.chg-pill {
+  padding: 4rpx 14rpx;
+  font-size: 20rpx;
+  border-radius: 16rpx;
+  background: rgba(138, 133, 123, 0.12);
+}
+
+.chg-pill.up {
+  background: rgba(208, 69, 59, 0.1);
+}
+
+.chg-pill.down {
+  background: rgba(47, 158, 98, 0.12);
+}
+
+.card-sub {
+  margin-top: 12rpx;
+  font-size: 20rpx;
+  color: #8a857b;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-source {
+  margin-top: 10rpx;
+  font-size: 18rpx;
+  color: #b4afa4;
+}
+
+/* 图表面板 */
+.panel {
+  margin-top: 24rpx;
+  padding: 24rpx 22rpx 26rpx;
+  background: #ffffff;
+  border: 1rpx solid rgba(44, 44, 42, 0.08);
+  border-radius: 28rpx;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10rpx;
+}
+
+.tab {
+  flex: 1;
+  min-width: 0;
+  padding: 10rpx 0;
+  font-size: 24rpx;
+  text-align: center;
+  white-space: nowrap;
+  color: #6f6a61;
+  background: #f4f1ea;
+  border-radius: 22rpx;
+}
+
+.tab-on {
+  color: #ffffff;
+  background: #2c2c2a;
+}
+
+.chart-box {
+  margin-top: 20rpx;
+  width: 100%;
+  height: 560rpx;
+}
+
+.kline {
+  width: 100%;
+  height: 100%;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: #8a857b;
+}
+
+.lg-ma5 {
+  color: #3e7bd6;
+}
+
+.lg-ma10 {
+  color: #d98f2b;
+}
+
+.lg-up {
+  color: #d0453b;
+}
+
+.lg-down {
+  color: #2f9e62;
+}
+
+.lg-tip {
+  margin-left: auto;
+  color: #c0bbb0;
+}
+
+.ohlc {
+  display: flex;
+  gap: 22rpx;
+  margin-top: 14rpx;
+  padding: 14rpx 18rpx;
+  font-size: 22rpx;
+  color: #6f6a61;
+  background: #f8f6f1;
+  border-radius: 14rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.foot {
+  margin-top: 18rpx;
+  font-size: 18rpx;
+  line-height: 1.6;
+  color: #b4afa4;
+}

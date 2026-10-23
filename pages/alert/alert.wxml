@@ -1,0 +1,88 @@
+<view class="page">
+  <view class="hero">
+    <view>
+      <view class="hero-title">提醒设置</view>
+      <view class="hero-sub">订阅消息按「次」授权 · 关闭小程序也能收到提醒</view>
+    </view>
+    <view class="refresh" bindtap="refreshStatus">刷新</view>
+  </view>
+
+  <!-- 授权攒次数 -->
+  <view class="panel">
+    <view class="panel-title">推送次数</view>
+    <view class="quota-row">
+      <view class="quota-item">
+        <view class="quota-num">{{quota.brief}}</view>
+        <view class="quota-label">每日简报</view>
+      </view>
+      <view class="quota-item">
+        <view class="quota-num">{{quota.vol}}</view>
+        <view class="quota-label">异动预警</view>
+      </view>
+    </view>
+    <button class="auth-btn" bindtap="onAuthTap">点击增加推送次数</button>
+    <view class="hint">每点一次弹一次授权框，同意哪个模板就给哪个 +1 次；单模板上限 200 次，用完再点即可。</view>
+  </view>
+
+  <!-- 提醒开关 -->
+  <view class="panel">
+    <view class="panel-title">提醒内容</view>
+
+    <view class="row">
+      <view class="row-main">
+        <view class="row-name">每日收盘简报</view>
+        <view class="row-desc">工作日 15:40 · 沪金收盘价与涨跌幅</view>
+      </view>
+      <switch checked="{{prefs.dailyBrief}}" color="#2c2c2a" data-key="dailyBrief" bindchange="onSwitch" />
+    </view>
+
+    <view class="row">
+      <view class="row-main">
+        <view class="row-name">沪金波动异动</view>
+        <view class="row-desc">较昨收涨跌 ≥ 1.5% 时提醒 · 同方向当日 1 条</view>
+      </view>
+      <switch checked="{{prefs.volatilityAu}}" color="#2c2c2a" data-key="volatilityAu" bindchange="onSwitch" />
+    </view>
+
+    <view class="row">
+      <view class="row-main">
+        <view class="row-name">伦敦金波动异动</view>
+        <view class="row-desc">覆盖夜盘与周末 · 同方向当日 1 条</view>
+      </view>
+      <switch checked="{{prefs.volatilityXau}}" color="#2c2c2a" data-key="volatilityXau" bindchange="onSwitch" />
+    </view>
+  </view>
+
+  <!-- 免打扰 -->
+  <view class="panel">
+    <view class="panel-title">免打扰</view>
+    <view class="row">
+      <view class="row-main">
+        <view class="row-name">免打扰时段</view>
+        <view class="row-desc">期间到点的提醒顺延到结束时间后合并发送</view>
+      </view>
+      <view class="dnd">
+        <picker mode="time" value="{{prefs.dndStart}}" bindchange="onDndStart">
+          <view class="dnd-time">{{prefs.dndStart}}</view>
+        </picker>
+        <text class="dnd-sep">至</text>
+        <picker mode="time" value="{{prefs.dndEnd}}" bindchange="onDndEnd">
+          <view class="dnd-time">{{prefs.dndEnd}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="hint">全天合计最多 3 条：简报 1 条 + 每类异动 1 条。</view>
+  </view>
+
+  <!-- 最近推送 -->
+  <view class="panel" wx:if="{{recent.length}}">
+    <view class="panel-title">最近推送</view>
+    <view class="task" wx:for="{{recent}}" wx:key="taskId">
+      <text class="task-type">{{item.typeText}}</text>
+      <text class="task-status {{item.status}}">{{item.statusText}}</text>
+      <text class="task-time">{{item.timeText}}</text>
+    </view>
+  </view>
+
+  <view class="foot">开通提醒即表示同意接收与金价相关的订阅通知，可随时关闭。</view>
+</view>

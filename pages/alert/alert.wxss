@@ -1,0 +1,173 @@
+.page {
+  padding: 24rpx 28rpx 48rpx;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 4rpx 24rpx;
+}
+
+.hero-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: #2c2c2a;
+}
+
+.hero-sub {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #9b968c;
+}
+
+.refresh {
+  padding: 12rpx 28rpx;
+  font-size: 24rpx;
+  color: #2c2c2a;
+  background: #ffffff;
+  border: 1rpx solid rgba(44, 44, 42, 0.12);
+  border-radius: 28rpx;
+}
+
+.panel {
+  margin-top: 24rpx;
+  padding: 26rpx 26rpx 28rpx;
+  background: #ffffff;
+  border: 1rpx solid rgba(44, 44, 42, 0.08);
+  border-radius: 28rpx;
+}
+
+.panel-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2c2c2a;
+}
+
+.quota-row {
+  display: flex;
+  margin-top: 22rpx;
+}
+
+.quota-item {
+  flex: 1;
+  text-align: center;
+}
+
+.quota-num {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #2c2c2a;
+  font-variant-numeric: tabular-nums;
+}
+
+.quota-label {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #9b968c;
+}
+
+.auth-btn {
+  width: 100%;
+  margin-top: 24rpx;
+  padding: 20rpx 0;
+  font-size: 26rpx;
+  white-space: nowrap;
+  color: #ffffff;
+  background: #2c2c2a;
+  border-radius: 40rpx;
+}
+
+.hint {
+  margin-top: 18rpx;
+  font-size: 20rpx;
+  line-height: 1.7;
+  color: #b4afa4;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 24rpx 0 8rpx;
+}
+
+.row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-name {
+  font-size: 26rpx;
+  color: #2c2c2a;
+}
+
+.row-desc {
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  line-height: 1.5;
+  color: #9b968c;
+}
+
+.dnd {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.dnd-time {
+  padding: 10rpx 22rpx;
+  font-size: 24rpx;
+  color: #2c2c2a;
+  background: #f4f1ea;
+  border-radius: 16rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.dnd-sep {
+  font-size: 22rpx;
+  color: #9b968c;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(44, 44, 42, 0.06);
+  font-size: 22rpx;
+}
+
+.task-type {
+  width: 140rpx;
+  color: #2c2c2a;
+}
+
+.task-status {
+  flex: 1;
+  color: #8a857b;
+}
+
+.task-status.sent {
+  color: #2f9e62;
+}
+
+.task-status.no-quota,
+.task-status.no-auth,
+.task-status.failed {
+  color: #d0453b;
+}
+
+.task-time {
+  color: #b4afa4;
+  font-variant-numeric: tabular-nums;
+}
+
+.foot {
+  margin-top: 26rpx;
+  padding: 0 8rpx;
+  font-size: 18rpx;
+  line-height: 1.6;
+  color: #b4afa4;
+}

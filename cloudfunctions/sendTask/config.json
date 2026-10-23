@@ -1,0 +1,14 @@
+{
+  "triggers": [
+    {
+      "name": "dispatchTimer",
+      "type": "timer",
+      "config": "0 * * * * * *"
+    },
+    {
+      "name": "scanTimer",
+      "type": "timer",
+      "config": "0 */5 * * * * *"
+    }
+  ]
+}

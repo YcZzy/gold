@@ -1,0 +1,18 @@
+/* 全局样式：纸感浅底 + 涨红跌绿 */
+page {
+  background: #f4f1ea;
+  color: #2c2c2a;
+  font-size: 28rpx;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+/* 涨：红 | 跌：绿（A 股惯例） */
+.up {
+  color: #d0453b;
+}
+.down {
+  color: #2f9e62;
+}
+.flat {
+  color: #8a857b;
+}

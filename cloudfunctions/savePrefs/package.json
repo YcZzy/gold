@@ -1,0 +1,9 @@
+{
+  "name": "savePrefs",
+  "version": "1.0.0",
+  "description": "保存提醒偏好（白名单字段）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

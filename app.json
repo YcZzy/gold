@@ -1,0 +1,12 @@
+{
+  "pages": ["pages/index/index", "pages/alert/alert"],
+  "window": {
+    "navigationBarBackgroundColor": "#FAF8F3",
+    "navigationBarTitleText": "金价行情",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F4F1EA",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
