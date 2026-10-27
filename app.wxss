@@ -1,18 +1,123 @@
-/* 全局样式：纸感浅底 + 涨红跌绿 */
+/* 全局样式：双主题变量（paper 纸感浅色 / blackgold 黑金深色）+ 涨红跌绿 */
+/* 变量绑定在各页面根节点 theme-paper / theme-blackgold 类上，向后代级联 */
+
 page {
-  background: #f4f1ea;
-  color: #2c2c2a;
   font-size: 28rpx;
   font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  background: #f4f1ea;
+  color: #2c2c2a;
 }
 
-/* 涨：红 | 跌：绿（A 股惯例） */
+.page .svg-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 64rpx;
+  height: 64rpx;
+  min-height: 64rpx;
+  padding: 16rpx;
+  line-height: 1;
+  border-radius: 32rpx;
+}
+
+.svg-icon-button::after {
+  border: none;
+}
+
+.svg-action-icon {
+  display: block;
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ---------- 纸感（默认浅色） ---------- */
+.theme-paper {
+  --bg: #f4f1ea;
+  --card: #ffffff;
+  --card-border: rgba(44, 44, 42, 0.08);
+  --card-main-border: rgba(176, 118, 140, 0.4);
+  --card-main-shadow: 0 6rpx 24rpx rgba(176, 118, 140, 0.12);
+  --intl-bg: rgba(176, 118, 140, 0.06);
+  --chip-bg: #f4f1ea;
+  --chip-border: rgba(44, 44, 42, 0.12);
+  --btn-bg: #2c2c2a;
+  --btn-text: #ffffff;
+  --tab-on-bg: #2c2c2a;
+  --tab-on-text: #ffffff;
+  --ohlc-bg: #f8f6f1;
+  --error-bg: #faeeda;
+  --error-text: #9a4b12;
+  --text: #2c2c2a;
+  --text-mid: #6f6a61;
+  --text-sub: #8a857b;
+  --text-sub2: #9b968c;
+  --text-faint: #b4afa4;
+  --accent: #b0768c;
+  --accent-border: rgba(176, 118, 140, 0.35);
+  --up: #d0453b;
+  --down: #2f9e62;
+  --flat: #8a857b;
+  --pill-up: rgba(208, 69, 59, 0.1);
+  --pill-down: rgba(47, 158, 98, 0.12);
+  --pill-flat: rgba(138, 133, 123, 0.12);
+  --status-ok: #2f9e62;
+  --status-bad: #d0453b;
+  --switch-on: #2c2c2a;
+  --theme-opt-on-border: #2c2c2a;
+}
+
+/* ---------- 黑金 ---------- */
+.theme-blackgold {
+  --bg: #14120b;
+  --card: #1e1a10;
+  --card-border: rgba(217, 180, 91, 0.18);
+  --card-main-border: rgba(217, 180, 91, 0.55);
+  --card-main-shadow: 0 6rpx 28rpx rgba(217, 180, 91, 0.12);
+  --intl-bg: rgba(217, 180, 91, 0.08);
+  --chip-bg: rgba(217, 180, 91, 0.1);
+  --chip-border: rgba(217, 180, 91, 0.3);
+  --btn-bg: #d9b45b;
+  --btn-text: #14120b;
+  --tab-on-bg: #d9b45b;
+  --tab-on-text: #14120b;
+  --ohlc-bg: rgba(217, 180, 91, 0.08);
+  --error-bg: rgba(217, 180, 91, 0.12);
+  --error-text: #e8c476;
+  --text: #f2e6c9;
+  --text-mid: #c8b98c;
+  --text-sub: #9a8f6e;
+  --text-sub2: #8d8265;
+  --text-faint: #6e654c;
+  --accent: #d9b45b;
+  --accent-border: rgba(217, 180, 91, 0.45);
+  --up: #ff7a6b;
+  --down: #4dbe84;
+  --flat: #9a8f6e;
+  --pill-up: rgba(255, 122, 107, 0.14);
+  --pill-down: rgba(77, 190, 132, 0.16);
+  --pill-flat: rgba(154, 143, 110, 0.18);
+  --status-ok: #4dbe84;
+  --status-bad: #ff7a6b;
+  --switch-on: #d9b45b;
+  --theme-opt-on-border: #d9b45b;
+}
+
+/* 涨：红 | 跌：绿（A 股惯例），颜色随主题 */
 .up {
-  color: #d0453b;
+  color: var(--up);
 }
 .down {
-  color: #2f9e62;
+  color: var(--down);
 }
 .flat {
-  color: #8a857b;
+  color: var(--flat);
 }

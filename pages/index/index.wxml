@@ -1,96 +1,71 @@
-<view class="page">
-  <view class="hero">
-    <view>
-      <view class="hero-title">金价行情</view>
-      <view class="hero-sub">{{updatedAtText}} · 下拉刷新</view>
+<view class="page home-page theme-{{theme}}">
+  <view class="home-header">
+    <view class="home-heading">
+      <view class="hero-title">我的自选</view>
+      <view class="hero-sub">查看价格与涨跌，按需设置提醒</view>
     </view>
-    <view class="hero-actions">
-      <view class="refresh" bindtap="openAlert">提醒</view>
-      <view class="refresh" bindtap="refreshAll">刷新</view>
-    </view>
+    <button class="home-add" bindtap="openSearch" aria-label="搜索并添加自选">
+      <view class="icon-plus" aria-hidden="true"></view><text>添加</text>
+    </button>
   </view>
 
-  <view wx:if="{{errorText}}" class="error-bar">{{errorText}}</view>
+  <view class="watchlist-card {{manage ? 'is-editing' : ''}}">
+    <view class="watchlist-heading">
+      <view class="watchlist-title">{{manage ? '编辑自选' : '关注列表'}}<text class="watchlist-count">{{rows.length}} / {{limits.watchlist}}</text></view>
+      <button wx:if="{{rows.length}}" class="home-manage {{manage ? 'is-managing' : ''}}" bindtap="toggleManage" disabled="{{busy}}">{{manage ? '完成' : '管理'}}</button>
+    </view>
+    <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
+    <view wx:if="{{loading && !rows.length}}" class="empty" role="status">正在加载自选…</view>
+    <view wx:elif="{{!rows.length}}" class="empty">
+      <view class="empty-title">添加你的第一个自选</view>
+      <view class="muted">把关注的股票或黄金加入列表，随时查看行情。</view>
+      <button class="home-empty-add" bindtap="openSearch">搜索并添加</button>
+    </view>
+    <view wx:if="{{manage && rows.length}}" class="manage-hint">拖动左侧手柄排序，松手自动保存</view>
+    <view class="list {{manage ? 'managing' : ''}}">
+      <view wx:for="{{rows}}" wx:key="id"
+        class="list-item {{draggingId === item.id ? 'dragging' : ''}}"
+        style="{{draggingId === item.id ? 'transform: translateY(' + dragOffset + 'px);' : ''}}">
+        <view wx:if="{{manage}}" class="manage-row">
+          <view class="drag-handle" data-id="{{item.id}}"
+            bindtouchstart="startDrag" catchtouchmove="dragMove"
+            bindtouchend="endDrag" bindtouchcancel="cancelDrag"
+            aria-label="拖动排序{{item.name}}">
+            <view class="icon-drag" aria-hidden="true"></view>
+          </view>
+          <view class="asset-name">
+            <view class="name">{{item.name}}</view>
+            <view class="code">{{item.code}} · {{item.market}}</view>
+          </view>
+          <button class="home-remove" data-id="{{item.id}}" catchtap="remove"
+            disabled="{{busy || draggingId}}" aria-label="删除{{item.name}}及全部提醒"><image class="remove-icon" src="/assets/icons/delete.svg" mode="aspectFit" aria-hidden="true" /><text>移除</text></button>
+        </view>
+        <view
+          wx:else
+          class="quote-row"
+          bindtap="openDetail"
+          data-id="{{item.id}}"
+          role="button"
+          aria-label="查看{{item.name}}行情"
+        >
+          <view class="asset-name"
+            ><view class="name">{{item.name}}</view
+            ><view class="code">{{item.code}} · {{item.market}}</view><view wx:if="{{item.activeCount}}" class="reminder-tag">已开启 {{item.activeCount}} 条提醒</view></view
+          >
+          <view class="price-col"
+            ><view class="quote-value">{{item.priceText || '--'}}</view
+            ><view class="quote-status">{{item.statusText || '待获取'}}</view></view
+          ><view class="change-col"
+            ><text class="change-pill {{item.changePct > 0 ? 'up' : item.changePct < 0 ? 'down' : 'flat'}}">{{item.pctText || '--'}}</text></view
+          >
+        </view>
 
-  <view class="cards">
-    <!-- 沪金主卡 -->
-    <view class="card card-main">
-      <view class="card-head">
-        <text class="card-name">沪金 Au99.99</text>
-        <text class="card-unit">上海黄金交易所 · 元/克</text>
       </view>
-      <view class="card-price {{au.cls}}">{{au.priceText}}</view>
-      <view class="card-chg {{au.cls}}">
-        <text>{{au.changeText}}</text>
-        <text class="chg-pill {{au.cls}}">{{au.pctText}}</text>
-      </view>
-      <view class="card-sub">开 {{au.openText}} · 高 {{au.highText}} · 低 {{au.lowText}}</view>
-
-      <!-- 国际参考（折算元/克） -->
-      <view class="intl-row">
-        <text class="intl-label">国际参考</text>
-        <text class="intl-item">{{intl.usdText}} 美元/盎司</text>
-        <text class="intl-item">折算 {{intl.cnyText}} 元/克</text>
-        <text class="intl-item">{{intl.premiumText}}</text>
-      </view>
-      <view class="card-source">{{au.source}} · 国际 {{intl.source}} · {{intl.rateText}}</view>
     </view>
   </view>
-
-  <view class="panel">
-    <view class="tabs">
-      <view
-        wx:for="{{periods}}"
-        wx:key="value"
-        class="tab {{period === item.value ? 'tab-on' : ''}}"
-        data-period="{{item.value}}"
-        bindtap="switchPeriod"
-      >{{item.label}}</view>
-    </view>
-
-    <view class="chart-box">
-      <canvas
-        type="2d"
-        id="kline"
-        class="kline"
-        bindtouchstart="onTouch"
-        bindtouchmove="onTouch"
-        bindtouchend="onTouchEnd"
-      ></canvas>
-    </view>
-
-    <view class="legend">
-      <block wx:if="{{period === 'intraday'}}">
-        <text class="lg lg-price">价格线</text>
-        <text class="lg lg-ma10">均价线</text>
-        <text class="lg">昨收虚线</text>
-      </block>
-      <block wx:else>
-        <text class="lg lg-ma5">MA5</text>
-        <text class="lg lg-ma10">MA10</text>
-      </block>
-      <text class="lg lg-up">涨（红）</text>
-      <text class="lg lg-down">跌（绿）</text>
-      <text class="lg-tip">点按图表查看细节</text>
-    </view>
-
-    <view wx:if="{{intradayInfo}}" class="ohlc">
-      <text>{{intradayInfo.time}}</text>
-      <text>价 {{intradayInfo.price}}</text>
-      <text>均价 {{intradayInfo.avg}}</text>
-      <text class="{{intradayInfo.cls}}">{{intradayInfo.pctText}}</text>
-    </view>
-
-    <view wx:if="{{candleInfo}}" class="ohlc">
-      <text>{{candleInfo.time}}</text>
-      <text>开 {{candleInfo.o}}</text>
-      <text>高 {{candleInfo.h}}</text>
-      <text>低 {{candleInfo.l}}</text>
-      <text>收 {{candleInfo.c}}</text>
-    </view>
-
-    <view class="foot">
-      数据来源：{{chartSource}}。免费公开接口，仅供参考，不构成投资建议。
-    </view>
+  <view class="home-footer">
+    <view class="update-note"><view class="update-dot" aria-hidden="true"></view><text>每分钟自动刷新 · 行情可能延迟</text></view>
+    <view class="home-disclaimer">点击标的查看行情来源、报价时间与提醒设置。</view>
+    <view class="home-disclaimer">公开行情仅供参考，不构成投资建议。</view>
   </view>
 </view>

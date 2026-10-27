@@ -1,11 +1,30 @@
 {
-  "pages": ["pages/index/index", "pages/alert/alert"],
+  "pages": [
+    "pages/index/index",
+    "pages/reminders/reminders",
+    "pages/mine/mine",
+    "pages/search/search",
+    "pages/detail/detail",
+    "pages/asset-alert/asset-alert",
+    "pages/alert/alert"
+  ],
   "window": {
     "navigationBarBackgroundColor": "#FAF8F3",
-    "navigationBarTitleText": "金价行情",
+    "navigationBarTitleText": "自选行情",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#F4F1EA",
     "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8a857b",
+    "selectedColor": "#2c2c2a",
+    "backgroundColor": "#FAF8F3",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "自选" },
+      { "pagePath": "pages/reminders/reminders", "text": "提醒" },
+      { "pagePath": "pages/mine/mine", "text": "我的" }
+    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

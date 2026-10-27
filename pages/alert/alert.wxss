@@ -10,43 +10,47 @@
 }
 
 .hero-title {
-  font-size: 44rpx;
+  font-size: 40rpx;
   font-weight: 600;
-  color: #2c2c2a;
+  color: var(--text);
 }
 
 .hero-sub {
   margin-top: 6rpx;
   font-size: 22rpx;
-  color: #9b968c;
+  color: var(--text-sub2);
 }
 
 .refresh {
-  padding: 12rpx 28rpx;
-  font-size: 24rpx;
-  color: #2c2c2a;
-  background: #ffffff;
-  border: 1rpx solid rgba(44, 44, 42, 0.12);
+  padding: 8rpx 22rpx;
+  font-size: 23rpx;
+  color: var(--text);
+  background: var(--card);
+  border: 1rpx solid var(--chip-border);
   border-radius: 28rpx;
 }
 
 .panel {
   margin-top: 24rpx;
-  padding: 26rpx 26rpx 28rpx;
-  background: #ffffff;
-  border: 1rpx solid rgba(44, 44, 42, 0.08);
+  padding: 24rpx 24rpx 26rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
   border-radius: 28rpx;
 }
 
 .panel-title {
   font-size: 26rpx;
   font-weight: 600;
-  color: #2c2c2a;
+  line-height: 1.5;
+  color: var(--text);
 }
 
 .quota-row {
   display: flex;
-  margin-top: 22rpx;
+  margin-top: 20rpx;
+  padding: 20rpx 0;
+  background: var(--chip-bg);
+  border-radius: 16rpx;
 }
 
 .quota-item {
@@ -54,35 +58,39 @@
   text-align: center;
 }
 
+.quota-item + .quota-item {
+  border-left: 1rpx solid var(--card-border);
+}
+
 .quota-num {
-  font-size: 48rpx;
+  font-size: 44rpx;
   font-weight: 600;
-  color: #2c2c2a;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .quota-label {
   margin-top: 4rpx;
   font-size: 20rpx;
-  color: #9b968c;
+  color: var(--text-sub2);
 }
 
 .auth-btn {
   width: 100%;
-  margin-top: 24rpx;
-  padding: 20rpx 0;
-  font-size: 26rpx;
+  margin-top: 20rpx;
+  padding: 14rpx 0;
+  font-size: 25rpx;
   white-space: nowrap;
-  color: #ffffff;
-  background: #2c2c2a;
-  border-radius: 40rpx;
+  color: var(--btn-text);
+  background: var(--btn-bg);
+  border-radius: 28rpx;
 }
 
 .hint {
   margin-top: 18rpx;
   font-size: 20rpx;
   line-height: 1.7;
-  color: #b4afa4;
+  color: var(--text-faint);
 }
 
 .row {
@@ -90,7 +98,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 20rpx;
-  padding: 24rpx 0 8rpx;
+  padding: 20rpx 0 12rpx;
+}
+
+.row + .row {
+  border-top: 1rpx solid var(--card-border);
 }
 
 .row-main {
@@ -100,14 +112,14 @@
 
 .row-name {
   font-size: 26rpx;
-  color: #2c2c2a;
+  color: var(--text);
 }
 
 .row-desc {
   margin-top: 6rpx;
   font-size: 20rpx;
   line-height: 1.5;
-  color: #9b968c;
+  color: var(--text-sub2);
 }
 
 .dnd {
@@ -117,17 +129,23 @@
 }
 
 .dnd-time {
-  padding: 10rpx 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  min-height: 44rpx;
+  padding: 8rpx 20rpx;
   font-size: 24rpx;
-  color: #2c2c2a;
-  background: #f4f1ea;
-  border-radius: 16rpx;
+  color: var(--text);
+  background: var(--chip-bg);
+  border: 1rpx solid var(--chip-border);
+  border-radius: 14rpx;
   font-variant-numeric: tabular-nums;
 }
 
 .dnd-sep {
   font-size: 22rpx;
-  color: #9b968c;
+  color: var(--text-sub2);
 }
 
 .task {
@@ -135,32 +153,32 @@
   align-items: center;
   gap: 18rpx;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid rgba(44, 44, 42, 0.06);
+  border-bottom: 1rpx solid var(--card-border);
   font-size: 22rpx;
 }
 
 .task-type {
   width: 140rpx;
-  color: #2c2c2a;
+  color: var(--text);
 }
 
 .task-status {
   flex: 1;
-  color: #8a857b;
+  color: var(--text-sub);
 }
 
 .task-status.sent {
-  color: #2f9e62;
+  color: var(--status-ok);
 }
 
 .task-status.no-quota,
 .task-status.no-auth,
 .task-status.failed {
-  color: #d0453b;
+  color: var(--status-bad);
 }
 
 .task-time {
-  color: #b4afa4;
+  color: var(--text-faint);
   font-variant-numeric: tabular-nums;
 }
 
@@ -169,5 +187,137 @@
   padding: 0 8rpx;
   font-size: 18rpx;
   line-height: 1.6;
-  color: #b4afa4;
+  color: var(--text-faint);
+}
+
+.panel-desc {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: var(--text-sub2);
+}
+
+.target-rule + .target-rule {
+  margin-top: 20rpx;
+  border-top: 1rpx solid var(--card-border);
+}
+
+.price-field {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 10rpx;
+  padding: 6rpx 18rpx;
+  border: 1rpx solid var(--chip-border);
+  border-radius: 14rpx;
+  background: var(--chip-bg);
+}
+
+.price-field input {
+  flex: 1;
+  min-width: 0;
+  height: 68rpx;
+  color: var(--text);
+  font-size: 28rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-field text {
+  color: var(--text-sub2);
+  font-size: 22rpx;
+}
+
+.field-error {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: var(--status-bad);
+}
+
+.save-error {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  border: 1rpx solid var(--card-border);
+  border-radius: 16rpx;
+  color: var(--status-bad);
+  background: var(--card);
+  font-size: 24rpx;
+}
+
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  margin: 14rpx 0 0;
+  padding: 8rpx 24rpx;
+  font-size: 23rpx;
+  color: var(--btn-text);
+  background: var(--btn-bg);
+}
+
+.picker-value {
+  display: block;
+  line-height: 1.4;
+}
+
+.picker-arrow-slot {
+  display: flex;
+  flex: 0 0 24rpx;
+  width: 24rpx;
+  height: 24rpx;
+  align-items: center;
+  justify-content: center;
+}
+
+.picker-chevron {
+  width: 10rpx;
+  height: 10rpx;
+  border-right: 2rpx solid var(--text-sub2);
+  border-bottom: 2rpx solid var(--text-sub2);
+  transform: translateY(-3rpx) rotate(45deg);
+}
+
+.dnd-row {
+  flex-wrap: wrap;
+}
+
+.refresh {
+  flex-shrink: 0;
+  margin: 0 0 0 16rpx;
+  line-height: 1.5;
+}
+
+.refresh::after,
+.retry-btn::after {
+  border: none;
+}
+
+
+.task-item {
+  padding-bottom: 12rpx;
+  border-bottom: 1rpx solid var(--card-border);
+}
+
+.task-item .task {
+  border-bottom: none;
+}
+
+.task-reason {
+  font-size: 21rpx;
+  line-height: 1.6;
+  color: var(--text-sub2);
+}
+
+/* ---------- 按钮统一重置（本页未 import 全局样式，单独对齐） ---------- */
+button {
+  margin: 0;
+  font-size: 24rpx;
+  border-radius: 12rpx;
+  font-weight: 500;
+  line-height: 1.5;
+}
+button::after {
+  border: none;
+}
+button[disabled] {
+  opacity: 0.45;
 }

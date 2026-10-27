@@ -1,0 +1,65 @@
+<view class="page theme-{{theme}}"
+  ><view class="hero-title">行情提醒</view
+  ><view class="hero-sub">把关注交给提醒，把时间留给生活。</view>
+  <view class="panel quota-panel"
+    ><view class="section-row"
+      ><view
+        ><view wx:if="{{hasPortfolio}}" class="section-title"
+          >{{activeCount}} / {{limits.activeRules}}
+          <text class="micro">条提醒已开启</text></view
+        ><view wx:if="{{hasStatus}}" class="muted"
+          >播报授权 {{quota.brief}} 次 · 异动 {{quota.vol}} 次</view
+        ></view
+      ><button
+        class="primary compact"
+        bindtap="onAuthTap"
+        loading="{{authBusy}}"
+        disabled="{{authBusy}}"
+      >
+        增加授权
+      </button></view
+    ><view class="foot">每次同意订阅，可增加对应模板 1 次授权。</view></view
+  >
+  <view wx:if="{{loading}}" class="empty">正在加载提醒…</view
+  ><view wx:elif="{{hasPortfolio && !groups.length}}" class="empty"
+    ><view class="empty-title">还没有设置提醒</view
+    ><view class="muted">从「自选」打开标的，即可设置专属提醒。</view></view
+  >
+  <view
+    wx:for="{{groups}}"
+    wx:key="id"
+    class="panel"
+    data-id="{{item.id}}"
+    bindtap="openAsset"
+    role="button"
+    aria-label="管理{{item.name}}提醒"
+    ><view class="section-row"
+      ><view
+        ><view class="section-title">{{item.name}}</view
+        ><view class="code">{{item.code}} · {{item.market}}</view></view
+      ><view class="muted manage-link">管理<view class="chev" aria-hidden="true"></view></view></view
+    ><view
+      wx:for="{{item.rules}}"
+      wx:for-item="rule"
+      wx:key="id"
+      class="summary-row"
+      ><text>{{rule.summary}}</text
+      ><text class="micro">{{rule.enabled ? '已开启' : '已暂停'}}</text></view
+    ></view
+  >
+  <view wx:if="{{recent.length}}" class="panel">
+    <view class="section-title">最近提醒</view>
+    <view wx:for="{{recent}}" wx:key="taskId" class="recent-task">
+      <view class="section-row"
+        ><text>{{item.assetName}}</text
+        ><text class="micro">{{item.statusText}}</text></view
+      >
+      <view wx:if="{{item.reasonText}}" class="muted">{{item.reasonText}}</view>
+      <view class="micro">{{item.timeText}}</view>
+    </view>
+  </view>
+  <view class="foot"
+    >后台约每 1
+    分钟监测，行情和推送均可能延迟。每标的每类每日最多 1 条；每天常规最多 6 条、到价最多 4 条，共享微信授权次数。免打扰时间可在「我的」修改。</view
+  >
+</view>

@@ -1,7 +1,12 @@
 {
   "description": "金价行情小程序",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      { "type": "folder", "value": "tests" },
+      { "type": "folder", "value": "docs" },
+      { "type": "folder", "value": "scripts" },
+      { "type": "folder", "value": ".workbuddy" }
+    ],
     "include": []
   },
   "setting": {

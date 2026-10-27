@@ -1,0 +1,234 @@
+/* 独立页面样式，使用 app.wxss 的双主题变量。 */
+.mine-page {
+  padding: 40rpx 28rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+.mine-page .mine-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  margin: 0 4rpx 36rpx;
+}
+.mine-page .mine-heading { flex: 1; min-width: 0; }
+.mine-page .hero-title {
+  font-size: 48rpx;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 2rpx;
+}
+.mine-page .hero-sub {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.65;
+  color: var(--text-mid);
+}
+.mine-page button {
+  box-sizing: border-box;
+  margin: 0;
+  font-size: 26rpx;
+  line-height: 1.5;
+  font-weight: 500;
+  white-space: normal;
+}
+.mine-page button::after { border: none; }
+.mine-page button[disabled] { opacity: 0.5; }
+.mine-page .control-pressed { opacity: 0.7; }
+.mine-page .theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 6rpx;
+  width: 96rpx;
+  min-height: 96rpx;
+  padding: 14rpx 10rpx;
+  border: 1rpx solid var(--card-border);
+  border-radius: 24rpx;
+  background: var(--card);
+  color: var(--text-mid);
+  font-size: 20rpx;
+}
+.mine-page .theme-toggle-icon { display: block; width: 32rpx; height: 32rpx; }
+.mine-page .mine-card {
+  margin-top: 24rpx;
+  padding: 30rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: 28rpx;
+}
+.mine-page .subscription-card {
+  margin-top: 0;
+  border-top: 4rpx solid var(--accent);
+}
+.mine-page .section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12rpx 20rpx;
+}
+.mine-page .section-title {
+  font-size: 29rpx;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.mine-page .section-caption { font-size: 21rpx; line-height: 1.5; color: var(--text-mid); }
+.mine-page .muted {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: var(--text-mid);
+  overflow-wrap: break-word;
+}
+.mine-page .quota-grid,
+.mine-page .benefits-grid,
+.mine-page .time-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.mine-page .quota-grid { padding: 32rpx 0; margin-top: 8rpx; }
+.mine-page .quota-item + .quota-item { border-left: 1rpx solid var(--card-border); padding-left: 32rpx; }
+.mine-page .metric-label { font-size: 23rpx; line-height: 1.6; color: var(--text-mid); }
+.mine-page .quota-value {
+  margin-top: 8rpx;
+  font-size: 64rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.mine-page .metric-unit { margin-left: 10rpx; font-size: 23rpx; font-weight: 400; color: var(--text-mid); }
+.mine-page .primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 88rpx;
+  padding: 22rpx 24rpx;
+  border-radius: 16rpx;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+}
+.mine-page .helper {
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  line-height: 1.75;
+  color: var(--text-mid);
+  overflow-wrap: break-word;
+}
+.mine-page .subscription-card > .helper { text-align: center; }
+.mine-page .time-grid { gap: 20rpx; margin-top: 26rpx; }
+.mine-page .time-picker { min-width: 0; }
+.mine-page .time-field {
+  padding: 22rpx 24rpx;
+  border: 1rpx solid var(--card-border);
+  border-radius: 18rpx;
+  background: var(--ohlc-bg);
+}
+.mine-page .time-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin-top: 12rpx;
+  font-size: 36rpx;
+  line-height: 1.4;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.mine-page .picker-chevron {
+  width: 10rpx;
+  height: 10rpx;
+  flex-shrink: 0;
+  border-right: 2rpx solid var(--text-mid);
+  border-bottom: 2rpx solid var(--text-mid);
+  transform: translateY(-4rpx) rotate(45deg);
+}
+.mine-page .is-busy { opacity: 0.5; }
+.mine-page .section-label {
+  margin: 36rpx 6rpx -8rpx;
+  font-size: 23rpx;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--text-mid);
+}
+.mine-page .service-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  width: 100%;
+  min-height: 116rpx;
+  margin-top: 20rpx;
+  padding: 24rpx;
+  border-radius: 18rpx;
+  text-align: left;
+  background: var(--ohlc-bg);
+  color: var(--text);
+}
+.mine-page .action-copy { flex: 1; min-width: 0; }
+.mine-page .action-title { font-size: 26rpx; font-weight: 500; }
+.mine-page .action-description { margin-top: 6rpx; font-size: 22rpx; line-height: 1.65; color: var(--text-mid); }
+.mine-page .chevron {
+  flex-shrink: 0;
+  width: 12rpx;
+  height: 12rpx;
+  margin-right: 4rpx;
+  border-right: 2rpx solid var(--text-mid);
+  border-top: 2rpx solid var(--text-mid);
+  transform: rotate(45deg);
+}
+.mine-page .diagnostic {
+  margin-top: 24rpx;
+  padding: 0 4rpx 24rpx;
+  border-bottom: 1rpx solid var(--card-border);
+}
+.mine-page .summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24rpx;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--card-border);
+  font-size: 24rpx;
+  line-height: 1.7;
+}
+.mine-page .summary-row > text:first-child { flex-shrink: 0; }
+.mine-page .summary-row > text:last-child { min-width: 0; text-align: right; overflow-wrap: break-word; }
+.mine-page .record-title { margin-top: 28rpx; font-size: 24rpx; font-weight: 600; }
+.mine-page .diagnostic-task { padding: 20rpx 0; border-bottom: 1rpx solid var(--card-border); font-size: 24rpx; line-height: 1.6; }
+.mine-page .diagnostic-task:last-child { padding-bottom: 0; border-bottom: none; }
+.mine-page .task-status { font-size: 22rpx; color: var(--text-mid); }
+.mine-page .diagnostic-task .helper { margin-top: 8rpx; }
+.mine-page .test-result { margin-top: 20rpx; padding: 20rpx; border-radius: 14rpx; background: var(--ohlc-bg); font-size: 24rpx; line-height: 1.75; }
+.mine-page .tier-badge {
+  padding: 6rpx 16rpx;
+  border: 1rpx solid var(--chip-border);
+  border-radius: 10rpx;
+  font-size: 21rpx;
+  line-height: 1.5;
+  color: var(--text-mid);
+  background: var(--chip-bg);
+}
+.mine-page .benefits-grid { gap: 24rpx; padding: 26rpx 0; }
+.mine-page .benefit-value { margin-bottom: 8rpx; font-size: 40rpx; line-height: 1.4; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mine-page .benefits-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  width: 100%;
+  min-height: 88rpx;
+  padding: 24rpx 0 0;
+  border-top: 1rpx solid var(--card-border);
+  border-radius: 0;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  font-size: 24rpx;
+}
+.mine-page .question { margin-top: 24rpx; font-size: 25rpx; font-weight: 500; line-height: 1.6; }
+.mine-page .page-footer { padding: 0 8rpx; margin-top: 28rpx; font-size: 21rpx; line-height: 1.85; color: var(--text-mid); }
+.mine-page .disclaimer { margin-top: 12rpx; }
+.mine-page .error-bar { margin-bottom: 24rpx; padding: 22rpx 24rpx; border-radius: 16rpx; background: var(--error-bg); color: var(--error-text); font-size: 24rpx; line-height: 1.7; }
+.mine-page .loading-note { margin-bottom: 24rpx; font-size: 24rpx; color: var(--text-mid); }

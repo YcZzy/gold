@@ -2,8 +2,8 @@
  * 金价数据源封装（已实测 2026-10-23，全量收敛到东方财富）
  *
  * 全部数据来自东财，后台需配置的 request 合法域名（均有 ICP 备案，可加白）：
- *   - https://push2.eastmoney.com      实时行情（必须）
- *   - https://push2his.eastmoney.com   K 线 / 分时（必须，也是实时行情的兜底源）
+ *   - https://push2his.eastmoney.com   分时 / K 线（必须，本地黄金报价优先使用分时末点）
+ *   - https://push2.eastmoney.com      报价备选 / 汇率
  *   （push2delay.eastmoney.com 仅降级镜像，开发期用，正式可不配）
  *
  *   - 沪金 Au99.99：secid=118.AU9999，价格字段单位「分」需 ÷100
@@ -187,13 +187,15 @@ function quoteFromIntraday(intra) {
   };
 }
 
-/** 实时报价统一入口：push2 → push2delay → 分时末点兜底 */
+/** 本地黄金展示：优先分时末点，避免先请求会空响应的 push2 报价端点。
+ * 分时不可用时仍尝试报价端点；这些数据由 market-client 标记为延迟展示。
+ */
 async function quoteSmart(secid) {
   try {
-    return await emQuote(secid);
-  } catch (e) {
     const intra = await emIntraday(secid, false);
     return quoteFromIntraday(intra);
+  } catch (e) {
+    return emQuote(secid);
   }
 }
 
@@ -286,5 +288,7 @@ module.exports = {
   getAuQuote,
   getIntlRef,
   getUsdCny,
-  getXauQuote
+  getXauQuote,
+  getXauIntraday: () => emIntraday("122.XAU", true),
+  getXauKline: (period) => emKline("122.XAU", period)
 };

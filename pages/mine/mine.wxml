@@ -1,0 +1,111 @@
+<view class="page mine-page theme-{{theme}}">
+  <view class="mine-header">
+    <view class="mine-heading">
+      <view class="hero-title">我的</view>
+      <view class="hero-sub">管理提醒，按自己的节奏关注行情</view>
+    </view>
+    <button class="theme-toggle" bindtap="onThemeTap" hover-class="control-pressed" aria-label="{{theme === 'paper' ? '切换深色主题' : '切换浅色主题'}}">
+      <image class="theme-toggle-icon" src="{{theme === 'paper' ? '/assets/icons/moon.svg' : '/assets/icons/sun.svg'}}" mode="aspectFit" aria-hidden="true" />
+      <text>{{theme === 'paper' ? '深色' : '浅色'}}</text>
+    </button>
+  </view>
+
+  <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
+  <view wx:if="{{loading}}" class="loading-note" role="status">正在读取账户设置…</view>
+
+  <view class="mine-card subscription-card">
+    <view class="section-heading">
+      <view class="section-title">订阅消息授权</view>
+      <text class="section-caption">微信服务通知</text>
+    </view>
+    <view class="muted">为下一次行情提醒，留好发送次数。</view>
+    <view wx:if="{{hasStatus}}" class="quota-grid">
+      <view class="quota-item">
+        <view class="metric-label">行情播报</view>
+        <view class="quota-value">{{quota.brief}}<text class="metric-unit">次</text></view>
+      </view>
+      <view class="quota-item">
+        <view class="metric-label">异动提醒</view>
+        <view class="quota-value">{{quota.vol}}<text class="metric-unit">次</text></view>
+      </view>
+    </view>
+    <button class="primary" bindtap="onAuthTap" loading="{{authBusy}}" disabled="{{authBusy}}" hover-class="control-pressed">{{authBusy ? '正在登记授权' : '增加授权次数'}}</button>
+    <view class="helper">每次同意订阅，增加对应模板 1 次授权。</view>
+  </view>
+
+  <view wx:if="{{hasStatus}}" class="mine-card">
+    <view class="section-heading">
+      <view class="section-title">免打扰</view>
+      <text class="section-caption">北京时间</text>
+    </view>
+    <view class="muted">此时段暂缓推送，过期的提醒不再补发。</view>
+    <view class="time-grid">
+      <picker class="time-picker" mode="time" value="{{prefs.dndStart}}" disabled="{{busy || loading}}" data-key="dndStart" bindchange="saveDnd" aria-label="免打扰开始时间 {{prefs.dndStart}}">
+        <view class="time-field {{busy ? 'is-busy' : ''}}">
+          <view class="metric-label">开始时间</view>
+          <view class="time-value"><text>{{prefs.dndStart}}</text><view class="picker-chevron" aria-hidden="true"></view></view>
+        </view>
+      </picker>
+      <picker class="time-picker" mode="time" value="{{prefs.dndEnd}}" disabled="{{busy || loading}}" data-key="dndEnd" bindchange="saveDnd" aria-label="免打扰结束时间 {{prefs.dndEnd}}">
+        <view class="time-field {{busy ? 'is-busy' : ''}}">
+          <view class="metric-label">结束时间</view>
+          <view class="time-value"><text>{{prefs.dndEnd}}</text><view class="picker-chevron" aria-hidden="true"></view></view>
+        </view>
+      </picker>
+    </view>
+    <view wx:if="{{busy}}" class="helper" role="status">正在保存免打扰时间…</view>
+  </view>
+
+  <view class="section-label">通知与服务</view>
+  <view class="mine-card diagnostic-card">
+    <view class="section-title">自助检测</view>
+    <view class="muted">收不到提醒？先检查通知条件。</view>
+    <button class="service-action" bindtap="checkNotifications" loading="{{checkBusy}}" disabled="{{checkBusy}}" hover-class="control-pressed">
+      <view class="action-copy"><view class="action-title">{{checkBusy ? '正在检查' : '检查通知条件'}}</view><view class="action-description">查看规则、授权与最近发送状态</view></view>
+      <view class="chevron" aria-hidden="true"></view>
+    </button>
+    <view wx:if="{{check}}" class="diagnostic" role="status">
+      <view wx:if="{{check.error}}" class="muted">{{check.error}}</view>
+      <block wx:else>
+        <view class="summary-row"><text class="metric-label">提醒规则</text><text>{{check.rules}}</text></view>
+        <view class="summary-row"><text class="metric-label">剩余授权</text><text>{{check.quota}}</text></view>
+        <view class="summary-row"><text class="metric-label">免打扰</text><text>{{check.dnd}}</text></view>
+        <view class="helper">规则需达到设定条件；行情延迟、休市或每日上限也可能影响提醒。免打扰内过期的提醒不补发。</view>
+        <view class="record-title">最近发送记录</view>
+        <view wx:if="{{!check.recent.length}}" class="muted">暂无记录；请检查规则条件和后台定时任务。</view>
+        <view wx:for="{{check.recent}}" wx:key="taskId" class="diagnostic-task">
+          <view class="section-heading"><text>{{item.assetName}}</text><text class="task-status">{{item.statusText}}</text></view>
+          <view wx:if="{{item.reasonText}}" class="muted">{{item.reasonText}}</view>
+          <view class="helper">{{item.timeText}}</view>
+        </view>
+      </block>
+    </view>
+    <button class="service-action test-action" bindtap="testNotification" loading="{{testBusy}}" disabled="{{testBusy}}" hover-class="control-pressed">
+      <view class="action-copy"><view class="action-title">{{testBusy ? '正在发送' : '测试通知'}}</view><view class="action-description">发送一条消息，确认微信能否接收</view></view>
+      <view class="chevron" aria-hidden="true"></view>
+    </button>
+    <view class="helper">消耗 1 次异动授权；测试不受规则条件和免打扰限制。</view>
+    <view wx:if="{{testResult}}" class="test-result" role="status">{{testResult}}</view>
+  </view>
+
+  <view wx:if="{{hasPortfolio}}" class="mine-card benefits-card">
+    <view class="section-heading">
+      <view class="section-title">账户权益</view>
+      <text class="tier-badge">{{limits.tier === 'free' ? '免费版' : '会员权益'}}</text>
+    </view>
+    <view class="benefits-grid">
+      <view><view class="benefit-value">{{limits.watchlist}}<text class="metric-unit">个</text></view><view class="metric-label">自选标的上限</view></view>
+      <view><view class="benefit-value">{{limits.activeRules}}<text class="metric-unit">条</text></view><view class="metric-label">启用提醒上限</view></view>
+    </view>
+    <view wx:if="{{limits.expiresAt}}" class="helper">有效期以账户为准</view>
+    <button class="benefits-link" bindtap="openAuth" hover-class="control-pressed"><text>查看订阅授权与提醒</text><view class="chevron" aria-hidden="true"></view></button>
+  </view>
+
+  <view class="mine-card faq-card">
+    <view class="section-title">常见问题</view>
+    <view class="question">为什么每次只能增加 1 次？</view>
+    <view class="muted">微信订阅消息按模板逐次授权。每次同意一个模板，增加该模板 1 次发送机会；发送成功后消耗 1 次。播报与异动分别计数，可再次点击增加授权并同意订阅。</view>
+  </view>
+  <view class="page-footer">后台约每 1 分钟监测。股票按沪深市场规则处理；定时播报中的「仅周一至周五」仅表示星期，不代表完整交易日历。</view>
+  <view class="page-footer disclaimer">公开行情仅供参考，不构成投资建议。</view>
+</view>

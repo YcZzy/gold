@@ -1,244 +1,202 @@
-const api = require("../../utils/gold-api.js");
-const { createKlineChart } = require("../../utils/candle-chart.js");
-
-const PERIODS = [
-  { label: "当日", value: "intraday" },
-  { label: "1月", value: "1mo" },
-  { label: "3月", value: "3mo" },
-  { label: "1年", value: "1y" },
-  { label: "5年", value: "5y" }
-];
-
-function fmt(n, d) {
-  if (n == null || isNaN(n)) return "--";
-  return Number(n).toFixed(d == null ? 2 : d);
-}
-
-function fmtChange(n) {
-  if (n == null || isNaN(n)) return "--";
-  return (n > 0 ? "+" : "") + Number(n).toFixed(2);
-}
-
-function clsOf(change) {
-  if (change > 0) return "up";
-  if (change < 0) return "down";
-  return "flat";
-}
-
-function fmtTime(ts) {
-  const d = new Date(ts || Date.now());
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return hh + ":" + mm + " 更新";
-}
-
+const market = require("../../utils/market-client");
+const portfolio = require("../../utils/portfolio-client");
+const theme = require("../../utils/theme");
+const cache = require("../../utils/read-cache");
+const fmt = require("../../utils/asset-format");
 Page({
   data: {
-    periods: PERIODS,
-    period: "intraday",
-    au: {
-      priceText: "--",
-      changeText: "--",
-      pctText: "--",
-      openText: "--",
-      highText: "--",
-      lowText: "--",
-      cls: "flat",
-      source: "--"
-    },
-    intl: {
-      usdText: "--",
-      cnyText: "--",
-      premiumText: "--",
-      rateText: "--",
-      source: "--"
-    },
-    updatedAtText: "--",
+    theme: "paper",
+    rows: [],
+    limits: { watchlist: 5 },
+    revision: 0,
+    loading: true,
     errorText: "",
-    candleInfo: null,
-    intradayInfo: null,
-    chartSource: "--"
+    manage: false,
+    busy: false,
+    draggingId: "",
+    dragOffset: 0,
   },
-
   onLoad() {
-    this.bars = [];
-    this.intradayPrevClose = null;
-    this.chart = null;
-    this.timer = null;
-    this.initCanvas().then(() => this.refreshAll());
-    this.timer = setInterval(() => this.loadQuotes(), 60000);
+    this._alive = true;
   },
-
+  async onShow() {
+    this._alive = true;
+    this._visible = true;
+    this.setData({ theme: theme.getTheme() });
+    theme.applyChrome(this.data.theme);
+    this.stopPolling();
+    await this.reload();
+    if (this._visible) this.timer = setInterval(() => this.loadQuotes(), 60000);
+  },
+  onHide() {
+    this.cancelDrag();
+    this._visible = false;
+    this.stopPolling();
+    this._request = (this._request || 0) + 1;
+  },
   onUnload() {
+    this._alive = false;
+    this.onHide();
+  },
+  stopPolling() {
     if (this.timer) clearInterval(this.timer);
+    this.timer = null;
   },
-
-  onPullDownRefresh() {
-    this.refreshAll().finally(() => wx.stopPullDownRefresh());
+  async reload() {
+    if (this._drag || this.data.busy) return;
+    const request = (this._request = (this._request || 0) + 1);
+    try {
+      const state = await portfolio.list();
+      if (!this._alive || request !== this._request || this._drag || this.data.busy) return;
+      this.applyState(state);
+      await this.loadQuotes();
+    } catch (e) {
+      if (this._alive) this.setData({ loading: false });
+    }
   },
-
-  initCanvas() {
-    return new Promise((resolve) => {
-      const q = wx.createSelectorQuery().in(this);
-      q.select("#kline")
-        .fields({ node: true, size: true, rect: true })
-        .exec((res) => {
-          const info = res && res[0];
-          if (!info || !info.node) {
-            resolve();
-            return;
-          }
-          const canvas = info.node;
-          const ctx = canvas.getContext("2d");
-          const dpr = (wx.getWindowInfo && wx.getWindowInfo().windowPixelRatio) || 2;
-          canvas.width = info.width * dpr;
-          canvas.height = info.height * dpr;
-          ctx.scale(dpr, dpr);
-          this.canvasRect = { left: info.left || 0, top: info.top || 0 };
-          this.chart = createKlineChart({
-            canvas,
-            ctx,
-            width: info.width,
-            height: info.height
-          });
-          resolve();
-        });
+  applyState(s) {
+    this._state = s;
+    const previousRows = new Map(this.data.rows.map((row) => [row.id, row]));
+    this.setData({
+      rows: s.items.map((a) => ({
+        ...fmt.quote(previousRows.get(a.id) ||
+          ((cache.forPlatform(wx).read("quote:" + a.id) || {}).quote || {}), a),
+        ...a,
+        activeCount: (s.rules || []).filter(
+          (r) => r.assetId === a.id && r.enabled,
+        ).length,
+      })),
+      limits: s.limits,
+      revision: s.revision,
+      errorText: "",
+      loading: false,
     });
   },
-
-  async refreshAll() {
-    this.setData({ errorText: "" });
-    await Promise.all([this.loadQuotes(), this.loadChart()]);
-    this.setData({ updatedAtText: fmtTime(Date.now()) });
-  },
-
   async loadQuotes() {
-    const settled = await Promise.allSettled([api.getAuQuote(), api.getIntlRef()]);
-    const auRes = settled[0];
-    const intlRes = settled[1];
-    let auPrice = null;
-
-    if (auRes.status === "fulfilled") {
-      const q = auRes.value;
-      auPrice = q.price;
-      this.setData({
-        au: {
-          priceText: fmt(q.price),
-          changeText: fmtChange(q.change),
-          pctText: (q.changePct > 0 ? "+" : "") + fmt(q.changePct) + "%",
-          openText: fmt(q.open),
-          highText: fmt(q.high),
-          lowText: fmt(q.low),
-          cls: clsOf(q.change),
-          source: q.source
-        }
-      });
-    }
-
-    if (intlRes.status === "fulfilled") {
-      const q = intlRes.value;
-      let premiumText = "--";
-      if (auPrice != null && q.cnyPerGram != null) {
-        const gap = auPrice - q.cnyPerGram;
-        premiumText = (gap >= 0 ? "升水 +" : "贴水 ") + fmt(gap, 2) + " 元/克";
-      }
-      this.setData({
-        intl: {
-          usdText: fmt(q.price, 2),
-          cnyText: q.cnyPerGram != null ? fmt(q.cnyPerGram, 2) : "--",
-          premiumText,
-          rateText: q.usdCny ? "汇率 " + Number(q.usdCny).toFixed(4) : "--",
-          source: q.source
-        }
-      });
-    }
-
-    const errs = [];
-    if (auRes.status === "rejected") errs.push("沪金");
-    if (errs.length) {
-      this.setData({ errorText: errs.join("、") + "获取失败，稍后自动重试" });
-    }
-    this.setData({ updatedAtText: fmtTime(Date.now()) });
-  },
-
-  async loadChart() {
-    const { period } = this.data;
+    if (!this._state || !this._state.items.length || this._drag || this.data.busy) return;
+    const request = (this._quoteRequest = (this._quoteRequest || 0) + 1);
+    const revision = this.data.revision;
     try {
-      if (period === "intraday") {
-        const res = await api.getAuIntraday();
-        this.bars = res.points;
-        this.intradayPrevClose = res.prevClose;
-        this.setData({
-          chartSource: res.source + "（含夜盘）",
-          candleInfo: null,
-          intradayInfo: null
-        });
-        if (this.chart) this.chart.renderIntraday(res.points, res.prevClose);
-      } else {
-        const candles = await api.getAuKline(period);
-        this.bars = candles;
-        this.intradayPrevClose = null;
-        this.setData({
-          chartSource: "东方财富",
-          candleInfo: null,
-          intradayInfo: null
-        });
-        if (this.chart) this.chart.render(candles);
-      }
+      const result = await market.quotes(this._state.items.map((a) => a.id));
+      if (
+        !this._visible ||
+        this._drag ||
+        this.data.busy ||
+        request !== this._quoteRequest ||
+        revision !== this.data.revision
+      )
+        return;
+      const quotes = result.quotes || [];
+      this.setData({
+        rows: this.data.rows.map((a) => {
+          const quote = quotes.find((q) => q.assetId === a.id);
+          // Keep the last successful quote until a usable replacement arrives.
+          if (!quote || quote.price == null || !Number.isFinite(Number(quote.price)) || Number(quote.price) <= 0 || quote.status === "unavailable")
+            return { ...a, ...fmt.quote({ ...a, stale: true, cached: true }, a) };
+          return { ...a, ...fmt.quote(quote, a) };
+        }),
+        errorText: "",
+      });
     } catch (e) {
-      this.setData({
-        errorText: period === "intraday" ? "分时数据获取失败，请稍后重试" : "K 线获取失败，请检查网络或稍后重试"
-      });
+      if (!this._visible || request !== this._quoteRequest || revision !== this.data.revision || this._drag || this.data.busy) return;
+      this.setData({ rows: this.data.rows.map(a => ({ ...a, ...fmt.quote({ ...a, stale: true, cached: true }, a) })) });
     }
   },
-
-  openAlert() {
-    wx.navigateTo({ url: "/pages/alert/alert" });
+  onPullDownRefresh() {
+    return this.reload().finally(() => wx.stopPullDownRefresh());
   },
-
-  switchPeriod(e) {
-    const period = e.currentTarget.dataset.period;
-    if (period === this.data.period) return;
-    this.setData({ period, candleInfo: null, intradayInfo: null });
-    this.loadChart();
+  openSearch() {
+    wx.navigateTo({ url: "/pages/search/search" });
   },
-
-  onTouch(e) {
-    if (!this.chart || !this.bars.length) return;
-    const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
-    if (!t) return;
-    const x = t.x != null ? t.x : t.clientX - (this.canvasRect ? this.canvasRect.left : 0);
-    const hit = this.chart.touchAt(x);
-    if (!hit) return;
-
-    if (this.data.period === "intraday") {
-      const base = this.intradayPrevClose;
-      const pct = base ? ((hit.price - base) / base) * 100 : null;
-      this.setData({
-        intradayInfo: {
-          time: hit.time,
-          price: fmt(hit.price),
-          avg: hit.avg != null ? fmt(hit.avg) : "--",
-          pctText: pct != null ? (pct > 0 ? "+" : "") + fmt(pct) + "%" : "--",
-          cls: pct != null ? clsOf(pct) : "flat"
-        },
-        candleInfo: null
+  openDetail(e) {
+    if (!this.data.manage)
+      wx.navigateTo({
+        url:
+          "/pages/detail/detail?assetId=" +
+          encodeURIComponent(e.currentTarget.dataset.id),
       });
-    } else {
-      this.setData({
-        candleInfo: {
-          time: hit.time,
-          o: fmt(hit.o),
-          h: fmt(hit.h),
-          l: fmt(hit.l),
-          c: fmt(hit.c)
-        },
-        intradayInfo: null
-      });
+  },
+  toggleManage() {
+    if (this.data.busy) return;
+    this.cancelDrag();
+    this.setData({ manage: !this.data.manage });
+  },
+  startDrag(e) {
+    if (!this.data.manage || this.data.busy || this._drag || !e.touches.length) return;
+    const id = e.currentTarget.dataset.id;
+    const index = this.data.rows.findIndex(row => row.id === id);
+    if (index < 0) return;
+    const drag = this._drag = {
+      id, index, startY: e.touches[0].clientY,
+      original: this.data.rows.slice(), revision: this.data.revision,
+    };
+    this.setData({ draggingId: id, dragOffset: 0 });
+    wx.createSelectorQuery().selectAll(".list-item").boundingClientRect(rects => {
+      if (this._drag !== drag) return;
+      if (!rects || rects.length !== drag.original.length || !rects[index].height) {
+        this.cancelDrag();
+        return;
+      }
+      drag.height = rects[index].height;
+    }).exec();
+  },
+  dragMove(e) {
+    const drag = this._drag;
+    if (!drag || !drag.height || !e.touches.length) return;
+    const delta = e.touches[0].clientY - drag.startY;
+    const offset = Math.max(-drag.index * drag.height,
+      Math.min((drag.original.length - 1 - drag.index) * drag.height, delta));
+    const target = Math.max(0, Math.min(drag.original.length - 1,
+      drag.index + Math.round(offset / drag.height)));
+    const byId = new Map(this.data.rows.map(row => [row.id, row]));
+    const rows = drag.original.map(row => byId.get(row.id) || row);
+    const [row] = rows.splice(drag.index, 1);
+    rows.splice(target, 0, row);
+    this.setData({ rows, dragOffset: offset - (target - drag.index) * drag.height });
+  },
+  cancelDrag() {
+    const drag = this._drag;
+    this._drag = null;
+    if (!drag) return;
+    const byId = new Map(this.data.rows.map(row => [row.id, row]));
+    this.setData({
+      rows: drag.original.map(row => byId.get(row.id) || row),
+      draggingId: "", dragOffset: 0,
+    });
+  },
+  async endDrag() {
+    const drag = this._drag;
+    if (!drag) return;
+    const ids = this.data.rows.map(row => row.id);
+    this._drag = null;
+    this.setData({ draggingId: "", dragOffset: 0 });
+    if (ids.every((id, i) => id === drag.original[i].id)) return;
+    this.setData({ busy: true });
+    try {
+      this.applyState(await portfolio.reorder(ids, drag.revision));
+    } catch (e) {
+      this.setData({ rows: drag.original, errorText: e.message });
+    } finally {
+      this.setData({ busy: false });
     }
   },
-
-  onTouchEnd() {
-    // 保留最后选中的信息，方便查看
-  }
+  remove(e) {
+    if (this.data.busy || this._drag) return;
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: "删除自选",
+      content: "删除后，该标的的全部通知提醒也将一并删除，重新添加不会恢复。确定删除？",
+      success: async (r) => {
+        if (!r.confirm || this.data.busy) return;
+        this.setData({ busy: true });
+        try {
+          this.applyState(await portfolio.remove(id));
+        } catch (e) {
+          this.setData({ errorText: e.message });
+        } finally {
+          this.setData({ busy: false });
+        }
+      },
+    });
+  },
 });

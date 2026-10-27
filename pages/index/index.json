@@ -1,5 +1,4 @@
 {
-  "navigationBarTitleText": "金价行情",
-  "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
+  "navigationBarTitleText": "自选",
+  "enablePullDownRefresh": true
 }

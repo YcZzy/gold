@@ -1,0 +1,14 @@
+{
+  "subscriptions": { "read": false, "write": false },
+  "preferences": { "read": false, "write": false },
+  "authLogs": { "read": false, "write": false },
+  "sendTasks": { "read": false, "write": false },
+  "quoteSnapshots": { "read": false, "write": false },
+  "portfolios": { "read": false, "write": false },
+  "entitlements": { "read": false, "write": false },
+  "instruments": { "read": false, "write": false },
+  "quoteCache": { "read": false, "write": false },
+  "chartCache": { "read": false, "write": false },
+  "searchCache": { "read": false, "write": false },
+  "sendBudgets": { "read": false, "write": false }
+}

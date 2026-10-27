@@ -1,0 +1,158 @@
+{
+  "checkedAt": "2026-10-27T07:11:52.828Z",
+  "environment": "local-node-readonly",
+  "tests": [
+    {
+      "label": "search:茅",
+      "ok": true,
+      "elapsedMs": 382,
+      "source": "tencent",
+      "count": 1,
+      "expectedAsset": "sh600519"
+    },
+    {
+      "label": "search:gzmt",
+      "ok": true,
+      "elapsedMs": 102,
+      "source": "tencent",
+      "count": 1,
+      "expectedAsset": "sh600519"
+    },
+    {
+      "label": "search:600519",
+      "ok": true,
+      "elapsedMs": 107,
+      "source": "tencent",
+      "count": 1,
+      "expectedAsset": "sh600519"
+    },
+    {
+      "label": "search:平安",
+      "ok": true,
+      "elapsedMs": 112,
+      "source": "tencent",
+      "count": 2,
+      "expectedAsset": "sz000001"
+    },
+    {
+      "label": "search:300750",
+      "ok": true,
+      "elapsedMs": 116,
+      "source": "tencent",
+      "count": 1,
+      "expectedAsset": "sz300750"
+    },
+    {
+      "label": "mixed-batch-quotes",
+      "ok": false,
+      "elapsedMs": 374,
+      "error": "[{\"assetId\":\"gold-au9999\",\"hint\":\"行情暂不可用，请稍后重试\"},{\"assetId\":\"gold-xauusd\",\"hint\":\"行情暂不可用，请稍后重试\"}]"
+    },
+    {
+      "label": "chart:sh600519:intraday",
+      "ok": true,
+      "elapsedMs": 273,
+      "source": "eastmoney",
+      "mode": "intraday",
+      "count": 241,
+      "first": "2026-10-27 09:30",
+      "last": "2026-10-27 15:00",
+      "stale": false
+    },
+    {
+      "label": "chart:sh600519:1mo",
+      "ok": true,
+      "elapsedMs": 454,
+      "source": "tencent",
+      "mode": "candle",
+      "count": 17,
+      "first": "2026-09-28",
+      "last": "2026-10-27",
+      "stale": false
+    },
+    {
+      "label": "chart:sz300750:intraday",
+      "ok": true,
+      "elapsedMs": 248,
+      "source": "eastmoney",
+      "mode": "intraday",
+      "count": 241,
+      "first": "2026-10-27 09:30",
+      "last": "2026-10-27 15:00",
+      "stale": false
+    },
+    {
+      "label": "chart:sz300750:1mo",
+      "ok": true,
+      "elapsedMs": 293,
+      "source": "tencent",
+      "mode": "candle",
+      "count": 17,
+      "first": "2026-09-28",
+      "last": "2026-10-27",
+      "stale": false
+    },
+    {
+      "label": "chart:gold-au9999:intraday",
+      "ok": true,
+      "elapsedMs": 255,
+      "source": "eastmoney",
+      "mode": "intraday",
+      "count": 763,
+      "first": "2026-10-26 20:00",
+      "last": "2026-10-27 15:12",
+      "stale": false
+    },
+    {
+      "label": "chart:gold-au9999:1mo",
+      "ok": false,
+      "elapsedMs": 224,
+      "error": "图表暂不可用，请稍后重试"
+    },
+    {
+      "label": "chart:gold-xauusd:intraday",
+      "ok": true,
+      "elapsedMs": 279,
+      "source": "eastmoney",
+      "mode": "intraday",
+      "count": 553,
+      "first": "2026-10-27 06:00",
+      "last": "2026-10-27 15:12",
+      "stale": false
+    },
+    {
+      "label": "chart:gold-xauusd:1mo",
+      "ok": false,
+      "elapsedMs": 215,
+      "error": "图表暂不可用，请稍后重试"
+    },
+    {
+      "label": "forced-fallback:search",
+      "ok": true,
+      "elapsedMs": 105,
+      "source": "tencent"
+    },
+    {
+      "label": "forced-fallback:quotes",
+      "ok": false,
+      "elapsedMs": 197,
+      "error": "[{\"assetId\":\"sz000001\",\"hint\":\"行情暂不可用，请稍后重试\"},{\"assetId\":\"sh600519\",\"hint\":\"行情暂不可用，请稍后重试\"}]"
+    },
+    {
+      "label": "forced-fallback:chart:intraday",
+      "ok": true,
+      "elapsedMs": 94,
+      "source": "tencent",
+      "count": 249
+    },
+    {
+      "label": "forced-fallback:chart:1mo",
+      "ok": true,
+      "elapsedMs": 206,
+      "source": "tencent",
+      "count": 17
+    }
+  ],
+  "passed": 14,
+  "failed": 4
+}

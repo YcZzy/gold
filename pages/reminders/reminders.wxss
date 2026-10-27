@@ -1,0 +1,12 @@
+@import "../index/index.wxss";
+
+.recent-task {
+  padding: 24rpx 0;
+  border-top: 1rpx solid var(--card-border);
+  font-size: 25rpx;
+  line-height: 1.7;
+}
+.recent-task .muted {
+  margin: 10rpx 0;
+  font-size: 22rpx;
+}

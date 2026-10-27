@@ -1,0 +1,102 @@
+<view class="page detail-page theme-{{theme}}">
+  <view wx:if="{{asset}}" class="hero"
+    ><view class="asset-heading"
+      ><view class="hero-title">{{asset.name}}</view
+      ><view class="hero-sub"
+        >{{asset.code}} · {{asset.market}} · {{asset.unit}}</view
+      ></view
+    ><button
+      class="follow-button {{following ? 'is-following' : ''}}"
+      bindtap="toggleFollow"
+      aria-label="{{busy ? '正在更新自选' : following ? '移除' + asset.name + '自选' : '将' + asset.name + '加入自选'}}"
+      aria-pressed="{{following}}"
+      loading="{{busy}}"
+      disabled="{{busy}}"
+    >
+      <view wx:if="{{!busy}}" class="follow-symbol {{following ? 'follow-check' : 'follow-plus'}}" aria-hidden="true"></view><text>{{busy ? '处理中' : following ? '已自选' : '自选'}}</text>
+    </button></view
+  >
+  <view wx:else class="hero-title">正在识别标的…</view>
+  <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
+  <button wx:if="{{asset}}" class="notice-bar reminder-entry" bindtap="openAlert">
+    <image class="notice-img" src="{{reminderIcon}}" mode="aspectFit" aria-hidden="true" />
+    <text class="reminder-title">设置提醒</text>
+    <text class="notice-text">设置后可自动预警推送，无需打开小程序</text>
+    <view class="chev" aria-hidden="true"></view>
+  </button>
+  <view wx:if="{{quote.price != null}}" class="card card-main"
+    ><view class="price-row"
+      ><view class="card-price {{quote.cls}}">{{quote.priceText}}</view
+      ><button class="refresh-button svg-icon-button" bindtap="refreshMarket" disabled="{{refreshing}}" aria-label="刷新行情和图表">
+        <image class="svg-action-icon" src="/assets/icons/refresh.svg" mode="aspectFit" aria-hidden="true" />
+      </button></view
+    ><view class="card-chg {{quote.cls}}"
+      ><text>{{quote.changeText}}</text
+      ><text wx:if="{{quote.changePct != null}}" class="chg-pill {{quote.cls}}">{{quote.pctText}}</text></view
+    ><view class="card-source"
+      >{{quote.sourceText}} · {{quote.timeText}} · {{quote.statusText}}</view
+    >
+    <view class="stats"
+      ><view wx:if="{{quote.open != null}}"
+        ><text class="micro">今开</text
+        ><view>{{quote.open}}</view></view
+      ><view wx:if="{{quote.high != null}}"
+        ><text class="micro">最高</text
+        ><view>{{quote.high}}</view></view
+      ><view wx:if="{{quote.low != null}}"
+        ><text class="micro">最低</text
+        ><view>{{quote.low}}</view></view
+      ><view wx:if="{{quote.prevClose != null}}"
+        ><text class="micro">昨收</text
+        ><view>{{quote.prevClose}}</view></view
+      ><view wx:if="{{quote.volume != null && quote.volumeText !== '--'}}"
+        ><text class="micro">成交量</text
+        ><view>{{quote.volumeText}}</view></view
+      ><view wx:if="{{quote.amount != null}}"
+        ><text class="micro">成交额</text
+        ><view>{{quote.amountText}}</view></view
+      ></view
+    ></view
+  >
+  <view wx:if="{{intl}}" class="intl-row"
+    ><text class="intl-label">国际参考</text
+    ><text>{{intl.usdText}} 美元/盎司</text
+    ><text>折算 {{intl.cnyText}} 元/克</text
+    ><text>{{intl.source}} · 汇率 {{intl.rateText}}</text></view
+  >
+  <view wx:if="{{asset}}" class="panel"
+    ><view class="tabs"
+      ><button
+        wx:for="{{periods}}"
+        wx:key="value"
+        class="tab {{period === item.value ? 'tab-on' : ''}}"
+        data-period="{{item.value}}"
+        bindtap="switchPeriod"
+      >
+        {{item.label}}
+      </button></view
+    >
+    <view wx:if="{{chartLoading}}" class="foot" role="status">正在更新图表…</view>
+    <view wx:if="{{chartError}}" class="chart-error" role="alert">
+      <text>{{chartError}}</text>
+      <button class="tab chart-retry" bindtap="loadChart" disabled="{{chartLoading}}" aria-label="重新加载图表">重试</button>
+    </view>
+    <view wx:if="{{hasChart}}" class="chart-box"
+      ><canvas
+        type="2d"
+        id="kline"
+        class="kline"
+        bindtouchstart="onTouch"
+        bindtouchmove="onTouch" /></view
+    ><view wx:if="{{hasChart}}" class="legend"
+      ><text wx:if="{{period === 'intraday'}}">价格 / 均价 / 昨收</text
+      ><text wx:else>MA5 / MA10</text><text class="lg-up">涨</text
+      ><text class="lg-down">跌</text><text class="lg-tip">点按查看</text></view
+    ><view wx:if="{{selectedInfo}}" class="ohlc">{{selectedInfo}}</view
+    ><view wx:if="{{hasChart}}" class="foot">{{chartSource}} · {{chartHint}}</view></view
+  >
+  <view class="foot"
+    >公开行情仅供参考，不构成投资建议。后台约每 1
+    分钟监测，提醒可能存在延迟。</view
+  >
+</view>

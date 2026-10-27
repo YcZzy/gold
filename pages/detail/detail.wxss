@@ -1,0 +1,502 @@
+@import "../index/index.wxss";
+.page {
+  padding: 24rpx 28rpx 48rpx;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 4rpx 14rpx;
+}
+
+.hero-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.hero-sub {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--text-sub2);
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.refresh {
+  padding: 12rpx 28rpx;
+  font-size: 24rpx;
+  color: var(--text);
+  background: var(--card);
+  border: 1rpx solid var(--chip-border);
+  border-radius: 28rpx;
+}
+
+/* 刷新：数据卡片右上角的圆形图标按钮（52rpx，紧凑） */
+.card-refresh {
+  width: 52rpx;
+  height: 52rpx;
+  padding: 12rpx;
+  box-sizing: border-box;
+  background: var(--chip-bg);
+  border: 1rpx solid var(--chip-border);
+  border-radius: 26rpx;
+}
+
+.card-refresh-img {
+  width: 100%;
+  height: 100%;
+}
+
+/* 提醒：显眼主按钮（纸感=墨底白字，黑金=金底黑字），高度与图标按钮一致 */
+.alert-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  height: 64rpx;
+  box-sizing: border-box;
+  padding: 0 30rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 64rpx;
+  color: var(--btn-text);
+  background: var(--btn-bg);
+  border-radius: 32rpx;
+  box-shadow: var(--card-main-shadow);
+}
+
+.alert-img {
+  width: 30rpx;
+  height: 30rpx;
+}
+
+/* 提醒引导条：图标 + 文案一体，点击进入提醒设置 */
+.notice-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 4rpx;
+  padding: 16rpx 22rpx;
+  background: var(--chip-bg);
+  border: 1rpx solid var(--chip-border);
+  border-radius: 20rpx;
+}
+
+.notice-img {
+  flex-shrink: 0;
+  width: 30rpx;
+  height: 30rpx;
+}
+
+.notice-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: var(--text-sub);
+}
+
+.page .reminder-entry {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  gap: 8rpx;
+  padding: 16rpx 12rpx;
+  margin: 0 0 20rpx;
+  text-align: left;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.reminder-entry .notice-img {
+  width: 28rpx;
+  height: 28rpx;
+}
+
+.reminder-entry .notice-text {
+  white-space: normal;
+  overflow-wrap: break-word;
+  font-size: 20rpx;
+}
+
+.reminder-title {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.reminder-entry .chev {
+  flex-shrink: 0;
+}
+
+.notice-arrow {
+  flex-shrink: 0;
+  font-size: 28rpx;
+  line-height: 1;
+  color: var(--text-faint);
+}
+
+.theme-icon {
+  width: 64rpx;
+  height: 64rpx;
+  padding: 14rpx;
+  box-sizing: border-box;
+  background: var(--card);
+  border: 1rpx solid var(--chip-border);
+  border-radius: 32rpx;
+}
+
+.error-bar {
+  margin-bottom: 20rpx;
+  padding: 16rpx 22rpx;
+  font-size: 24rpx;
+  color: var(--error-text);
+  background: var(--error-bg);
+  border-radius: 16rpx;
+}
+
+/* 报价卡片 */
+.cards {
+  display: block;
+}
+
+.card {
+  padding: 24rpx 22rpx 20rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: 28rpx;
+}
+
+.card-main {
+  border-color: var(--card-main-border);
+  box-shadow: var(--card-main-shadow);
+}
+
+/* 国际参考行 */
+.intl-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8rpx 18rpx;
+  margin-top: 16rpx;
+  padding: 14rpx 18rpx;
+  font-size: 20rpx;
+  color: var(--text-sub);
+  background: var(--intl-bg);
+  border-radius: 18rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.intl-label {
+  padding: 2rpx 12rpx;
+  font-size: 18rpx;
+  color: var(--accent);
+  border: 1rpx solid var(--accent-border);
+  border-radius: 12rpx;
+}
+
+.intl-item {
+  color: var(--text-mid);
+}
+
+.card-main .card-price {
+  font-size: 62rpx;
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+/* 价格行：大价格 + 刷新按钮（垂直居中） */
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+/* 刷新：价格旁的圆形图标按钮，flex 居中保证图标垂直水平居中 */
+.card-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 56rpx;
+  height: 56rpx;
+  background: var(--chip-bg);
+  border: 1rpx solid var(--chip-border);
+  border-radius: 28rpx;
+}
+
+.card-refresh-img {
+  display: block;
+  width: 28rpx;
+  height: 28rpx;
+}
+
+.card-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.card-unit {
+  font-size: 20rpx;
+  color: var(--text-sub2);
+}
+
+.card-price {
+  margin-top: 0;
+  font-size: 52rpx;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-chg {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.chg-pill {
+  padding: 4rpx 14rpx;
+  font-size: 20rpx;
+  border-radius: 16rpx;
+  background: var(--pill-flat);
+}
+
+.chg-pill.up {
+  background: var(--pill-up);
+}
+
+.chg-pill.down {
+  background: var(--pill-down);
+}
+
+.card-sub {
+  margin-top: 12rpx;
+  font-size: 20rpx;
+  color: var(--text-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-source {
+  margin-top: 10rpx;
+  font-size: 18rpx;
+  color: var(--text-faint);
+}
+
+/* 图表面板 */
+.panel {
+  margin-top: 24rpx;
+  padding: 24rpx 22rpx 26rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: 28rpx;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10rpx;
+}
+
+.tab {
+  flex: 1;
+  min-width: 0;
+  padding: 10rpx 0;
+  font-size: 24rpx;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--text-mid);
+  background: var(--chip-bg);
+  border-radius: 22rpx;
+}
+
+.tab-on {
+  color: var(--tab-on-text);
+  background: var(--tab-on-bg);
+}
+
+.chart-box {
+  margin-top: 20rpx;
+  width: 100%;
+  height: 560rpx;
+}
+
+.kline {
+  width: 100%;
+  height: 100%;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: var(--text-sub);
+}
+
+.lg-ma5 {
+  color: #3e7bd6;
+}
+
+.lg-ma10 {
+  color: #d98f2b;
+}
+
+.lg-up {
+  color: var(--up);
+}
+
+.lg-down {
+  color: var(--down);
+}
+
+.lg-tip {
+  margin-left: auto;
+  color: var(--text-faint);
+}
+
+.ohlc {
+  display: flex;
+  gap: 22rpx;
+  margin-top: 14rpx;
+  padding: 14rpx 18rpx;
+  font-size: 22rpx;
+  color: var(--text-mid);
+  background: var(--ohlc-bg);
+  border-radius: 14rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.foot {
+  margin-top: 18rpx;
+  font-size: 18rpx;
+  line-height: 1.6;
+  color: var(--text-faint);
+}
+.tab {
+  border: 0;
+  line-height: 1.5;
+  margin: 0;
+}
+.stats {
+  padding-top: 24rpx;
+  border-top: 1rpx solid var(--card-border);
+}
+.hero-title {
+  font-size: 40rpx;
+}
+.ohlc {
+  flex-wrap: wrap;
+  line-height: 1.7;
+}
+
+/* Compact watchlist action; override the native default button width. */
+.detail-page .asset-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-page .hero-title {
+  overflow-wrap: break-word;
+}
+
+.detail-page .hero-sub {
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+.detail-page .follow-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  gap: 10rpx;
+  width: auto;
+  min-width: 156rpx;
+  min-height: 72rpx;
+  margin: 0;
+  padding: 14rpx 20rpx;
+  border: 1rpx solid var(--btn-bg);
+  border-radius: 36rpx;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  font-size: 24rpx;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.detail-page .follow-button.is-following {
+  border-color: var(--chip-border);
+  background: transparent;
+  color: var(--text-mid);
+}
+
+.follow-symbol {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 20rpx;
+  height: 20rpx;
+}
+
+.follow-plus::before,
+.follow-plus::after {
+  content: "";
+  position: absolute;
+  top: 9rpx;
+  left: 1rpx;
+  width: 18rpx;
+  height: 2rpx;
+  border-radius: 1rpx;
+  background: currentColor;
+}
+
+.follow-plus::after {
+  transform: rotate(90deg);
+}
+
+.follow-check::before {
+  content: "";
+  position: absolute;
+  top: 3rpx;
+  left: 3rpx;
+  width: 7rpx;
+  height: 12rpx;
+  border-right: 2rpx solid currentColor;
+  border-bottom: 2rpx solid currentColor;
+  transform: rotate(45deg);
+}
+
+.chart-error {
+  margin-top: 20rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: var(--text-sub);
+}
+.chart-retry {
+  width: 140rpx;
+  margin-top: 16rpx;
+  min-height: 72rpx;
+}

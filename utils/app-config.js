@@ -25,10 +25,13 @@ module.exports = {
   strategy: {
     briefTime: "15:40", // 每日简报（沪金收盘后）
     briefDays: [1, 2, 3, 4, 5], // 周一至周五
-    maxPerDay: 3, // 每日推送总上限：简报 1 + 沪金异动 1 + 伦敦金异动 1
+    maxPerDay: 6, // 常规六类各 1 条；到价四类另各 1 条，不占常规上限
     maxBriefPerDay: 1,
     maxVolPerDay: 1, // 每个品种各 1 条/日
     volatilityPct: 1.5, // 异动阈值：较昨收涨跌幅 %
+    scheduledTime: "09:00",
+    shortWindowMinutes: 15,
+    shortPct: 1,
     dndStart: "23:00", // 免打扰开始
     dndEnd: "07:30" // 免打扰结束
   }

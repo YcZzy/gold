@@ -1,88 +1,122 @@
-<view class="page">
+<view class="page theme-{{theme}}">
   <view class="hero">
     <view>
       <view class="hero-title">提醒设置</view>
-      <view class="hero-sub">订阅消息按「次」授权 · 关闭小程序也能收到提醒</view>
+      <view class="hero-sub">订阅消息按次授权 · 关闭小程序也能收到提醒</view>
     </view>
-    <view class="refresh" bindtap="refreshStatus">刷新</view>
+    <button class="refresh svg-icon-button" bindtap="refreshStatus" aria-label="刷新提醒状态"><image class="svg-action-icon" src="/assets/icons/refresh.svg" mode="aspectFit" aria-hidden="true" /></button>
   </view>
 
-  <!-- 授权攒次数 -->
   <view class="panel">
     <view class="panel-title">推送次数</view>
-    <view class="quota-row">
-      <view class="quota-item">
-        <view class="quota-num">{{quota.brief}}</view>
-        <view class="quota-label">每日简报</view>
-      </view>
-      <view class="quota-item">
-        <view class="quota-num">{{quota.vol}}</view>
-        <view class="quota-label">异动预警</view>
-      </view>
+    <view wx:if="{{hasStatus}}" class="quota-row">
+      <view class="quota-item"><view class="quota-num">{{quota.brief}}</view><view class="quota-label">简报 / 定时播报</view></view>
+      <view class="quota-item"><view class="quota-num">{{quota.vol}}</view><view class="quota-label">到价 / 波动预警</view></view>
     </view>
     <button class="auth-btn" bindtap="onAuthTap">点击增加推送次数</button>
-    <view class="hint">每点一次弹一次授权框，同意哪个模板就给哪个 +1 次；单模板上限 200 次，用完再点即可。</view>
+    <view class="hint">每次授权，同意的模板增加 1 次。共用现有两个模板，同组提醒共享次数；每个模板上限 {{quotaCap}} 次。</view>
   </view>
 
-  <!-- 提醒开关 -->
+  <view class="save-error" wx:if="{{saveError}}">
+    <text>修改已保留</text>
+    <button class="retry-btn" bindtap="doSave">重试保存</button>
+  </view>
+
   <view class="panel">
-    <view class="panel-title">提醒内容</view>
-
-    <view class="row">
-      <view class="row-main">
-        <view class="row-name">每日收盘简报</view>
-        <view class="row-desc">工作日 15:40 · 沪金收盘价与涨跌幅</view>
+    <view class="panel-title">目标价提醒</view>
+    <view class="panel-desc">跌至或涨至目标价后提醒，成功发送一次后自动关闭；再次开启可重新布防，每条规则每天最多成功发送一次。</view>
+    <view class="target-rule" wx:for="{{targetRules}}" wx:key="key">
+      <view class="row">
+        <view class="row-main"><view class="row-name">{{item.label}}</view><view class="row-desc">{{item.unit}}</view></view>
+        <switch checked="{{prefs[item.key]}}" aria-label="{{item.label}}开关" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" data-key="{{item.key}}" bindchange="onSwitch" />
       </view>
-      <switch checked="{{prefs.dailyBrief}}" color="#2c2c2a" data-key="dailyBrief" bindchange="onSwitch" />
+      <view class="price-field">
+        <input type="digit" value="{{priceDrafts[item.key]}}" placeholder="输入目标价" aria-label="{{item.label}}目标价，{{item.unit}}" maxlength="12" data-key="{{item.key}}" bindinput="onTargetDraft" bindblur="onTargetPrice" />
+        <text>{{item.unit}}</text>
+      </view>
+      <view class="field-error" wx:if="{{priceErrors[item.key]}}">{{priceErrors[item.key]}}</view>
     </view>
+    <view class="hint">目标价输入完成并离开输入框后保存；请先填写有效价格再开启。后台约每 1 分钟检查，达标后同轮发送；行情与微信送达仍可能延迟，可能错过间隔内短暂触价。</view>
+  </view>
 
+  <view class="panel">
+    <view class="panel-title">简报与定时播报</view>
     <view class="row">
-      <view class="row-main">
-        <view class="row-name">沪金波动异动</view>
-        <view class="row-desc">较昨收涨跌 ≥ 1.5% 时提醒 · 同方向当日 1 条</view>
-      </view>
-      <switch checked="{{prefs.volatilityAu}}" color="#2c2c2a" data-key="volatilityAu" bindchange="onSwitch" />
+      <view class="row-main"><view class="row-name">每日收盘简报</view><view class="row-desc">工作日 15:40 · 沪金收盘价与涨跌幅</view></view>
+      <switch checked="{{prefs.dailyBrief}}" aria-label="每日收盘简报开关" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" data-key="dailyBrief" bindchange="onSwitch" />
     </view>
-
     <view class="row">
-      <view class="row-main">
-        <view class="row-name">伦敦金波动异动</view>
-        <view class="row-desc">覆盖夜盘与周末 · 同方向当日 1 条</view>
-      </view>
-      <switch checked="{{prefs.volatilityXau}}" color="#2c2c2a" data-key="volatilityXau" bindchange="onSwitch" />
+      <view class="row-main"><view class="row-name">定时金价播报</view><view class="row-desc">按所选时间播报沪金价格与涨跌幅</view></view>
+      <switch checked="{{prefs.scheduledBrief}}" aria-label="定时金价播报开关" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" data-key="scheduledBrief" bindchange="onSwitch" />
+    </view>
+    <view class="row">
+      <view class="row-name">播报时间</view>
+      <picker mode="time" value="{{prefs.scheduledTime}}" bindchange="onScheduledTime" aria-label="选择定时播报时间"><view class="dnd-time"><text class="picker-value">{{prefs.scheduledTime}}</text><view class="picker-arrow-slot" aria-hidden="true"><view class="picker-chevron"></view></view></view></picker>
+    </view>
+    <view class="row">
+      <view class="row-main"><view class="row-name">仅工作日播报</view><view class="row-desc">{{prefs.scheduledWeekdaysOnly ? '周一至周五' : '每天，包含周末'}}</view></view>
+      <switch checked="{{prefs.scheduledWeekdaysOnly}}" aria-label="定时播报仅工作日" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" data-key="scheduledWeekdaysOnly" bindchange="onSwitch" />
+    </view>
+    <view class="hint">北京时间。到点后首次分钟扫描触发，并在同轮发送；行情与微信送达仍可能延迟。</view>
+  </view>
+
+  <view class="panel">
+    <view class="panel-title">日内波动预警</view>
+    <view class="row">
+      <view class="row-main"><view class="row-name">沪金日内波动</view><view class="row-desc">较昨收涨跌达到所选幅度时提醒</view></view>
+      <switch checked="{{prefs.volatilityAu}}" aria-label="沪金日内波动预警开关" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" data-key="volatilityAu" bindchange="onSwitch" />
+    </view>
+    <view class="row">
+      <view class="row-main"><view class="row-name">伦敦金日内波动</view><view class="row-desc">覆盖有有效报价的夜盘与周末</view></view>
+      <switch checked="{{prefs.volatilityXau}}" aria-label="伦敦金日内波动预警开关" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" data-key="volatilityXau" bindchange="onSwitch" />
+    </view>
+    <view class="row">
+      <view class="row-name">涨跌幅阈值</view>
+      <picker range="{{pctOptions}}" value="{{volatilityPctIndex}}" data-key="volatilityPct" bindchange="onPctChange" aria-label="选择日内涨跌幅阈值"><view class="dnd-time"><text class="picker-value">{{prefs.volatilityPct}}%</text><view class="picker-arrow-slot" aria-hidden="true"><view class="picker-chevron"></view></view></view></picker>
     </view>
   </view>
 
-  <!-- 免打扰 -->
+  <view class="panel">
+    <view class="panel-title">短时急涨急跌</view>
+    <view class="panel-desc">比较约 15 分钟前的有效报价，首次开启或报价恢复后需约 15 分钟积累数据。</view>
+    <view class="row">
+      <view class="row-name">沪金短时急变</view>
+      <switch checked="{{prefs.shortAu}}" aria-label="沪金短时急变预警开关" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" data-key="shortAu" bindchange="onSwitch" />
+    </view>
+    <view class="row">
+      <view class="row-name">伦敦金短时急变</view>
+      <switch checked="{{prefs.shortXau}}" aria-label="伦敦金短时急变预警开关" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" data-key="shortXau" bindchange="onSwitch" />
+    </view>
+    <view class="row">
+      <view class="row-name">15 分钟涨跌幅阈值</view>
+      <picker range="{{pctOptions}}" value="{{shortPctIndex}}" data-key="shortPct" bindchange="onPctChange" aria-label="选择短时涨跌幅阈值"><view class="dnd-time"><text class="picker-value">{{prefs.shortPct}}%</text><view class="picker-arrow-slot" aria-hidden="true"><view class="picker-chevron"></view></view></view></picker>
+    </view>
+    <view class="hint">约每 1 分钟检查一次，达标后同轮发送，可能错过扫描间隔内的短暂变化。</view>
+  </view>
+
   <view class="panel">
     <view class="panel-title">免打扰</view>
-    <view class="row">
-      <view class="row-main">
-        <view class="row-name">免打扰时段</view>
-        <view class="row-desc">期间到点的提醒顺延到结束时间后合并发送</view>
-      </view>
+    <view class="row dnd-row">
+      <view class="row-main"><view class="row-name">免打扰时段</view><view class="row-desc">时效内顺延，过期预警不补发</view></view>
       <view class="dnd">
-        <picker mode="time" value="{{prefs.dndStart}}" bindchange="onDndStart">
-          <view class="dnd-time">{{prefs.dndStart}}</view>
-        </picker>
+        <picker mode="time" value="{{prefs.dndStart}}" bindchange="onDndStart" aria-label="免打扰开始时间"><view class="dnd-time"><text class="picker-value">{{prefs.dndStart}}</text></view></picker>
         <text class="dnd-sep">至</text>
-        <picker mode="time" value="{{prefs.dndEnd}}" bindchange="onDndEnd">
-          <view class="dnd-time">{{prefs.dndEnd}}</view>
-        </picker>
+        <picker mode="time" value="{{prefs.dndEnd}}" bindchange="onDndEnd" aria-label="免打扰结束时间"><view class="dnd-time"><text class="picker-value">{{prefs.dndEnd}}</text></view></picker>
       </view>
     </view>
-    <view class="hint">全天合计最多 3 条：简报 1 条 + 每类异动 1 条。</view>
+    <view class="hint">每日简报、定时播报、两个市场的日内波动及短时急变，共 6 类，每类每天最多 1 条。4 条目标价规则单独计数，每条每天最多 1 条；所有提醒仍受共享授权次数限制。</view>
   </view>
 
-  <!-- 最近推送 -->
   <view class="panel" wx:if="{{recent.length}}">
     <view class="panel-title">最近推送</view>
-    <view class="task" wx:for="{{recent}}" wx:key="taskId">
-      <text class="task-type">{{item.typeText}}</text>
-      <text class="task-status {{item.status}}">{{item.statusText}}</text>
-      <text class="task-time">{{item.timeText}}</text>
+    <view class="task-item" wx:for="{{recent}}" wx:key="taskId">
+      <view class="task">
+        <text class="task-type">{{item.typeText}}</text>
+        <text class="task-status {{item.status}}">{{item.statusText}}</text>
+        <text class="task-time">{{item.timeText}}</text>
+      </view>
+      <view class="task-reason" wx:if="{{item.reasonText}}">{{item.reasonText}}</view>
     </view>
   </view>
-
   <view class="foot">开通提醒即表示同意接收与金价相关的订阅通知，可随时关闭。</view>
 </view>

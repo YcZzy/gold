@@ -1,0 +1,67 @@
+<view class="page search-page theme-{{theme}}">
+  <view class="hero-title">添加自选</view
+  ><view class="hero-sub">搜索中文名称、代码或拼音首字母</view>
+  <view class="search-box"
+    ><view class="search-symbol" aria-hidden="true"></view><input
+      class="search-input"
+      value="{{keyword}}"
+      placeholder="例如：茅台、600519"
+      placeholder-class="search-placeholder"
+      focus
+      confirm-type="search"
+      bindinput="onInput"
+      bindconfirm="onConfirm"
+      bindcompositionstart="onCompositionStart"
+      bindcompositionend="onCompositionEnd"
+      aria-label="搜索股票或黄金"
+    /><button class="search-submit" bindtap="onConfirm">搜索</button></view
+  >
+  <view wx:if="{{!keyword && history.length}}" class="history-section"
+    ><view class="section-title">最近搜索</view
+    ><view class="chips"
+      ><button
+        wx:for="{{history}}"
+        wx:key="*this"
+        class="history-chip"
+        data-keyword="{{item}}"
+        bindtap="useHistory"
+      >
+        {{item}}
+      </button></view
+    ></view
+  >
+  <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
+  <view wx:if="{{loading}}" class="empty" role="status">正在搜索…</view>
+  <view wx:elif="{{searched && !results.length && !errorText}}" class="empty"
+    ><view class="empty-title">没有找到相关标的</view
+    ><view class="muted">试试完整代码，或缩短关键词。</view></view
+  >
+  <view wx:if="{{results.length}}" class="results-heading"><text>搜索结果</text><text class="results-count">{{results.length}} 个</text></view>
+  <view class="list"
+    ><view
+      wx:for="{{results}}"
+      wx:key="id"
+      class="search-result"
+      data-id="{{item.id}}"
+      bindtap="preview"
+      role="button"
+      aria-label="预览{{item.name}}"
+      ><view class="asset-name"
+        ><view class="name">{{item.name}}</view
+        ><view class="code"
+          >{{item.code}} · {{item.market}} · {{item.unit}}</view
+        ></view
+      ><button
+        class="result-add {{item.added ? 'is-added' : ''}}"
+        data-id="{{item.id}}"
+        catchtap="addAsset"
+        loading="{{adding === item.id}}"
+        disabled="{{adding || item.added}}"
+        aria-label="{{item.added ? item.name + '已加入自选' : '添加' + item.name + '到自选'}}"
+      >
+        <view wx:if="{{adding !== item.id}}" class="result-symbol {{item.added ? 'result-check' : 'icon-plus sm'}}" aria-hidden="true"></view><text>{{adding === item.id ? '加入中' : item.added ? '已自选' : '自选'}}</text>
+      </button></view
+    ></view
+  >
+  <view class="foot">点按结果查看行情，点「自选」加入列表。</view>
+</view>
