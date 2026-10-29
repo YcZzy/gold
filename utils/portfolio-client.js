@@ -34,7 +34,7 @@ function createClient(platform) {
       saved = saved || (platform && platform.getStorageSync(CACHE_KEY));
     } catch (ignore) {}
     return saved && Array.isArray(saved.items)
-      ? JSON.parse(JSON.stringify({ ...saved, annotations: saved.annotations || {} })) : null;
+      ? JSON.parse(JSON.stringify({ ...saved, annotations: saved.annotations || {}, groups:saved.groups || [] })) : null;
   }
   async function call(action, payload) {
     try {
@@ -58,6 +58,7 @@ function createClient(platform) {
           Number.isFinite(result.revision) && result.revision < lastGood.revision)
         return lastGood;
       result.annotations = result.annotations || {};
+      result.groups = result.groups || [];
       lastGood = result;
       const cache = require("./read-cache").forPlatform(platform);
       for (const asset of result.items || []) cache.write("asset:" + asset.id, asset);
@@ -92,6 +93,7 @@ function createClient(platform) {
         return Object.assign({}, fallback, {
           ok: true,
           annotations: fallback.annotations || {},
+          groups: fallback.groups || [],
           offline: true,
           hint: "当前离线，显示上次保存的自选；联网后可修改",
         });
@@ -111,6 +113,9 @@ function createClient(platform) {
     saveAnnotation: (assetId, note, tags, revision) =>
       call("saveAnnotation", { assetId, note, tags, revision }),
     deleteRule: (ruleId) => call("deleteRule", { ruleId }),
+    saveGroup: (group, revision) => call('saveGroup', {group,revision}),
+    deleteGroup: (groupId, revision) => call('deleteGroup', {groupId,revision}),
+    batchAdd: (assetIds, revision, entries, groupSettings) => call('batchAdd', {assetIds,revision,...(entries ? {entries} : {}),...(groupSettings ? {groupSettings} : {})}),
   };
 }
 const client = createClient(typeof wx !== "undefined" ? wx : null);

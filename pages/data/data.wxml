@@ -1,0 +1,41 @@
+<page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
+<view class="page theme-{{theme}} {{display.quiet ? 'quiet-mode' : ''}}">
+  <view class="hero-title">自选与数据管理</view><view class="muted">分组、设备显示偏好与个人备份</view>
+  <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
+  <view wx:if="{{notice}}" class="notice" role="status">{{notice}}</view>
+  <view wx:if="{{offline}}" class="notice">当前离线，显示已有缓存；联网后可修改和导出。</view>
+  <view class="card"><view class="heading"><text>自选分组</text><button bindtap="editGroup" data-id="" disabled="{{busy || offline}}">新建分组</button></view>
+    <view wx:if="{{!groups.length}}" class="muted">暂无分组，可按关注目的建立最多 10 个分组。</view>
+    <view wx:for="{{groups}}" wx:key="id" class="group-row"><view><text>{{item.name}}</text><view class="muted">{{item.assetIds.length}} 个标的</view></view><view class="actions"><button data-id="{{item.id}}" bindtap="editGroup" disabled="{{busy || offline}}">编辑</button><button data-id="{{item.id}}" bindtap="deleteGroup" disabled="{{busy || offline}}">删除</button></view></view>
+    <view wx:if="{{groupEditing}}" class="editor">
+      <label for="group-name">分组名称（最多 16 字）</label><input id="group-name" value="{{groupDraft.name}}" bindinput="onGroupName" maxlength="32" disabled="{{busy}}" aria-label="分组名称" />
+      <view class="field-label">包含标的</view><checkbox-group bindchange="onGroupMembers"><label wx:for="{{memberOptions}}" wx:key="id" class="member"><checkbox value="{{item.id}}" checked="{{item.checked}}" disabled="{{busy}}" />{{item.name}} · {{item.code}}</label></checkbox-group>
+      <picker range="{{sortOptions}}" value="{{sortIndex}}" bindchange="onGroupSort" disabled="{{busy}}" aria-label="组内排序"><view class="picker">组内排序：{{sortOptions[sortIndex]}}</view></picker>
+      <view class="setting"><text>降序排列</text><switch checked="{{groupDraft.sortDirection === 'desc'}}" bindchange="onGroupDirection" disabled="{{busy}}" aria-label="分组降序排列" /></view>
+      <view class="actions"><button class="primary" bindtap="saveGroup" disabled="{{busy}}" loading="{{busy}}">保存分组</button><button bindtap="cancelGroup" disabled="{{busy}}">取消</button></view>
+    </view>
+  </view>
+  <view class="card"><view class="heading">设备显示偏好</view>
+    <view class="setting"><text>低调灰阶模式</text><switch data-key="quiet" checked="{{display.quiet}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="低调灰阶模式" /></view>
+    <view class="setting"><text>紧凑列表</text><switch data-key="compact" checked="{{display.compact}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="紧凑列表" /></view>
+    <view class="setting"><text>隐藏持仓金额</text><switch data-key="hideAmounts" checked="{{display.hideAmounts}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="隐藏持仓金额" /></view>
+    <view class="setting"><text>显示涨跌额</text><switch data-key="showChange" checked="{{display.showChange}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="显示涨跌额" /></view>
+    <view class="setting"><text>显示报价时间</text><switch data-key="showTime" checked="{{display.showTime}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="显示报价时间" /></view>
+    <view class="setting"><text>显示备注与标签</text><switch data-key="showNotes" checked="{{display.showNotes}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="显示备注与标签" /></view>
+  </view>
+  <view class="card"><view class="heading">批量导入自选</view><view class="muted">支持代码文本、版本化 JSON 备份或 CSV。一次最多 30 个，现有自选名额仍适用。</view>
+    <label for="import-content">待导入内容</label><textarea id="import-content" value="{{raw}}" bindinput="onImportInput" maxlength="-1" disabled="{{busy}}" placeholder="例如 sh600519, sz159915, usAAPL" aria-label="待导入代码、JSON 或 CSV" />
+    <view class="actions"><button bindtap="chooseFile" disabled="{{busy}}">选择文件</button><button class="primary" bindtap="previewImport" disabled="{{busy || offline}}" loading="{{busy}}">识别并预览</button></view>
+    <view wx:for="{{preview}}" wx:key="index" wx:for-index="rowIndex" class="preview-row">
+      <view>{{item.keyword}} <text wx:if="{{item.assetId}}">→ {{item.name}} · {{item.assetId}}</text></view><view wx:if="{{item.error}}" class="error-text">{{item.error}}</view>
+      <view wx:if="{{item.candidates.length > 1}}" class="actions"><button wx:for="{{item.candidates}}" wx:for-item="candidate" wx:for-index="candidateIndex" wx:key="id" data-row="{{rowIndex}}" data-index="{{candidateIndex}}" bindtap="selectCandidate" aria-pressed="{{item.assetId === candidate.id}}">{{candidate.name}} · {{candidate.market}}</button></view>
+      <button data-row="{{rowIndex}}" bindtap="removeImportRow" disabled="{{busy}}">移除此条</button>
+    </view>
+    <view wx:if="{{pendingGroupCount}}" class="muted">包含 {{pendingGroupCount}} 个分组及其排序设置；同名已有分组保留现有设置。</view>
+    <button wx:if="{{preview.length || pendingGroupCount}}" class="primary" bindtap="commitImport" disabled="{{busy || offline}}">确认导入 {{preview.length}} 条及 {{pendingGroupCount}} 个分组</button>
+  </view>
+  <view class="card"><view class="heading">导出自选备份</view><view class="muted">包含自选标识、备注、标签与分组，不包含授权次数和消息记录。已有备注导入时保留。</view>
+    <view class="actions"><button data-format="json" bindtap="makeExport" disabled="{{offline}}">生成 JSON</button><button data-format="csv" bindtap="makeExport" disabled="{{offline}}">生成 CSV</button></view>
+    <block wx:if="{{exportText}}"><textarea class="export" value="{{exportText}}" disabled maxlength="-1" aria-label="生成的备份内容" /><view class="actions"><button bindtap="copyExport">复制内容</button><button bindtap="saveExport">生成文件</button><button wx:if="{{exportPath}}" bindtap="shareExport">分享导出文件</button></view></block>
+  </view>
+</view>

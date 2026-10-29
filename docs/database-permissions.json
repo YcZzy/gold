@@ -10,5 +10,6 @@
   "quoteCache": { "read": false, "write": false },
   "chartCache": { "read": false, "write": false },
   "searchCache": { "read": false, "write": false },
-  "sendBudgets": { "read": false, "write": false }
+  "sendBudgets": { "read": false, "write": false },
+  "investmentLedgers": { "read": false, "write": false }
 }

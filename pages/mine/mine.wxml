@@ -56,6 +56,12 @@
     <view wx:if="{{busy}}" class="helper" role="status">正在保存免打扰时间…</view>
   </view>
 
+  <view class="section-label">看盘工具</view>
+  <view class="mine-card">
+    <button class="service-action" data-target="market" bindtap="openWorkspace"><view class="action-copy"><view class="action-title">行情发现</view><view class="action-description">指数、板块、成分股与市场榜单</view></view><view class="chevron" aria-hidden="true"></view></button>
+    <button class="service-action" data-target="holdings" bindtap="openWorkspace"><view class="action-copy"><view class="action-title">我的持仓</view><view class="action-description">手工交易、现金和分币种盈亏</view></view><view class="chevron" aria-hidden="true"></view></button>
+    <button class="service-action" data-target="data" bindtap="openWorkspace"><view class="action-copy"><view class="action-title">分组、显示与备份</view><view class="action-description">分组排序、低调模式、导入导出</view></view><view class="chevron" aria-hidden="true"></view></button>
+  </view>
   <view class="section-label">通知与服务</view>
   <view class="mine-card diagnostic-card">
     <view class="section-title">自助检测</view>

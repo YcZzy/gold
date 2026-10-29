@@ -1207,8 +1207,10 @@ function createService(options = {}) {
       throw Error("搜索服务暂不可用，请稍后重试");
     }
   }
+  const discovery = require("./discovery").createDiscovery({ request: fetch, now, get, set, resolve });
   async function handle(event = {}) {
     try {
+      if (event.action === "discovery") return await discovery.handle(event);
       if (event.action === "resolve")
         return { ok: true, asset: await resolve(event.assetId, true) };
       if (event.action === "search") return await search(event.keyword);
@@ -1232,7 +1234,9 @@ function createService(options = {}) {
       return {
         ok: false,
         err: "market-data-unavailable",
-        hint: e.message || "行情服务暂不可用",
+        hint: event.action === 'discovery' && /socket|ECONN|ETIMEDOUT|timeout|certificate|ENOTFOUND|TLS|HTTP/i.test(e.message || '')
+          ? '数据源连接暂不可用，请稍后重试；其他行情功能可继续使用'
+          : e.message || "行情服务暂不可用",
       };
     }
   }

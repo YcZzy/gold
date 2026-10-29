@@ -528,3 +528,13 @@
 .saved-note { color: var(--text); white-space: pre-wrap; overflow-wrap: break-word; font-size: 26rpx; line-height: 1.8; }
 .saved-tags { display: flex; flex-wrap: wrap; gap: 10rpx; margin-top: 14rpx; }
 .saved-tag { padding: 4rpx 12rpx; color: var(--text-mid); background: var(--ohlc-bg); border-radius: 8rpx; font-size: 22rpx; line-height: 1.6; }
+
+.granularity-control, .chart-navigation { display: flex; flex-wrap: wrap; gap: 12rpx; align-items: center; margin: 20rpx 0; }
+.chart-navigation .feature-option { flex: 1; min-width: 100rpx; padding: 0 10rpx; font-size: 22rpx; }
+.chart-navigation button[disabled] { opacity: .4; }
+.quiet-mode .up, .quiet-mode .down, .quiet-mode .lg-up, .quiet-mode .lg-down { color: var(--text-secondary, #77736b); }
+.book-table { margin-top:18rpx; }
+.book-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20rpx; padding:12rpx 0; border-bottom:1rpx solid var(--card-border); font-size:22rpx; line-height:1.7; font-variant-numeric:tabular-nums; }
+.book-row > view { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6rpx; }
+.book-heading { color:var(--text-mid); }
+.flow-row { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12rpx; padding:14rpx 0; border-bottom:1rpx solid var(--card-border); font-size:24rpx; line-height:1.7; font-variant-numeric:tabular-nums; }

@@ -129,3 +129,6 @@ page {
 .flat {
   color: var(--flat);
 }
+/* User-selected quiet palette retains signed values, with no red/green emphasis. */
+.quiet-mode { --up: var(--text-mid); --down: var(--text-mid); --pill-up: var(--chip-bg); --pill-down: var(--chip-bg); }
+.quiet-mode .up, .quiet-mode .down, .quiet-mode .lg-up, .quiet-mode .lg-down { color: var(--text-mid); }

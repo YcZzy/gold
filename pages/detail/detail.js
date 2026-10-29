@@ -6,9 +6,18 @@ const theme = require("../../utils/theme");
 const fmt = require("../../utils/asset-format");
 const { createKlineChart } = require("../../utils/candle-chart");
 const features = require("../../utils/chart-features");
+const discovery = require('../../utils/discovery-client');
+const display = require("../../utils/display-preferences");
 Page({
   data: {
     theme: theme.getTheme(),
+    quiet: false,
+    chartInteraction: "inspect",
+    bollEnabledDraft: false,
+    volumeMaEnabledDraft: false,
+    granularityOptions: [{value:"day",label:"日K"},{value:"week",label:"周K"},{value:"month",label:"月K"}],
+    canOlder: false, canNewer: false, canZoomIn: false, canZoomOut: false,
+    partialHint: "",
     reminderIcon: theme.ICON_BELL_GOLD,
     asset: null,
     quote: fmt.quote(),
@@ -54,9 +63,17 @@ Page({
     intl: null,
     intlError: "",
     busy: false,
+    extraMode: '',
+    extraBusy: false,
+    extraError: '',
+    extraSource: '',
+    extraTime: '',
+    extraCached: false,
+    bookRows: [],
+    flowRows: [],
   },
   onLoad(options) {
-    this.setData({ theme: theme.getTheme() });
+    this.setData({ theme: theme.getTheme(), quiet: display.get().quiet });
     theme.applyChrome(this.data.theme);
     this.assetId = options.assetId;
     this._alive = true;
@@ -72,24 +89,26 @@ Page({
   async onShow() {
     this._visible = true;
     this.restoreIndicators();
-    this.setData({ theme: theme.getTheme() });
+    this.setData({ theme: theme.getTheme(), quiet: display.get().quiet });
     theme.applyChrome(this.data.theme);
-    if (this.chart) this.chart.setColors(theme.chartColors(this.data.theme));
+    if (this.chart) this.chart.setColors(display.colors(theme.chartColors(this.data.theme)));
     this.stopPolling();
     this.restorePortfolio();
     await this.reload();
     if (this._visible) this.timer = setInterval(() => this.refreshMarket(), 60000);
   },
   onReady() {
-    this.initCanvas().then(() => this.redrawChart());
+    this.queueChartRender();
   },
   onHide() {
+    this._extraRequest = (this._extraRequest || 0) + 1;
     this._visible = false;
+    this._canvasEpoch = (this._canvasEpoch || 0) + 1;
     this._portfolioRequest = (this._portfolioRequest || 0) + 1;
     this._portfolioPending = null;
     this._refreshRequest = (this._refreshRequest || 0) + 1;
     this._intlRequest = (this._intlRequest || 0) + 1;
-    this.setData({ refreshing: false, chartLoading: false });
+    this.setData({ refreshing: false, chartLoading: false, extraBusy:false });
     this.stopPolling();
     this._quoteRequest = (this._quoteRequest || 0) + 1;
     this._chartRequest = (this._chartRequest || 0) + 1;
@@ -123,7 +142,7 @@ Page({
     const request = (this._refreshRequest = (this._refreshRequest || 0) + 1);
     this.setData({ refreshing: true });
     try {
-      await Promise.all([this.loadQuote(), this.loadChart(), this.loadIntl()]);
+      await Promise.all([this.loadQuote(), this.loadChart(), this.loadIntl(), this.loadExtra()]);
     } finally {
       if (this._alive && request === this._refreshRequest) this.setData({ refreshing: false });
     }
@@ -147,6 +166,39 @@ Page({
     } catch (e) {
       // Preserve the last international reference, including its exchange rate.
     }
+  },
+  async chooseExtra(e) {
+    const mode=e.currentTarget.dataset.mode;
+    if(!['orderbook','flow'].includes(mode)||!this._visible)return;
+    const asset=this.data.asset;
+    if(!asset || asset.kind!=='stock' || !['SH','SZ'].includes(asset.market))return;
+    if(mode===this.data.extraMode){this._extraRequest=(this._extraRequest||0)+1;this.setData({extraMode:'',extraBusy:false,extraError:''});return;}
+    this.setData({extraMode:mode,extraError:'',extraSource:'',extraTime:'',extraCached:false,
+      ...(mode==='orderbook'?{bookRows:[]}:{flowRows:[]})});
+    await this.loadExtra();
+  },
+  async loadExtra() {
+    const mode=this.data.extraMode;
+    if(!mode || !this._visible || !this.data.asset)return;
+    const request=this._extraRequest=(this._extraRequest||0)+1;
+    this.setData({extraBusy:true,extraError:''});
+    try{
+      const result=await discovery[mode](this.assetId);
+      if(!this._alive || !this._visible || request!==this._extraRequest || mode!==this.data.extraMode)return;
+      const precision=this.data.asset.precision ?? 2;
+      const patch={extraSource:fmt.sourceName(result.source),extraTime:fmt.time(result.sourceTime),extraCached:!!(result.cached||result.stale)};
+      if(mode==='orderbook')patch.bookRows=Array.from({length:5},(_,i)=>({depth:i+1,
+        bidPrice:fmt.number(result.bids?.[i]?.price,precision),bidVolume:fmt.number(result.bids?.[i]?.volume,0),
+        askPrice:fmt.number(result.asks?.[i]?.price,precision),askVolume:fmt.number(result.asks?.[i]?.volume,0)}));
+      else patch.flowRows=[['main','主力净额'],['superLarge','超大单'],['large','大单'],['medium','中单'],['small','小单']].map(([key,label])=>{
+        const value=result.flow?.[key];let amount='--';
+        if(typeof value==='number'&&Number.isFinite(value))amount=Math.abs(value)>=1e8?fmt.number(value/1e8)+' 亿元':Math.abs(value)>=1e4?fmt.number(value/1e4)+' 万元':fmt.number(value)+' 元';
+        const pct=result.flow?.[key+'Pct'];
+        return{key,label,amount,pctText:typeof pct==='number'&&Number.isFinite(pct)?fmt.signed(pct)+'%':'--'};
+      });
+      this.setData(patch);
+    }catch(error){if(this._alive&&this._visible&&request===this._extraRequest)this.setData({extraError:error.message||'数据暂不可用，请稍后重试',extraCached:true});}
+    finally{if(this._alive&&this._visible&&request===this._extraRequest)this.setData({extraBusy:false});}
   },
   restorePortfolio() {
     const saved = portfolio.getCached && portfolio.getCached();
@@ -228,14 +280,18 @@ Page({
   toggleIndicatorEditor() {
     const settings = this.data.indicatorSettings;
     this.setData({ indicatorEditing: !this.data.indicatorEditing, maDraft: settings.maPeriods.join(','),
+      bollEnabledDraft: settings.bollEnabled, volumeMaEnabledDraft: settings.volumeMaEnabled,
       maEnabledDraft: settings.maEnabled, subIndicatorDraft: settings.subIndicator, indicatorError: "" });
   },
   onMaInput(e) { this.setData({ maDraft: e.detail.value, indicatorError: "" }); },
+  onBollToggle(e) { this.setData({ bollEnabledDraft: e.detail.value }); },
+  onVolumeMaToggle(e) { this.setData({ volumeMaEnabledDraft: e.detail.value }); },
   onMaToggle(e) { this.setData({ maEnabledDraft: e.detail.value }); },
   selectSubIndicator(e) { this.setData({ subIndicatorDraft: e.currentTarget.dataset.value }); },
   saveIndicators() {
     try {
       const settings = features.parseSettings({ maText: this.data.maDraft,
+        granularity: this.data.indicatorSettings.granularity, bollEnabled: this.data.bollEnabledDraft, volumeMaEnabled: this.data.volumeMaEnabledDraft,
         maEnabled: this.data.maEnabledDraft, subIndicator: this.data.subIndicatorDraft });
       let notice = "设置已保存到本设备";
       try { wx.setStorageSync(features.STORAGE_KEY, settings); }
@@ -247,7 +303,7 @@ Page({
   },
   refreshTargets() {
     const period = this._displayPeriod || this.data.period;
-    const range = features.chartRange(this.bars || [], period === 'intraday' ? 'intraday' : 'candle', this.intradayPrevClose);
+    const range = features.chartRange(this.visibleBars || this.bars || [], period === 'intraday' ? 'intraday' : 'candle', this.intradayPrevClose);
     const priceTargets = features.targets(this.data.rules, { ...this.data.asset, id: this.assetId }, this.data.quote.price, range);
     this.setData({ priceTargets });
     if (this.chart && this.chart.setTargets) this.chart.setTargets(priceTargets);
@@ -321,8 +377,10 @@ Page({
         throw Error("图表数据为空");
       }
       // Provider cumulative volumes and unknown units cannot be plotted as per-bar volume.
-      this.bars = c.volumeUnit === null ? bars.map(bar => ({ ...bar, v: null })) : bars;
+      this.bars = c.volumeUnit == null ? bars.map(bar => ({ ...bar, v: null })) : bars;
+      if (this._displayPeriod !== period) this.viewport = {};
       this._displayPeriod = period;
+      this.chartTimezone = c.timezone;
       this.intradayPrevClose = c.prevClose;
       this.setData({
         hasChart: true,
@@ -333,12 +391,7 @@ Page({
         chartHint: (cached ? "缓存图表 · " : "") +
           (c.coverage && c.coverage.status === 'unverified' ? '历史数据可能不完整 · ' : '') + fmt.time(c.sourceTime),
       });
-      if (!this.chart && wx.nextTick) {
-        wx.nextTick(() => {
-          if (!this.chart) this.initCanvas().then(() => this.redrawChart());
-          else this.redrawChart();
-        });
-      } else this.redrawChart();
+      this.queueChartRender(n);
     } catch (e) {
       if (!this._alive || n !== this._chartRequest) return;
       this.setData({
@@ -351,14 +404,26 @@ Page({
       if (this._alive && n === this._chartRequest) this.setData({ chartLoading: false });
     }
   },
-  initCanvas() {
+  queueChartRender(request = this._chartRequest) {
+    const epoch = this._canvasEpoch || 0;
+    const active = () => this._alive && this._visible && epoch === (this._canvasEpoch || 0) && request === this._chartRequest;
+    const render = () => {
+      if (!active()) return;
+      if (this.chart) this.redrawChart();
+      else this.initCanvas(request, epoch).then(() => { if (active()) this.redrawChart(); });
+    };
+    if (!this.chart && wx.nextTick) wx.nextTick(render);
+    else render();
+  },
+  initCanvas(request = this._chartRequest, epoch = this._canvasEpoch || 0) {
+    if (!this._alive || !this._visible) return Promise.resolve();
     return new Promise((resolve) => {
       const q = wx.createSelectorQuery().in(this);
       q.select("#kline")
         .fields({ node: true, size: true, rect: true })
         .exec((res) => {
           const i = res && res[0];
-          if (i && i.node && this._alive) {
+          if (i && i.node && this._alive && this._visible && request === this._chartRequest && epoch === (this._canvasEpoch || 0)) {
             const canvas = i.node;
             const ctx = canvas.getContext("2d");
             const dpr =
@@ -372,7 +437,7 @@ Page({
               ctx,
               width: i.width,
               height: i.height,
-              colors: theme.chartColors(this.data.theme),
+              colors: display.colors(theme.chartColors(this.data.theme)),
             });
           }
           resolve();
@@ -380,15 +445,35 @@ Page({
     });
   },
   redrawChart() {
-    this.refreshTargets();
+    if (!this._alive || !this._visible) return;
     const period = this._displayPeriod || this.data.period;
     const settings = this.data.indicatorSettings;
-    this.macdRows = features.macd(period === 'intraday' ? [] : this.bars || []);
+    let history = this.bars || [];
+    if (period !== 'intraday') {
+      const today = this.exchangeToday();
+      history = features.aggregateCandles(history, settings.granularity, today);
+      this.chartViewport = features.chartView(history, settings, this.viewport);
+      this.viewport = { count: this.chartViewport.count, offset: this.chartViewport.offset };
+      this.visibleBars = this.chartViewport.bars;
+      this.macdRows = this.chartViewport.indicators.macd;
+    } else { this.visibleBars = history; this.macdRows = []; }
+    const visible = this.visibleBars;
+    const partial = visible.filter(b => b.partial);
+    this.setData({
+      canOlder: !!this.chartViewport && period !== 'intraday' && this.chartViewport.start > 0,
+      canNewer: !!this.chartViewport && period !== 'intraday' && this.chartViewport.offset > 0,
+      canZoomIn: visible.length > 10,
+      canZoomOut: visible.length < history.length,
+      chartRangeText: visible.length ? (visible[0].startTime || visible[0].time) + ' 至 ' + (visible[visible.length - 1].endTime || visible[visible.length - 1].time) : '',
+      partialHint: [visible.some(b=>b.startIncomplete) ? '首根周/月 K 的区间起点可能被截断，仅汇总实际取得日期；其完整性未知，指标亦受此影响。' : '',
+        visible.some(b=>b.endIncomplete) ? '当前周/月尚未结束；末根 K 线仅汇总已取得的交易日。' : ''].filter(Boolean).join(' '),
+    });
+    this.refreshTargets();
     const last = this.macdRows[this.macdRows.length - 1];
     this.setData({
       chartPeriod: period,
       macdSummary: last ? this.formatMacd(last) : "",
-      indicatorHint: period !== 'intraday' && settings.subIndicator === 'macd' && this.macdRows.length < 26
+      indicatorHint: period !== 'intraday' && settings.subIndicator === 'macd' && history.length < 26
         ? "当前不足 26 根 K 线，MACD 基于已加载数据计算，建议切换更长区间。" : "",
     });
     if (!this.chart) return;
@@ -396,8 +481,66 @@ Page({
     if (this.chart.setPrecision) this.chart.setPrecision(this.data.asset && this.data.asset.precision);
     if (period === "intraday")
       this.chart.renderIntraday(this.bars || [], this.intradayPrevClose);
-    else this.chart.render(this.bars || []);
+    else this.chart.render(this.visibleBars || [], undefined, this.chartViewport.indicators);
   },
+  exchangeToday() {
+    // Endpoint candles already carry exchange-local YYYY-MM-DD dates. Only "today" needs zone conversion.
+    try {
+      const zone = this.chartTimezone || (this.data.asset && this.data.asset.market === 'US' ? 'America/New_York' : 'Asia/Shanghai');
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+      const value = key => parts.find(p => p.type === key).value;
+      return value('year') + '-' + value('month') + '-' + value('day');
+    } catch (ignore) { return new Date().toISOString().slice(0, 10); }
+  },
+  switchGranularity(e) {
+    const granularity = e.currentTarget.dataset.value;
+    try {
+      const settings = features.parseSettings({ ...this.data.indicatorSettings, granularity });
+      this.applyIndicators(settings); this.viewport = {};
+      try { wx.setStorageSync(features.STORAGE_KEY, settings); }
+      catch (ignore) { this.setData({ indicatorNotice: '粒度本次已生效，设备保存失败' }); }
+      this.redrawChart();
+    } catch (error) { this.setData({ indicatorError: error.message }); }
+  },
+  zoomChart(e) {
+    if (!this.chartViewport || (this._displayPeriod || this.data.period) === 'intraday') return;
+    const factor = e.currentTarget.dataset.direction === 'in' ? 0.65 : 1.6;
+    this.viewport = { count: Math.max(10, Math.round(this.chartViewport.count * factor)), offset: this.chartViewport.offset };
+    this.setData({ selectedInfo: '' }); this.redrawChart();
+  },
+  panChart(e) {
+    if (!this.chartViewport || (this._displayPeriod || this.data.period) === 'intraday') return;
+    const delta = Math.max(1, Math.round(this.chartViewport.count / 2));
+    this.viewport = { count: this.chartViewport.count, offset: this.chartViewport.offset + (e.currentTarget.dataset.direction === 'older' ? delta : -delta) };
+    this.setData({ selectedInfo: '' }); this.redrawChart();
+  },
+  latestChart() {
+    this.viewport = { ...(this.viewport || {}), offset: 0 };
+    this.setData({ selectedInfo: '' }); this.redrawChart();
+  },
+  selectChartInteraction(e) {
+    const value = e.currentTarget.dataset.value;
+    if (!['inspect', 'pan'].includes(value)) return;
+    this.setData({ chartInteraction: value });
+  },
+  onChartTouchStart(e) {
+    const t = (e.touches || [])[0];
+    this._touchStartX = t && (t.x == null ? t.clientX : t.x);
+    // Freeze the mode until this finger lifts; switching controls cannot steal an active gesture.
+    this._gestureMode = (this._displayPeriod || this.data.period) === 'intraday' ? 'inspect' : this.data.chartInteraction;
+    if (this._gestureMode === 'inspect') this.onTouch(e);
+  },
+  onChartTouchMove(e) {
+    if (this._gestureMode === 'inspect') { this.onTouch(e); return; }
+    if (this._gestureMode !== 'pan') return;
+    const t = (e.touches || [])[0];
+    const x = t && (t.x == null ? t.clientX : t.x);
+    if (Number.isFinite(x) && Number.isFinite(this._touchStartX) && Math.abs(x - this._touchStartX) > 45) {
+      this.panChart({ currentTarget: { dataset: { direction: x > this._touchStartX ? 'older' : 'newer' } } });
+      this._touchStartX = x;
+    }
+  },
+  onChartTouchEnd() { this._touchStartX = null; this._gestureMode = null; },
   formatMacd(row) {
     return `DIF ${fmt.number(row.dif, 3)} · DEA ${fmt.number(row.dea, 3)} · MACD ${fmt.number(row.histogram, 3)}`;
   },
@@ -418,12 +561,12 @@ Page({
     const precision = this.data.asset && this.data.asset.precision != null ? this.data.asset.precision : 2;
     const period = this._displayPeriod || this.data.period;
     this.setData({
-      ...(period !== 'intraday' && this.macdRows && this.macdRows[this.bars.indexOf(hit)]
-        ? { macdSummary: this.formatMacd(this.macdRows[this.bars.indexOf(hit)]) } : {}),
+      ...(period !== 'intraday' && this.macdRows && this.macdRows[(this.visibleBars || this.bars).indexOf(hit)]
+        ? { macdSummary: this.formatMacd(this.macdRows[(this.visibleBars || this.bars).indexOf(hit)]) } : {}),
       selectedInfo:
         period === "intraday"
           ? `${hit.time} · 价 ${fmt.number(hit.price, precision)} · 均 ${fmt.number(hit.avg, precision)}`
-          : `${hit.time} · 开 ${fmt.number(hit.o, precision)} 高 ${fmt.number(hit.h, precision)} 低 ${fmt.number(hit.l, precision)} 收 ${fmt.number(hit.c, precision)}`,
+          : `${hit.startTime || hit.time}${hit.endTime ? ' 至 ' + hit.endTime : ''}${hit.partial ? '（部分周期）' : ''} · 开 ${fmt.number(hit.o, precision)} 高 ${fmt.number(hit.h, precision)} 低 ${fmt.number(hit.l, precision)} 收 ${fmt.number(hit.c, precision)}`,
     });
   },
   async follow() {

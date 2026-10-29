@@ -6,7 +6,10 @@
     "pages/search/search",
     "pages/detail/detail",
     "pages/asset-alert/asset-alert",
-    "pages/alert/alert"
+    "pages/alert/alert",
+    "pages/data/data",
+    "pages/holdings/holdings",
+    "pages/market/market"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FAF8F3",

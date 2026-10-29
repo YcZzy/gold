@@ -94,6 +94,10 @@ Page({
       ),
     });
   },
+  openWorkspace(e) {
+    const target=e.currentTarget.dataset.target;
+    if(['market','holdings','data'].includes(target))wx.navigateTo({url:'/pages/'+target+'/'+target});
+  },
   async saveDnd(e) {
     if (this.data.busy) return;
     const key = e.currentTarget.dataset.key;

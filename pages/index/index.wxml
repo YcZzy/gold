@@ -1,5 +1,5 @@
 <page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
-<view class="page home-page tab-page theme-{{theme}}">
+<view class="page home-page tab-page theme-{{theme}} {{display.quiet ? 'quiet-mode' : ''}} {{display.compact ? 'compact-mode' : ''}}">
   <view class="home-header">
     <view class="home-heading">
       <view class="hero-title">我的自选</view>
@@ -8,6 +8,15 @@
     <button class="home-add glass-control" hover-class="glass-control-pressed" bindtap="openSearch" aria-label="搜索并添加自选">
       <view class="icon-plus" aria-hidden="true"></view><text>添加</text>
     </button>
+  </view>
+  <view class="workspace-shortcuts"><button data-target="market" bindtap="openWorkspace">行情发现</button><button data-target="holdings" bindtap="openWorkspace">我的持仓</button><button data-target="data" bindtap="openWorkspace">分组与备份</button></view>
+  <view class="group-chips"><button class="{{!view.groupId ? 'selected' : ''}}" data-id="" bindtap="chooseGroup" aria-pressed="{{!view.groupId}}">全部</button><button wx:for="{{groups}}" wx:key="id" class="{{view.groupId === item.id ? 'selected' : ''}}" data-id="{{item.id}}" bindtap="chooseGroup" aria-pressed="{{view.groupId === item.id}}">{{item.name}}</button></view>
+  <view wx:if="{{rows.length && !manage}}" class="workspace-toolbar"><picker range="{{sortOptions}}" value="{{sortIndex}}" bindchange="changeSort" disabled="{{busy}}" aria-label="自选排序"><view>{{sortOptions[sortIndex]}}</view></picker><button bindtap="toggleFilters" aria-expanded="{{filterOpen}}" aria-controls="watch-filter">{{filterOpen ? '收起筛选' : '筛选自选'}}</button></view>
+  <view wx:if="{{filterOpen && !manage}}" id="watch-filter" class="watch-filter">
+    <view class="filter-pickers"><picker range="{{markets}}" value="{{marketIndex}}" bindchange="setMarket" aria-label="选择市场"><view>{{markets[marketIndex]}}</view></picker><picker range="{{kinds}}" value="{{kindIndex}}" bindchange="setKind" aria-label="选择标的类型"><view>{{kinds[kindIndex]}}</view></picker></view>
+    <label for="watch-query">名称、代码、备注或标签</label><input id="watch-query" data-key="query" value="{{view.query}}" bindinput="setCondition" aria-label="在自选中搜索名称代码备注标签" />
+    <view class="filter-inputs"><view><label for="min-price">最低价格</label><input id="min-price" type="digit" data-key="minPrice" value="{{view.minPrice}}" bindinput="setCondition" /></view><view><label for="max-price">最高价格</label><input id="max-price" type="digit" data-key="maxPrice" value="{{view.maxPrice}}" bindinput="setCondition" /></view><view><label for="min-pct">最低涨跌幅 %</label><input id="min-pct" data-key="minPct" value="{{view.minPct}}" bindinput="setCondition" /></view><view><label for="max-pct">最高涨跌幅 %</label><input id="max-pct" data-key="maxPct" value="{{view.maxPct}}" bindinput="setCondition" /></view></view>
+    <view class="filter-help">仅筛选当前自选的已取得行情，缺少数据的标的不参与数值条件；各币种价格不换汇。</view><button bindtap="resetConditions">重置筛选</button>
   </view>
 
   <view class="watchlist-card {{manage ? 'is-editing' : ''}}">
@@ -23,9 +32,10 @@
       <view class="muted">把关注的股票、ETF 或黄金加入列表，随时查看行情。</view>
       <button class="home-empty-add" hover-class="home-pressed" bindtap="openSearch">搜索并添加</button>
     </view>
-    <view wx:if="{{manage && rows.length}}" class="manage-hint">拖动左侧手柄排序，松手自动保存</view>
+    <view wx:if="{{manage && rows.length}}" class="manage-hint">管理模式显示全部自选。拖动左侧手柄调整总顺序，松手自动保存；分组成员和排序在「分组与备份」设置。</view>
+    <view wx:if="{{rows.length && !visibleRows.length && !manage}}" class="empty"><view class="empty-title">没有符合条件的自选</view><button bindtap="resetConditions">重置筛选</button></view>
     <view class="list {{manage ? 'managing' : ''}}">
-      <view wx:for="{{rows}}" wx:key="id"
+      <view wx:for="{{visibleRows}}" wx:key="id"
         class="list-item {{draggingId === item.id ? 'dragging' : ''}}"
         style="{{draggingId === item.id ? 'transform: translateY(' + dragOffset + 'px);' : ''}}">
         <view wx:if="{{manage}}" class="manage-row">
@@ -58,13 +68,13 @@
             ><view class="quote-value">{{item.priceText || '--'}}</view
             ><view class="quote-status">{{item.statusText || '待获取'}}</view></view
           ><view class="change-col"
-            ><text class="change-pill {{item.changePct > 0 ? 'up' : item.changePct < 0 ? 'down' : 'flat'}}">{{item.pctText || '--'}}</text><view class="change-amount {{item.cls}}" aria-label="涨跌额 {{item.changeText}}">{{item.changeText || '--'}}</view></view
+            ><text class="change-pill {{item.changePct > 0 ? 'up' : item.changePct < 0 ? 'down' : 'flat'}}">{{item.pctText || '--'}}</text><view wx:if="{{display.showChange}}" class="change-amount {{item.cls}}" aria-label="涨跌额 {{item.changeText}}">{{item.changeText || '--'}}</view></view
           >
-          <view wx:if="{{item.note || item.tags.length}}" class="watch-annotation">
+          <view wx:if="{{display.showNotes && (item.note || item.tags.length)}}" class="watch-annotation">
             <text wx:if="{{item.note}}" class="watch-note">{{item.note}}</text>
             <view wx:if="{{item.tags.length}}" class="watch-tags"><text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="watch-tag">{{tag}}</text></view>
           </view>
-          <view class="quote-time">报价 {{item.timeText}}</view>
+          <view wx:if="{{display.showTime}}" class="quote-time">报价 {{item.timeText}}</view>
         </button>
 
       </view>

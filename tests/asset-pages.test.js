@@ -17,12 +17,15 @@ function load(file, clients = {}) {
     cloud: { callFunction: async () => ({ result: { ok: true } }) },
     stopPullDownRefresh() {},
     createSelectorQuery: () => ({
+      in() { return this; },
+      select() { this.canvas = true; return this; },
+      fields() { return this; },
       selectAll() { return this; },
       boundingClientRect(callback) {
         this.callback = callback;
         return this;
       },
-      exec() { this.callback(page.data.rows.map((_, i) => ({ top: i * 80, height: 80 }))); },
+      exec(callback) { if (this.canvas) { callback([]); return; } this.callback(page.data.rows.map((_, i) => ({ top: i * 80, height: 80 }))); },
     }),
   };
   const theme = {
@@ -38,7 +41,7 @@ function load(file, clients = {}) {
     {
       Page: (x) => (page = x),
       require: (p) =>
-        p.includes("market-client")
+        p.includes("display-preferences") ? { get: () => ({quiet:false}), colors: base => base } : p.includes("market-client")
           ? clients.market
           : p.includes("portfolio-client")
             ? clients.portfolio || {}
@@ -74,6 +77,7 @@ function load(file, clients = {}) {
   );
   page.data = JSON.parse(JSON.stringify(page.data));
   page.setData = (patch) => Object.assign(page.data, patch);
+  page._visible = true;
   return { page, timers, routes, wx };
 }
 const a = {
@@ -1072,4 +1076,77 @@ test('removing a followed asset applies returned state without a second list rou
   assert.equal(page.data.followingReady, true);
   assert.equal(page.data.rules.length, 0);
   assert.equal(lists, 0);
+});
+
+test('history granularity, viewport navigation and new local indicator settings use visible ranges',()=>{
+ const {page,wx}=load('pages/detail/detail.js'); page.onLoad({assetId:a.id}); page._visible=true;
+ page.data.asset=a; page._displayPeriod='1y'; page.data.period='1y';
+ page.bars=Array.from({length:80},(_,i)=>({time:new Date(Date.UTC(2026,0,i+1)).toISOString().slice(0,10),o:i+1,h:i+2,l:i+.5,c:i+1,v:20}));
+ page.redrawChart(); page.zoomChart({currentTarget:{dataset:{direction:'in'}}});
+ assert.ok(page.visibleBars.length<80); const latest=page.visibleBars.at(-1).time;
+ page.panChart({currentTarget:{dataset:{direction:'older'}}}); assert.ok(page.visibleBars.at(-1).time<latest);
+ page.latestChart(); assert.equal(page.visibleBars.at(-1).time,latest);
+ page.switchGranularity({currentTarget:{dataset:{value:'week'}}}); assert.ok(page.visibleBars.length<20);
+ assert.match(page.data.chartRangeText,/至/); assert.equal(page.data.indicatorSettings.granularity,'week');
+ page.toggleIndicatorEditor(); page.onBollToggle({detail:{value:true}}); page.onVolumeMaToggle({detail:{value:true}}); page.saveIndicators();
+ assert.equal(page.data.indicatorSettings.bollEnabled,true); assert.equal(page.data.indicatorSettings.volumeMaEnabled,true);
+});
+
+test('history target summaries follow visible candles and inspect/pan gestures never compete',()=>{
+ const {page}=load('pages/detail/detail.js'); page.onLoad({assetId:a.id}); page.data.asset=a;
+ page._displayPeriod='1y'; page.data.period='1y'; page.data.quote.price=80;
+ page.data.rules=[{id:'old',assetId:a.id,type:'priceBelow',value:10,enabled:true}];
+ page.bars=Array.from({length:80},(_,i)=>({time:new Date(Date.UTC(2026,0,i+1)).toISOString().slice(0,10),o:i+1,h:i+2,l:i+.5,c:i+1,v:20}));
+ page.redrawChart(); page.zoomChart({currentTarget:{dataset:{direction:'in'}}});
+ assert.equal(page.data.priceTargets[0].inRange,false);
+ page.panChart({currentTarget:{dataset:{direction:'older'}}});
+ assert.equal(page.data.priceTargets[0].inRange,true);
+ let taps=0; page.chart={render(){},touchAt(){taps++;return page.visibleBars[0]}};
+ page.onChartTouchStart({touches:[{x:100}]}); assert.equal(taps,1); assert.match(page.data.selectedInfo,/开/);
+ const oldOffset=page.chartViewport.offset;
+ page.onChartTouchMove({touches:[{x:40}]}); page.onChartTouchMove({touches:[{x:220}]});
+ assert.equal(page.chartViewport.offset,oldOffset); assert.equal(taps,3);
+ page.onChartTouchEnd(); page.selectChartInteraction({currentTarget:{dataset:{value:'pan'}}});
+ page.onChartTouchStart({touches:[{x:100}]}); page.onChartTouchMove({touches:[{x:40}]});
+ assert.ok(page.chartViewport.offset<oldOffset); assert.equal(taps,3);
+ page.onChartTouchEnd(); page.selectChartInteraction({currentTarget:{dataset:{value:'inspect'}}});
+ page.onChartTouchStart({touches:[{x:100}]}); assert.equal(taps,4);
+});
+test('late history responses cannot overwrite newer range data or a hidden page',async()=>{
+ const requests=[];const {page}=load('pages/detail/detail.js',{market:{chart:()=>new Promise(resolve=>requests.push(resolve))}});
+ page.onLoad({assetId:a.id}); page._visible=true; page.data.period='1mo';
+ const old=page.loadChart(); page.data.period='1y';const recent=page.loadChart();
+ requests[1]({chart:{candles:[{time:'2026-10-28',o:2,h:3,l:1,c:2}],volumeUnit:null}}); await recent;
+ requests[0]({chart:{candles:[{time:'2025-10-28',o:9,h:10,l:8,c:9}]}}); await old;
+ assert.equal(page.bars[0].c,2);
+ const hidden=page.loadChart(); page.onHide(); requests[2]({chart:{candles:[{time:'2026-10-28',c:8}]}}); await hidden;
+ assert.equal(page.bars[0].c,2);assert.equal(page.timer,null);
+});
+
+
+test('omitted volume units also hide amounts instead of inferring their meaning',async()=>{
+ const {page}=load('pages/detail/detail.js',{market:{chart:async()=>({chart:{points:[{time:'10:00',price:4,v:12}]}})}});
+ page.onLoad({assetId:a.id});page._visible=true;await page.loadChart();assert.equal(page.bars[0].v,null);
+});
+
+
+test('deferred onReady canvas initialization cannot redraw after the page hides',async()=>{
+ const {page}=load('pages/detail/detail.js');page.onLoad({assetId:a.id});
+ let finish;page.initCanvas=()=>new Promise(resolve=>{finish=resolve});
+ let renders=0;page.redrawChart=()=>{renders++};page.onReady();
+ page.onHide();finish();await Promise.resolve();await Promise.resolve();assert.equal(renders,0);
+});
+test('queued canvas work ignores hidden or superseded chart requests',async()=>{
+ const {page,wx}=load('pages/detail/detail.js',{market:{chart:async()=>({chart:{points:[{time:'10:00',price:4}]}})}});
+ page.onLoad({assetId:a.id});const queued=[];wx.nextTick=callback=>queued.push(callback);
+ let initialized=0,renders=0;page.initCanvas=async()=>{initialized++};page.redrawChart=()=>{renders++};
+ await page.loadChart();const old=queued.shift();await page.loadChart();old();await Promise.resolve();assert.equal(initialized,0);
+ page.onHide();queued.shift()();await Promise.resolve();assert.equal(initialized,0);assert.equal(renders,0);
+});
+test('selector callbacks after hiding cannot create canvases or mutate chart state',async()=>{
+ const {page,wx}=load('pages/detail/detail.js');page.onLoad({assetId:a.id});let finish;
+ wx.createSelectorQuery=()=>({in(){return this},select(){return this},fields(){return this},exec(fn){finish=fn}});
+ const work=page.initCanvas();page.onHide();let contexts=0;
+ finish([{node:{getContext(){contexts++;return {scale(){}}}},width:350,height:300}]);await work;
+ assert.equal(contexts,0);assert.equal(page.chart,undefined);
 });

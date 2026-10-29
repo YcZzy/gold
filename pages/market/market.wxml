@@ -1,0 +1,46 @@
+<page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
+<view class="page market-page theme-{{theme}} {{quiet ? 'quiet-mode' : ''}}">
+  <view class="heading"><view><view class="eyebrow">MARKET / 看盘发现</view><view class="title">市场脉络</view></view><button class="text-button" bindtap="toggleIndexEditor" aria-expanded="{{indexEditing}}">关注指数</button></view>
+  <view class="section-caption">主要指数<text>点位 · 独立于股票自选</text></view>
+  <view wx:if="{{indexEditing}}" class="panel index-editor">
+    <view class="panel-title">本设备关注的指数</view>
+    <checkbox-group bindchange="onIndexChoice" aria-label="选择关注指数">
+      <label wx:for="{{indexOptions}}" wx:key="id" class="choice"><checkbox value="{{item.id}}" checked="{{item.checked}}" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" />{{item.name}}</label>
+    </checkbox-group>
+    <view class="hint">指数仅用于观察，不创建股票资产或提醒；可全部取消。</view><button class="primary" bindtap="saveIndexChoices">保存选择</button>
+  </view>
+  <view class="index-grid">
+    <view wx:for="{{indices}}" wx:key="id" class="index-card"><view class="index-name">{{item.name}}</view><view class="index-price {{item.cls}}">{{item.priceText}}</view><view class="index-change {{item.cls}}">{{item.pctText}}</view><view class="index-time">{{item.timeText}}</view><view class="index-time">腾讯财经 · {{item.statusText}}</view></view>
+  </view>
+  <view wx:if="{{!indexLoading && !indices.length && !indexError}}" class="empty">尚未选择关注指数，点击右上角选择。</view>
+  <view class="module-status"><text wx:if="{{indexLoading}}" role="status">指数正在更新…</text><text wx:else>{{indexNotice}}</text><button class="text-button" bindtap="loadIndices" disabled="{{indexLoading}}" aria-label="刷新主要指数">刷新指数</button></view>
+  <view wx:if="{{indexError}}" class="error" role="alert">{{indexError}}<button class="text-button" bindtap="loadIndices" disabled="{{indexLoading}}">重试指数</button></view>
+  <view class="section-tabs" role="group" aria-label="发现榜单类型"><button wx:for="{{sections}}" wx:key="value" class="tab {{section === item.value ? 'selected' : ''}}" bindtap="switchSection" data-value="{{item.value}}" aria-pressed="{{section === item.value}}">{{item.label}}</button></view>
+  <view wx:if="{{selectedSector}}" class="member-heading"><button class="text-button" bindtap="closeSector">← 返回板块</button><text>{{selectedSector.name}}</text></view>
+  <view wx:if="{{section === 'ranking' || selectedSector}}" class="sort-tabs" role="group" aria-label="个股排序"><button wx:for="{{rankSorts}}" wx:key="value" class="sort {{sort === item.value ? 'sort-on' : ''}}" bindtap="selectSort" data-value="{{item.value}}" aria-pressed="{{sort === item.value}}">{{item.label}}</button></view>
+  <view wx:if="{{(section === 'industry' || section === 'concept') && !selectedSector}}" class="sector-tools">
+    <label class="field-label" for="sector-search">搜索{{section === 'industry' ? '行业' : '概念'}}</label>
+    <view class="search-row"><input id="sector-search" value="{{keyword}}" bindinput="onKeywordInput" bindconfirm="searchSectors" maxlength="40" confirm-type="search" placeholder="输入板块名称或代码" aria-label="板块搜索" /><button class="search-button" bindtap="searchSectors">搜索</button></view>
+    <label class="field-label" for="sector-sort">板块排序</label><picker id="sector-sort" mode="selector" range="{{sectorSortLabels}}" value="{{sectorSortIndex}}" bindchange="onSectorSort" aria-label="选择板块排序"><view class="picker-value">{{sectorSortLabels[sectorSortIndex]}} ▾</view></picker>
+  </view>
+  <view class="list-heading"><view class="panel-title">{{listTitle}}</view><button class="text-button" bindtap="loadList" disabled="{{listLoading}}" aria-label="刷新当前榜单">刷新榜单</button></view>
+  <view wx:if="{{listLoading}}" class="hint" role="status">正在更新榜单…</view>
+  <view wx:if="{{listError}}" class="error" role="alert">{{listError}}<button class="text-button" bindtap="loadList" disabled="{{listLoading}}">重试榜单</button></view>
+  <view wx:if="{{!listLoading && !rows.length && !listError}}" class="empty">暂无符合条件的数据，可修改搜索或排序后重试。</view>
+  <view class="market-list">
+    <view wx:for="{{rows}}" wx:key="key" class="market-row">
+      <block wx:if="{{isSector}}">
+        <button class="sector-row" bindtap="openSector" data-id="{{item.id}}" data-name="{{item.name}}" aria-label="查看{{item.name}}成员"><view><view class="row-name">{{item.name}}</view><view class="row-meta">供应商成员 {{item.count == null ? '--' : item.count}} · {{item.id}}</view><view class="row-meta">领涨 {{item.leaderName || '--'}}</view></view><view class="row-numbers"><view class="{{item.cls}}">{{item.pctText}}</view><view class="row-meta">{{item.amountText}}</view><view class="row-meta">成员 →</view></view></button>
+      </block>
+      <block wx:else>
+        <view class="security-row"><button class="asset-button" bindtap="openAsset" data-id="{{item.assetId}}" aria-label="查看{{item.name}}行情详情"><view class="row-name">{{item.name || item.asset.name}}</view><view class="row-meta">{{item.assetId}}<text wx:if="{{item.clock}}"> · 源时刻 {{item.clock}}（日期未确认）</text></view></button><view class="row-numbers"><view class="{{item.cls}}">{{isFlow ? item.flowText : item.pctText}}</view><view class="row-meta">{{isFlow ? '主力净额估算' : '现价 ' + item.priceText}}</view><view wx:if="{{!isFlow}}" class="row-meta">成交额 {{item.amountText}}</view></view></view>
+        <view wx:if="{{isFlow && item.sourceTimeText}}" class="row-meta">行情来源 {{item.sourceTimeText}}</view>
+        <view class="row-footer"><text wx:if="{{!item.canAdd}}" class="hint">暂无有效报价，仅保留成员身份</text><button wx:if="{{followingMap[item.assetId]}}" class="add-button" disabled>已自选</button><button wx:else class="add-button" bindtap="addAsset" data-id="{{item.assetId}}" disabled="{{!!rowBusy || !item.canAdd}}" loading="{{rowBusy === item.assetId}}" aria-label="将{{item.name}}加入自选">＋ 自选</button></view>
+        <view wx:if="{{rowErrorId === item.assetId}}" class="row-error" role="alert">{{rowError}}</view>
+      </block>
+    </view>
+  </view>
+  <view class="pagination"><button bindtap="previousPage" disabled="{{listLoading || listPage <= 1}}" aria-label="上一页榜单">上一页</button><text>第 {{listPage}} 页 · 最多 10 页</text><button bindtap="nextPage" disabled="{{listLoading || !hasMore}}" aria-label="下一页榜单">下一页</button></view>
+  <view class="hint provenance">{{listTime}}</view><view class="hint provenance">{{scope}}</view>
+  <view class="hint disclaimer">板块为新浪供应商分类，可能包含非 A 股，行业与概念并非互斥，不可加总。资金为东方财富按成交单大小估算，不代表机构身份或北向资金。榜单时刻未附日期时仅标获取时间。公开行情可能延迟，仅供个人观察。</view>
+</view>

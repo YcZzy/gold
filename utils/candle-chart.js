@@ -77,6 +77,7 @@ function createKlineChart(opts) {
   let hasVolume = true;
   let hasMacd = false;
   let naturalRange = null;
+  let indicatorRows = null;
 
   function xAt(i) {
     return padLeft + step * (i + 0.5);
@@ -105,10 +106,22 @@ function createKlineChart(opts) {
       if (prevClose < minP) minP = prevClose;
       if (prevClose > maxP) maxP = prevClose;
     }
+    if (mode === 'candle' && indicatorRows) {
+      if (indicators.bollEnabled) indicatorRows.boll.forEach(row => {
+        if (!row) return;
+        minP = Math.min(minP, row.lower); maxP = Math.max(maxP, row.upper);
+      });
+      if (indicators.maEnabled) indicators.maPeriods.forEach(period =>
+        (indicatorRows.ma[period] || []).forEach(value => {
+          if (value != null) { minP = Math.min(minP, value); maxP = Math.max(maxP, value); }
+        }));
+      if (indicators.volumeMaEnabled) Object.values(indicatorRows.volumeMa).forEach(rows =>
+        rows.forEach(value => { if (value != null) maxV = Math.max(maxV, value); }));
+    }
     const pad = (maxP - minP) * 0.06 || maxP * 0.01 || 1;
     minP -= pad;
     maxP += pad;
-    hasVolume = maxV > 1;
+    hasVolume = bars.some(b => typeof b.v === 'number' && Number.isFinite(b.v) && b.v >= 0);
   }
 
   function priceAreaHeight() {
@@ -164,9 +177,26 @@ function createKlineChart(opts) {
     for (let i = 0; i < bars.length; i++) {
       const b = bars[i];
       const up = mode === "candle" ? b.c >= b.o : b.price >= (bars[i - 1] ? bars[i - 1].price : b.price);
+      if (typeof b.v !== 'number' || !Number.isFinite(b.v) || b.v < 0) continue;
       const h = maxV ? (b.v / maxV) * volH : 0;
       ctx.fillStyle = up ? palette.volUp : palette.volDown;
       ctx.fillRect(xAt(i) - w / 2, baseY - h, w, h);
+    }
+    if (mode === 'candle' && indicators.volumeMaEnabled) {
+      for (const [period, color] of [[5, palette.ma5], [10, palette.ma10]]) {
+        const rows = indicatorRows.volumeMa[period];
+        ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.beginPath();
+        let started = false;
+        rows.forEach((v, i) => {
+          if (v == null) { started = false; return; }
+          const y = baseY - v / maxV * volH;
+          if (started) ctx.lineTo(xAt(i), y); else ctx.moveTo(xAt(i), y);
+          started = true;
+        });
+        ctx.stroke();
+      }
+      ctx.fillStyle = palette.axisText; ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('量 MA5 / MA10', padLeft, baseY - volH);
     }
   }
 
@@ -212,7 +242,8 @@ function createKlineChart(opts) {
 
   // ---------- K 线模式 ----------
 
-  function renderCandles(list, focus) {
+  function renderCandles(list, focus, prepared) {
+    indicatorRows = prepared || features.chartView(list || [], indicators).indicators;
     mode = "candle";
     bars = list || [];
     focusIndex = typeof focus === "number" ? focus : -1;
@@ -227,7 +258,13 @@ function createKlineChart(opts) {
     if (hasMacd) drawMacd();
     drawCandles();
     if (indicators.maEnabled) indicators.maPeriods.forEach((period, i) =>
-      drawMA(features.movingAverage(bars, period), [palette.ma5, palette.ma10, palette.last][i]));
+      drawMA(indicatorRows.ma[period] || features.movingAverage(bars, period), [palette.ma5, palette.ma10, palette.last][i]));
+    if (indicators.bollEnabled) {
+      for (const [key, color] of [['upper', palette.ma5], ['middle', palette.last], ['lower', palette.ma10]])
+        drawMA(indicatorRows.boll.map(row => row && row[key]), color);
+      ctx.fillStyle = palette.axisText; ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('BOLL(20,2)', padLeft, padTop + 8);
+    }
     drawTargets();
     drawLastLine(bars[bars.length - 1].c, palette.last);
     if (focusIndex >= 0 && focusIndex < bars.length) drawCross(focusIndex, bars[focusIndex].c);
@@ -302,7 +339,7 @@ function createKlineChart(opts) {
   }
 
   function drawMacd() {
-    const rows = features.macd(bars);
+    const rows = indicatorRows.macd;
     const top = padTop + priceH + gap;
     const innerTop = top + 13;
     const innerHeight = Math.max(8, volH - 15);
@@ -437,7 +474,7 @@ function createKlineChart(opts) {
     if (!bars.length) return null;
     const i = Math.max(0, Math.min(bars.length - 1, Math.floor((clientX - padLeft) / step)));
     if (mode === "intraday") renderIntraday(bars, prevClose, i);
-    else renderCandles(bars, i);
+    else renderCandles(bars, i, indicatorRows);
     focusIndex = i;
     return bars[i];
   }
@@ -445,7 +482,7 @@ function createKlineChart(opts) {
   function clearTouch() {
     if (focusIndex >= 0) {
       if (mode === "intraday") renderIntraday(bars, prevClose, -1);
-      else renderCandles(bars, -1);
+      else renderCandles(bars, -1, indicatorRows);
     }
     focusIndex = -1;
   }
@@ -455,7 +492,7 @@ function createKlineChart(opts) {
     palette = Object.assign({}, palette, patch || {});
     if (bars.length) {
       if (mode === "intraday") renderIntraday(bars, prevClose, focusIndex);
-      else renderCandles(bars, focusIndex);
+      else renderCandles(bars, focusIndex, indicatorRows);
     }
   }
 

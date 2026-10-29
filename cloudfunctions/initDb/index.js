@@ -28,7 +28,7 @@ const db = cloud.database();
 
 const COLLECTIONS = [
   "subscriptions", "preferences", "authLogs", "sendTasks", "quoteSnapshots",
-  "portfolios", "entitlements", "instruments", "quoteCache", "chartCache", "searchCache", "sendBudgets"
+  "portfolios", "entitlements", "instruments", "quoteCache", "chartCache", "searchCache", "sendBudgets", "investmentLedgers"
 ];
 
 function classifyError(err) {

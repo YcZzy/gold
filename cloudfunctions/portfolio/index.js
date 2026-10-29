@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const securities = require("./securities");
+const workspace = require("./workspace");
 const hasOwn = (object, key) =>
   Object.prototype.hasOwnProperty.call(object, key);
 const GOLD = {
@@ -198,6 +199,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
           "saveRule",
           "saveAnnotation",
           "deleteRule",
+          ...workspace.ACTIONS,
         ].includes(action)
       )
         fail("bad-action", "不支持的操作");
@@ -207,6 +209,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
       )
         fail("bad-asset", "证券代码无效");
       let patch = null;
+      const workspacePatch = workspace.prepare({ ...event, action });
       const annotationPatch = action === "saveAnnotation" ? annotation(event) : null;
       if (
         action === "deleteRule" &&
@@ -233,6 +236,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
       }
       // Resolve remote metadata before entering the transaction: retries stay local.
       if (action === "add") await asset(event.assetId);
+      if (action === 'batchAdd') await Promise.all(workspacePatch.assetIds.map(asset));
       if (action === "saveRule") patch = conditions(event, await asset(event.assetId));
       const saved = await db.runTransaction(async (tx) => {
         const ref = tx.collection("portfolios").doc(openid),
@@ -248,6 +252,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
               ...existing,
               items: [...existing.items],
               annotations: { ...(existing.annotations || {}) },
+              groups: (existing.groups || []).map(g => ({ ...g, assetIds:[...g.assetIds] })),
               rules: existing.rules.map((r) => ({ ...r })),
             }
           : {
@@ -255,11 +260,13 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
               items: Object.keys(GOLD),
               rules: [],
               annotations: {},
+              groups: [],
               revision: 0,
               migrationVersion: 0,
             };
         delete doc._id;
         let changed = !existing;
+        if (workspace.apply(doc, workspacePatch, limits, timestamp)) changed = true;
         if (doc.migrationVersion !== 1) {
           // A legacy target may already have delivered even if its old auto-off failed.
           // Read deterministic task IDs in this transaction before persisting the migration.
@@ -312,6 +319,11 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
           }
         }
         if (action === "remove") {
+          for (const group of doc.groups) {
+            if (group.assetIds.includes(event.assetId)) {
+              group.assetIds = group.assetIds.filter(id => id !== event.assetId); changed = true;
+            }
+          }
           if (hasOwn(doc.annotations, event.assetId)) {
             delete doc.annotations[event.assetId];
             changed = true;
@@ -397,6 +409,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
         items,
         rules: saved.rules,
         annotations: saved.annotations,
+        groups: saved.groups,
         limits: saved.limits,
         revision: saved.revision,
       };

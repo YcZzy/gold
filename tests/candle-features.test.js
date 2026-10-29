@@ -55,3 +55,26 @@ test('MACD occupies the candle subplot while intraday retains volume and target 
   assert.ok(!calls.some(c => c.name === 'fillText' && c.args[0] === 'MACD(12,26,9)'));
   assert.ok(calls.some(c => c.name === 'fillText' && c.args[0] === '跌到 3.500'));
 });
+
+test('BOLL and volume averages draw from supplied full-history viewport indicators and touch retains them',()=>{
+ const {chart,calls,bars}=fixture();
+ const f=require('../utils/chart-features');
+ const settings={...f.DEFAULT_SETTINGS,bollEnabled:true,volumeMaEnabled:true};
+ const view=f.chartView(bars,settings,{count:10});
+ chart.setIndicators(settings); chart.render(view.bars,undefined,view.indicators);
+ assert.ok(calls.some(c=>c.name==='fillText' && c.args[0]==='BOLL(20,2)'));
+ assert.ok(calls.some(c=>c.name==='fillText' && c.args[0]==='量 MA5 / MA10'));
+ calls.length=0; chart.touchAt(100);
+ assert.ok(calls.some(c=>c.name==='fillText' && c.args[0]==='BOLL(20,2)'));
+ for(const call of calls.filter(c=>['lineTo','moveTo','fillRect'].includes(c.name))) assert.ok(call.args.every(Number.isFinite));
+});
+
+test('enabled BOLL bands and historical volume averages stay inside their chart areas',()=>{
+ const {chart,calls,bars}=fixture();const f=require('../utils/chart-features');
+ const settings={...f.DEFAULT_SETTINGS,bollEnabled:true,volumeMaEnabled:true};
+ const view=f.chartView(bars,settings,{count:10});
+ view.indicators.boll=view.bars.map(()=>({middle:3,upper:10,lower:1}));
+ view.indicators.volumeMa[5]=view.bars.map(()=>10000);
+ chart.setIndicators(settings);chart.render(view.bars,undefined,view.indicators);
+ for(const c of calls.filter(c=>['moveTo','lineTo'].includes(c.name))) assert.ok(c.args[1]>=0 && c.args[1]<=300,JSON.stringify(c));
+});
