@@ -1,0 +1,685 @@
+{
+  "startedAt": "2026-10-29T09:35:01.517Z",
+  "method": "production createService, in-memory store; public sources only; no deployment or user database",
+  "checks": [
+    {
+      "params": {
+        "mode": "indices"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "tencent",
+      "sourceTime": null,
+      "fetchedAt": 1793266505429,
+      "count": 8,
+      "total": null,
+      "stale": false,
+      "scope": null,
+      "sample": [
+        {
+          "id": "index:sh000001",
+          "code": "sh000001",
+          "name": "上证指数",
+          "market": "SH",
+          "providerCode": "000001",
+          "kind": "index",
+          "unit": "点",
+          "timezone": "Asia/Shanghai",
+          "price": 3651.43,
+          "change": -30.04,
+          "changePct": -0.82,
+          "source": "tencent",
+          "sourceTime": 1793261640000,
+          "sourceLabel": "2026-10-29 16:14",
+          "fetchedAt": 1793266505402,
+          "status": "delayed"
+        },
+        {
+          "id": "index:sz399001",
+          "code": "sz399001",
+          "name": "深证成指",
+          "market": "SZ",
+          "providerCode": "399001",
+          "kind": "index",
+          "unit": "点",
+          "timezone": "Asia/Shanghai",
+          "price": 11138.2,
+          "change": -334.98,
+          "changePct": -2.92,
+          "source": "tencent",
+          "sourceTime": 1793261655000,
+          "sourceLabel": "2026-10-29 16:14",
+          "fetchedAt": 1793266505402,
+          "status": "delayed"
+        }
+      ]
+    },
+    {
+      "params": {
+        "mode": "sectors",
+        "type": "industry"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "sina",
+      "sourceTime": null,
+      "fetchedAt": 1793266506494,
+      "count": 20,
+      "total": 49,
+      "stale": false,
+      "scope": "新浪板块口径可能包含非 A 股，行业与概念并非互斥分类，不可加总",
+      "sample": [
+        {
+          "id": "sina:industry:new_fjzz",
+          "node": "new_fjzz",
+          "type": "industry",
+          "name": "飞机制造",
+          "count": 14,
+          "changePct": 1.6454437566155,
+          "amount": 10009710014,
+          "leaderSymbol": "sh600118",
+          "leaderName": "中国卫星",
+          "leaderChangePct": 9.996,
+          "sourceTime": null
+        },
+        {
+          "id": "sina:industry:new_ljhy",
+          "node": "new_ljhy",
+          "type": "industry",
+          "name": "酿酒行业",
+          "count": 33,
+          "changePct": 1.4632461908119,
+          "amount": 14693803761,
+          "leaderSymbol": "sh600809",
+          "leaderName": "山西汾酒",
+          "leaderChangePct": 5,
+          "sourceTime": null
+        }
+      ]
+    },
+    {
+      "params": {
+        "mode": "sectors",
+        "type": "concept"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "sina",
+      "sourceTime": null,
+      "fetchedAt": 1793266507996,
+      "count": 20,
+      "total": 175,
+      "stale": false,
+      "scope": "新浪板块口径可能包含非 A 股，行业与概念并非互斥分类，不可加总",
+      "sample": [
+        {
+          "id": "sina:concept:gn_yq50",
+          "node": "gn_yq50",
+          "type": "concept",
+          "name": "央企50",
+          "count": 50,
+          "changePct": 1.8148183586898,
+          "amount": 49253355478,
+          "leaderSymbol": "sh600428",
+          "leaderName": "中远海特",
+          "leaderChangePct": 10.048,
+          "sourceTime": null
+        },
+        {
+          "id": "sina:concept:gn_scp",
+          "node": "gn_scp",
+          "type": "concept",
+          "name": "奢侈品",
+          "count": 16,
+          "changePct": 1.4313681440354,
+          "amount": 10558623413,
+          "leaderSymbol": "sz002277",
+          "leaderName": "友阿股份",
+          "leaderChangePct": 9.94,
+          "sourceTime": null
+        }
+      ]
+    },
+    {
+      "params": {
+        "mode": "members",
+        "sectorId": "sina:industry:new_fjzz"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "sina",
+      "sourceTime": null,
+      "fetchedAt": 1793266508953,
+      "count": 14,
+      "total": null,
+      "stale": false,
+      "scope": "仅列本应用可核验的 A 股成员；供应商成员数可能包含其他证券，不能承诺完整覆盖",
+      "sample": [
+        {
+          "asset": {
+            "id": "sh600118",
+            "name": "中国卫星",
+            "code": "600118",
+            "market": "SH",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "1.600118",
+            "quoteCode": "sh600118",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SH",
+            "providers": {
+              "tencentQuote": "sh600118",
+              "tencentChart": "sh600118",
+              "eastmoney": "1.600118",
+              "sina": "sh600118"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sh600118",
+          "name": "中国卫星",
+          "price": 55.9,
+          "changePct": 9.996,
+          "amount": 3113427489,
+          "sourceTime": null,
+          "clock": "15:34:58"
+        },
+        {
+          "asset": {
+            "id": "sh600879",
+            "name": "航天电子",
+            "code": "600879",
+            "market": "SH",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "1.600879",
+            "quoteCode": "sh600879",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SH",
+            "providers": {
+              "tencentQuote": "sh600879",
+              "tencentChart": "sh600879",
+              "eastmoney": "1.600879",
+              "sina": "sh600879"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sh600879",
+          "name": "航天电子",
+          "price": 13.72,
+          "changePct": 6.274,
+          "amount": 2495835627,
+          "sourceTime": null,
+          "clock": "15:34:58"
+        }
+      ]
+    },
+    {
+      "params": {
+        "mode": "members",
+        "sectorId": "sina:concept:gn_hwqc"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "sina",
+      "sourceTime": null,
+      "fetchedAt": 1793266509925,
+      "count": 20,
+      "total": null,
+      "stale": false,
+      "scope": "仅列本应用可核验的 A 股成员；供应商成员数可能包含其他证券，不能承诺完整覆盖",
+      "sample": [
+        {
+          "asset": {
+            "id": "sz000851",
+            "name": "*ST高鸿",
+            "code": "000851",
+            "market": "SZ",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "0.000851",
+            "quoteCode": "sz000851",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SZ",
+            "providers": {
+              "tencentQuote": "sz000851",
+              "tencentChart": "sz000851",
+              "eastmoney": "0.000851",
+              "sina": "sz000851"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sz000851",
+          "name": "*ST高鸿",
+          "price": null,
+          "changePct": 0,
+          "amount": 0,
+          "sourceTime": null,
+          "clock": "11:45:01"
+        },
+        {
+          "asset": {
+            "id": "sh603161",
+            "name": "科华控股",
+            "code": "603161",
+            "market": "SH",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "1.603161",
+            "quoteCode": "sh603161",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SH",
+            "providers": {
+              "tencentQuote": "sh603161",
+              "tencentChart": "sh603161",
+              "eastmoney": "1.603161",
+              "sina": "sh603161"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sh603161",
+          "name": "科华控股",
+          "price": 14.12,
+          "changePct": -0.282,
+          "amount": 40382784,
+          "sourceTime": null,
+          "clock": "15:34:58"
+        }
+      ]
+    },
+    {
+      "params": {
+        "mode": "ranking",
+        "sort": "gainers"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "sina",
+      "sourceTime": null,
+      "fetchedAt": 1793266511342,
+      "count": 20,
+      "total": null,
+      "stale": false,
+      "scope": "新浪 hs_a 排名，包含已核验沪深北 A 股；时刻无源日期，仅展示获取时间",
+      "sample": [
+        {
+          "asset": {
+            "id": "bj920306",
+            "name": "N天元",
+            "code": "920306",
+            "market": "BJ",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "0.920306",
+            "quoteCode": "bj920306",
+            "timezone": "Asia/Shanghai",
+            "exchange": "BJ",
+            "providers": {
+              "tencentQuote": "bj920306",
+              "tencentChart": "bj920306",
+              "eastmoney": "0.920306",
+              "sina": "bj920306"
+            },
+            "supportsClose": true,
+            "identityVerified": "official",
+            "typeVerified": "official"
+          },
+          "assetId": "bj920306",
+          "name": "N天元",
+          "price": 9.88,
+          "changePct": 120.536,
+          "amount": 380740460,
+          "sourceTime": null,
+          "clock": "15:30:01"
+        },
+        {
+          "asset": {
+            "id": "sz301079",
+            "name": "邵阳液压",
+            "code": "301079",
+            "market": "SZ",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "0.301079",
+            "quoteCode": "sz301079",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SZ",
+            "providers": {
+              "tencentQuote": "sz301079",
+              "tencentChart": "sz301079",
+              "eastmoney": "0.301079",
+              "sina": "sz301079"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sz301079",
+          "name": "邵阳液压",
+          "price": 34,
+          "changePct": 20.014,
+          "amount": 472972366,
+          "sourceTime": null,
+          "clock": "15:35:45"
+        }
+      ]
+    },
+    {
+      "params": {
+        "mode": "ranking",
+        "sort": "losers"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "sina",
+      "sourceTime": null,
+      "fetchedAt": 1793266512756,
+      "count": 20,
+      "total": null,
+      "stale": false,
+      "scope": "新浪 hs_a 排名，包含已核验沪深北 A 股；时刻无源日期，仅展示获取时间",
+      "sample": [
+        {
+          "asset": {
+            "id": "sz300394",
+            "name": "天孚通信",
+            "code": "300394",
+            "market": "SZ",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "0.300394",
+            "quoteCode": "sz300394",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SZ",
+            "providers": {
+              "tencentQuote": "sz300394",
+              "tencentChart": "sz300394",
+              "eastmoney": "0.300394",
+              "sina": "sz300394"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sz300394",
+          "name": "天孚通信",
+          "price": 161.6,
+          "changePct": -19.774,
+          "amount": 12531945838,
+          "sourceTime": null,
+          "clock": "15:35:15"
+        },
+        {
+          "asset": {
+            "id": "sz301718",
+            "name": "通则康威",
+            "code": "301718",
+            "market": "SZ",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "0.301718",
+            "quoteCode": "sz301718",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SZ",
+            "providers": {
+              "tencentQuote": "sz301718",
+              "tencentChart": "sz301718",
+              "eastmoney": "0.301718",
+              "sina": "sz301718"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sz301718",
+          "name": "通则康威",
+          "price": 48.98,
+          "changePct": -17.584,
+          "amount": 789465842,
+          "sourceTime": null,
+          "clock": "15:35:45"
+        }
+      ]
+    },
+    {
+      "params": {
+        "mode": "ranking",
+        "sort": "amount"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "sina",
+      "sourceTime": null,
+      "fetchedAt": 1793266513898,
+      "count": 20,
+      "total": null,
+      "stale": false,
+      "scope": "新浪 hs_a 排名，包含已核验沪深北 A 股；时刻无源日期，仅展示获取时间",
+      "sample": [
+        {
+          "asset": {
+            "id": "sz300308",
+            "name": "中际旭创",
+            "code": "300308",
+            "market": "SZ",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "0.300308",
+            "quoteCode": "sz300308",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SZ",
+            "providers": {
+              "tencentQuote": "sz300308",
+              "tencentChart": "sz300308",
+              "eastmoney": "0.300308",
+              "sina": "sz300308"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sz300308",
+          "name": "中际旭创",
+          "price": 582.05,
+          "changePct": -8.526,
+          "amount": 19475976073,
+          "sourceTime": null,
+          "clock": "15:35:15"
+        },
+        {
+          "asset": {
+            "id": "sz300502",
+            "name": "新易盛",
+            "code": "300502",
+            "market": "SZ",
+            "kind": "stock",
+            "currency": "CNY",
+            "unit": "元/股",
+            "precision": 2,
+            "secid": "0.300502",
+            "quoteCode": "sz300502",
+            "timezone": "Asia/Shanghai",
+            "exchange": "SZ",
+            "providers": {
+              "tencentQuote": "sz300502",
+              "tencentChart": "sz300502",
+              "eastmoney": "0.300502",
+              "sina": "sz300502"
+            },
+            "supportsClose": true
+          },
+          "assetId": "sz300502",
+          "name": "新易盛",
+          "price": 228.4,
+          "changePct": -11.056,
+          "amount": 13900019543,
+          "sourceTime": null,
+          "clock": "15:35:45"
+        }
+      ]
+    },
+    {
+      "params": {
+        "mode": "flowRanking"
+      },
+      "ok": false,
+      "hint": "socket hang up",
+      "source": null,
+      "sourceTime": null,
+      "fetchedAt": null,
+      "count": null,
+      "total": null,
+      "stale": null,
+      "scope": null,
+      "sample": null
+    },
+    {
+      "params": {
+        "mode": "flow",
+        "assetId": "sh600519"
+      },
+      "ok": false,
+      "hint": "socket hang up",
+      "source": null,
+      "sourceTime": null,
+      "fetchedAt": null,
+      "count": null,
+      "total": null,
+      "stale": null,
+      "scope": null,
+      "sample": null
+    },
+    {
+      "params": {
+        "mode": "orderbook",
+        "assetId": "sh600519"
+      },
+      "ok": true,
+      "hint": null,
+      "source": "tencent",
+      "sourceTime": 1793261697000,
+      "fetchedAt": 1793266517334,
+      "count": null,
+      "total": null,
+      "stale": false,
+      "scope": null,
+      "sample": {
+        "bids": [
+          {
+            "price": 1353.77,
+            "volume": 100
+          },
+          {
+            "price": 1352,
+            "volume": 200
+          },
+          {
+            "price": 1351.06,
+            "volume": 100
+          },
+          {
+            "price": 1351,
+            "volume": 200
+          },
+          {
+            "price": 1350.99,
+            "volume": 100
+          }
+        ],
+        "asks": [
+          {
+            "price": 1354,
+            "volume": 2700
+          },
+          {
+            "price": 1354.01,
+            "volume": 100
+          },
+          {
+            "price": 1354.02,
+            "volume": 100
+          },
+          {
+            "price": 1354.18,
+            "volume": 100
+          },
+          {
+            "price": 1354.4,
+            "volume": 100
+          }
+        ]
+      }
+    }
+  ],
+  "requests": [
+    {
+      "url": "https://qt.gtimg.cn/q=sh000001,sz399001,sz399006,sh000688,bj899050,hkHSI,us.IXIC,us.INX",
+      "status": "ok",
+      "durationMs": 3872
+    },
+    {
+      "url": "https://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php",
+      "status": "ok",
+      "durationMs": 261
+    },
+    {
+      "url": "https://money.finance.sina.com.cn/q/view/newFLJK.php?param=class",
+      "status": "ok",
+      "durationMs": 698
+    },
+    {
+      "url": "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=20&sort=changepercent&asc=0&node=new_fjzz&symbol=",
+      "status": "ok",
+      "durationMs": 150
+    },
+    {
+      "url": "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=20&sort=changepercent&asc=0&node=gn_hwqc&symbol=",
+      "status": "ok",
+      "durationMs": 172
+    },
+    {
+      "url": "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=20&sort=changepercent&asc=0&node=hs_a&symbol=",
+      "status": "ok",
+      "durationMs": 616
+    },
+    {
+      "url": "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=20&sort=changepercent&asc=1&node=hs_a&symbol=",
+      "status": "ok",
+      "durationMs": 611
+    },
+    {
+      "url": "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=20&sort=amount&asc=0&node=hs_a&symbol=",
+      "status": "ok",
+      "durationMs": 339
+    },
+    {
+      "url": "https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=20&po=1&np=1&fltt=2&fid=f62&fs=m:1+t:2,m:0+t:6,m:0+t:80&fields=f12,f13,f14,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87,f124",
+      "status": "failed",
+      "hint": "socket hang up",
+      "durationMs": 316
+    },
+    {
+      "url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&secids=1.600519&fields=f12,f13,f14,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87,f124,f6&ut=b2884a393a59ad64002292a3e90d46a5",
+      "status": "failed",
+      "hint": "socket hang up",
+      "durationMs": 381
+    },
+    {
+      "url": "https://qt.gtimg.cn/q=sh600519",
+      "status": "ok",
+      "durationMs": 330
+    }
+  ],
+  "finishedAt": "2026-10-29T09:35:18.137Z",
+  "passed": 9,
+  "total": 11
+}
