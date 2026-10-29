@@ -4,9 +4,10 @@ const TPL_IDS = [templates.dailyBrief, templates.volatility];
 const theme = require("../../utils/theme");
 const portfolio = require("../../utils/portfolio-client");
 const fmt = require("../../utils/asset-format");
+const cache = require("../../utils/read-cache");
 Page({
   data: {
-    theme: "paper",
+    theme: theme.getTheme(),
     hasStatus: false,
     hasPortfolio: false,
     prefs: { dndStart: "23:00", dndEnd: "07:30" },
@@ -21,16 +22,50 @@ Page({
     check: null,
     testResult: "",
   },
-  onShow() {
-    this._alive = true;
+  onLoad() {
     this.setData({ theme: theme.getTheme() });
     theme.applyChrome(this.data.theme);
+  },
+  onShow() {
+    this._alive = true;
+    this._visible = true;
+    this.setData({ theme: theme.getTheme() });
+    theme.applyChrome(this.data.theme);
+    if (!this.data.hasPortfolio && portfolio.getCached) {
+      const saved = portfolio.getCached();
+      if (saved) this.setData({ hasPortfolio: true, limits: saved.limits });
+    }
+    if (!this.data.hasStatus) {
+      const saved = cache.forPlatform(wx).read("status");
+      if (saved && saved.ok) this.applyStatus(saved);
+    }
     return this.reload();
+  },
+  onHide() {
+    this._visible = false;
+    this._reloadRequest = (this._reloadRequest || 0) + 1;
   },
   onUnload() {
     this._alive = false;
+    this.onHide();
+  },
+  applyStatus(r, patch = {}) {
+    // Cached status fills the layout; only a live response may initialize theme.
+    this.setData({
+      hasStatus: true,
+      quota: {
+        brief: Number((r.remaining || {})[templates.dailyBrief] || 0),
+        vol: Number((r.remaining || {})[templates.volatility] || 0),
+      },
+      prefs: {
+        dndStart: (r.prefs && r.prefs.dndStart) || "23:00",
+        dndEnd: (r.prefs && r.prefs.dndEnd) || "07:30",
+      },
+      ...patch,
+    });
   },
   async reload() {
+    const request = this._reloadRequest = (this._reloadRequest || 0) + 1;
     try {
       const [s, response] = await Promise.all([
         portfolio.list(),
@@ -38,25 +73,18 @@ Page({
       ]);
       const r = response;
       if (!r || !r.ok) throw Error("设置获取失败");
-      if (this._alive)
-        this.setData({
+      if (this._alive && this._visible && request === this._reloadRequest) {
+        this.applyStatus(r, {
           theme: theme.syncFromPrefs(r.prefs),
-          hasStatus: true,
           hasPortfolio: true,
-          quota: {
-            brief: Number((r.remaining || {})[templates.dailyBrief] || 0),
-            vol: Number((r.remaining || {})[templates.volatility] || 0),
-          },
           limits: s.limits,
-          prefs: {
-            dndStart: (r.prefs && r.prefs.dndStart) || "23:00",
-            dndEnd: (r.prefs && r.prefs.dndEnd) || "07:30",
-          },
           loading: false,
           errorText: "",
         });
+      }
     } catch (e) {
-      if (this._alive) this.setData({ loading: false });
+      if (this._alive && this._visible && request === this._reloadRequest)
+        this.setData({ loading: false });
     }
   },
   onThemeTap() {

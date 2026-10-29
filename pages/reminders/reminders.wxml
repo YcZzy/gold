@@ -1,65 +1,72 @@
-<view class="page theme-{{theme}}"
-  ><view class="hero-title">行情提醒</view
-  ><view class="hero-sub">把关注交给提醒，把时间留给生活。</view>
-  <view class="panel quota-panel"
-    ><view class="section-row"
-      ><view
-        ><view wx:if="{{hasPortfolio}}" class="section-title"
-          >{{activeCount}} / {{limits.activeRules}}
-          <text class="micro">条提醒已开启</text></view
-        ><view wx:if="{{hasStatus}}" class="muted"
-          >播报授权 {{quota.brief}} 次 · 异动 {{quota.vol}} 次</view
-        ></view
-      ><button
-        class="primary compact"
-        bindtap="onAuthTap"
-        loading="{{authBusy}}"
-        disabled="{{authBusy}}"
-      >
-        增加授权
-      </button></view
-    ><view class="foot">每次同意订阅，可增加对应模板 1 次授权。</view></view
-  >
-  <view wx:if="{{loading}}" class="empty">正在加载提醒…</view
-  ><view wx:elif="{{hasPortfolio && !groups.length}}" class="empty"
-    ><view class="empty-title">还没有设置提醒</view
-    ><view class="muted">从「自选」打开标的，即可设置专属提醒。</view></view
-  >
-  <view
-    wx:for="{{groups}}"
-    wx:key="id"
-    class="panel"
-    data-id="{{item.id}}"
-    bindtap="openAsset"
-    role="button"
-    aria-label="管理{{item.name}}提醒"
-    ><view class="section-row"
-      ><view
-        ><view class="section-title">{{item.name}}</view
-        ><view class="code">{{item.code}} · {{item.market}}</view></view
-      ><view class="muted manage-link">管理<view class="chev" aria-hidden="true"></view></view></view
-    ><view
-      wx:for="{{item.rules}}"
-      wx:for-item="rule"
-      wx:key="id"
-      class="summary-row"
-      ><text>{{rule.summary}}</text
-      ><text class="micro">{{rule.enabled ? '已开启' : '已暂停'}}</text></view
-    ></view
-  >
-  <view wx:if="{{recent.length}}" class="panel">
-    <view class="section-title">最近提醒</view>
-    <view wx:for="{{recent}}" wx:key="taskId" class="recent-task">
-      <view class="section-row"
-        ><text>{{item.assetName}}</text
-        ><text class="micro">{{item.statusText}}</text></view
-      >
-      <view wx:if="{{item.reasonText}}" class="muted">{{item.reasonText}}</view>
-      <view class="micro">{{item.timeText}}</view>
-    </view>
+<page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
+<view class="page reminders-page tab-page theme-{{theme}}">
+  <view class="reminders-header">
+    <view class="hero-title">行情提醒</view>
+    <view class="hero-sub">把关注交给提醒，把时间留给生活。</view>
   </view>
-  <view class="foot"
-    >后台约每 1
-    分钟监测，行情和推送均可能延迟。每标的每类每日最多 1 条；每天常规最多 6 条、到价最多 4 条，共享微信授权次数。免打扰时间可在「我的」修改。</view
-  >
+
+  <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
+  <view class="reminder-card overview-card">
+    <view class="section-heading">
+      <view class="overview-copy">
+        <view class="metric-label">已开启提醒</view>
+        <view wx:if="{{hasPortfolio}}" class="active-value">{{activeCount}}<text class="value-limit">/ {{limits.activeRules}} 条</text></view>
+        <view wx:else class="pending-value">待获取</view>
+      </view>
+      <button class="auth-button" bindtap="onAuthTap" loading="{{authBusy}}" disabled="{{authBusy}}" hover-class="control-pressed">{{authBusy ? '授权中' : '增加授权'}}</button>
+    </view>
+    <view wx:if="{{hasStatus}}" class="quota-grid">
+      <view class="quota-item"><text class="metric-label">播报授权</text><view class="quota-value">{{quota.brief}}<text class="value-unit">次</text></view></view>
+      <view class="quota-item"><text class="metric-label">异动授权</text><view class="quota-value">{{quota.vol}}<text class="value-unit">次</text></view></view>
+    </view>
+    <view class="helper">每次同意订阅，可增加对应模板 1 次授权。</view>
+  </view>
+
+  <view class="section-heading list-heading">
+    <view class="section-title">我的提醒</view>
+    <text wx:if="{{hasPortfolio}}" class="section-caption">{{groups.length}} 个标的</text>
+  </view>
+  <view wx:if="{{loading}}" class="reminder-card empty" role="status">
+    <view class="empty-title">正在加载提醒…</view>
+    <view class="muted">正在整理你关注的标的和规则</view>
+  </view>
+  <view wx:elif="{{hasPortfolio && !groups.length}}" class="reminder-card empty">
+    <view class="empty-mark" aria-hidden="true"><view class="empty-line"></view><view class="empty-line short"></view></view>
+    <view class="empty-title">还没有设置提醒</view>
+    <view class="muted">从「自选」打开标的，<text>即可设置专属提醒。</text></view>
+  </view>
+
+  <button wx:for="{{groups}}" wx:key="id" class="reminder-card asset-card" data-id="{{item.id}}" bindtap="openAsset" hover-class="control-pressed" aria-label="管理{{item.name}}提醒">
+    <view class="section-heading asset-heading">
+      <view class="asset-identity"><view class="asset-title">{{item.name}}</view><view class="asset-code">{{item.code}}<text wx:if="{{item.market}}"> · {{item.marketText}} · {{item.kindText}}</text></view></view>
+      <view class="manage-link"><text>管理</text><view class="chevron" aria-hidden="true"></view></view>
+    </view>
+    <view class="rule-list">
+      <view wx:for="{{item.rules}}" wx:for-item="rule" wx:key="id" class="rule-row">
+        <view class="rule-description">{{rule.summary}}</view>
+        <view class="rule-state {{rule.enabled ? 'is-enabled' : 'is-paused'}}"><view wx:if="{{rule.enabled}}" class="state-dot" aria-hidden="true"></view><text>{{rule.enabled ? '已开启' : '已暂停'}}</text></view>
+      </view>
+    </view>
+  </button>
+
+  <block wx:if="{{recent.length}}">
+    <view class="section-heading list-heading"><view class="section-title">最近提醒</view><text class="section-caption">最近 {{recent.length}} 条</text></view>
+    <view class="reminder-card recent-card">
+      <view wx:for="{{recent}}" wx:key="taskId" class="recent-task">
+        <view class="timeline-dot" aria-hidden="true"></view>
+        <view class="task-content">
+          <view class="section-heading task-heading"><text class="task-name">{{item.assetName}}</text><text class="task-status">{{item.statusText}}</text></view>
+          <view wx:if="{{item.reasonText}}" class="task-reason">{{item.reasonText}}</view>
+          <view class="task-time">{{item.timeText}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="reminder-guide">
+    <view class="guide-heading"><view class="monitor-mark" aria-hidden="true"></view><text>提醒说明</text></view>
+    <view class="guide-copy">后台约每 1 分钟监测，行情和推送均可能延迟。</view>
+    <view class="guide-copy">每标的每类每日最多 1 条；每天常规最多 6 条、到价最多 4 条，共享微信授权次数。</view>
+    <view class="guide-copy">免打扰时间可在「我的」修改。</view>
+  </view>
 </view>

@@ -1,0 +1,52 @@
+{
+  "sh510300": {
+    "availableFrom": "2020-08-17",
+    "source": "validated-history-2026-10-28"
+  },
+  "sz159915": {
+    "availableFrom": "2020-08-14",
+    "source": "validated-history-2026-10-28"
+  },
+  "bj920185": {
+    "availableFrom": "2020-08-18",
+    "source": "validated-history-2026-10-28"
+  },
+  "hk00700": {
+    "availableFrom": "2020-09-22",
+    "source": "validated-history-2026-10-28"
+  },
+  "hk02800": {
+    "availableFrom": "2020-09-22",
+    "source": "validated-history-2026-10-28"
+  },
+  "usAAPL": {
+    "availableFrom": "2020-11-05",
+    "source": "validated-history-2026-10-28"
+  },
+  "usSPY": {
+    "availableFrom": "2020-11-05",
+    "source": "validated-history-2026-10-28"
+  },
+  "usBRK.B": {
+    "availableFrom": "2020-11-05",
+    "source": "validated-history-2026-10-28"
+  },
+  "sh600519": {
+    "availableFrom": "2020-08-17",
+    "source": "validated-history-2026-10-28"
+  },
+  "sz000001": {
+    "availableFrom": "2020-08-17",
+    "source": "validated-history-2026-10-28"
+  },
+  "hk82840": {
+    "availableFrom": "2024-10-29",
+    "shortHistoryFrom": "2024-10-29",
+    "source": "validated-counter-history-2026-10-28"
+  },
+  "hk09840": {
+    "availableFrom": "2024-10-29",
+    "shortHistoryFrom": "2024-10-29",
+    "source": "validated-counter-history-2026-10-28"
+  }
+}

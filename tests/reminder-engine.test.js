@@ -235,8 +235,9 @@ test("minute timer still dispatches queued tasks when scanning fails", async () 
 test("minute timer sends multi-asset price and daily moves without another timer", async () => {
   const { memoryDb } = require("./helpers/asset-db");
   for (const type of ["priceAbove", "priceBelow", "dailyMove", "rapidMove"]) {
-    const time = Date.parse("2026-10-27T09:02:00+08:00");
-    const asset = { id: "sh600519", name: "贵州茅台", precision: 2, unit: "元/股", currency: "CNY" };
+    const tradingTime = "2026-10-27T10:02:00+08:00";
+    const time = Date.parse(tradingTime);
+    const asset = { id: "sh600519", name: "贵州茅台", market: "SH", kind: "stock", precision: 2, unit: "元/股", currency: "CNY" };
     const q = { assetId: asset.id, price: 900, changePct: -1.1, sourceTime: time, fetchedAt: time, source: "tencent", stale: false };
     const rule = { id: "r", version: "v1", assetId: asset.id, type, value: type.startsWith("price") ? 900 : 1, enabled: true };
     const { db, tables } = memoryDb({
@@ -245,7 +246,7 @@ test("minute timer sends multi-asset price and daily moves without another timer
       subscriptions: [{ _id: "u:" + templates.volatility, openid: "u", templateId: templates.volatility, remaining: 20 }],
       quoteSnapshots: [{ _id: "asset:" + asset.id, samples: [{ ...q, price: 920, at: time - 15 * 60000, sourceTime: time - 15 * 60000 }] }]
     });
-    const e = loadEngine({ db, tables, callFunction: async () => ({ result: { ok: true, assets: [asset], quotes: [q] } }) });
+    const e = loadEngine({ time: tradingTime, db, tables, callFunction: async () => ({ result: { ok: true, assets: [asset], quotes: [q] } }) });
     await e.main({ TriggerName: "dispatchTimer" });
     assert.equal(e.sent.length, 1, type);
     assert.equal(tables.sendTasks[0].sentAt, time, type);

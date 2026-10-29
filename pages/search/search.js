@@ -1,9 +1,10 @@
 const market = require("../../utils/market-client");
 const portfolio = require("../../utils/portfolio-client");
 const theme = require("../../utils/theme");
+const fmt = require("../../utils/asset-format");
 Page({
   data: {
-    theme: "paper",
+    theme: theme.getTheme(),
     keyword: "",
     results: [],
     history: [],
@@ -38,6 +39,7 @@ Page({
   decorate(assets) {
     return assets.map((asset) => ({
       ...asset,
+      ...fmt.identity(asset),
       added: !!(this._followed && this._followed.has(asset.id)),
     }));
   },

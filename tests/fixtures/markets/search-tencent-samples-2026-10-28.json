@@ -1,0 +1,65 @@
+{
+  "retrievedAt": "2026-10-28T08:11:10.262934+00:00",
+  "samples": [
+    {
+      "q": "腾讯",
+      "url": "https://smartbox.gtimg.cn/s3/?q=%E8%85%BE%E8%AE%AF&t=all",
+      "status": 200,
+      "raw": "v_hint=\"sh~000847~\\u817e\\u8baf\\u6d4e\\u5b89~txja~ZS^hk~00700~\\u817e\\u8baf\\u63a7\\u80a1~txkg~GP^hk~80700~\\u817e\\u8baf\\u63a7\\u80a1r~txkgr~GP^hk~01698~\\u817e\\u8baf\\u97f3\\u4e50sw~txylsw~GP^us~tcehy.ps~\\u817e\\u8baf\\u63a7\\u80a1(adr)~txkgadr~GP^us~tctzf.ps~\\u817e\\u8baf\\u63a7\\u80a1~txkg~GP^us~tme.n~\\u817e\\u8baf\\u97f3\\u4e50~txyl~GP^hk~13005~\\u817e\\u8baf\\u6cd5\\u5174\\u4e03\\u4e09\\u8d2dA~txfxqsga~QZ^hk~13020~\\u817e\\u8baf\\u4fe1\\u8bc1\\u4e03\\u4e03\\u8d2dB~txxzqqgb~QZ^hk~13024~\\u817e\\u8baf\\u6469\\u5229\\u516d\\u4e59\\u8d2dA~txmllyga~QZ\""
+    },
+    {
+      "q": "510300",
+      "url": "https://smartbox.gtimg.cn/s3/?q=510300&t=all",
+      "status": 200,
+      "raw": "v_hint=\"sh~510300~\\u6caa\\u6df1300ETF\\u534e\\u6cf0\\u67cf\\u745e~hs300etfhtbr~ETF\""
+    },
+    {
+      "q": "159915",
+      "url": "https://smartbox.gtimg.cn/s3/?q=159915&t=all",
+      "status": 200,
+      "raw": "v_hint=\"sz~159915~\\u521b\\u4e1a\\u677fETF\\u6613\\u65b9\\u8fbe~cybetfyfd~ETF\""
+    },
+    {
+      "q": "920185",
+      "url": "https://smartbox.gtimg.cn/s3/?q=920185&t=all",
+      "status": 200,
+      "raw": "v_hint=\"N\";"
+    },
+    {
+      "q": "贝特瑞",
+      "url": "https://smartbox.gtimg.cn/s3/?q=%E8%B4%9D%E7%89%B9%E7%91%9E&t=all",
+      "status": 200,
+      "raw": "v_hint=\"N\";"
+    },
+    {
+      "q": "80700",
+      "url": "https://smartbox.gtimg.cn/s3/?q=80700&t=all",
+      "status": 200,
+      "raw": "v_hint=\"hk~80700~\\u817e\\u8baf\\u63a7\\u80a1r~txkgr~GP\""
+    },
+    {
+      "q": "BRK.A",
+      "url": "https://smartbox.gtimg.cn/s3/?q=BRK.A&t=all",
+      "status": 200,
+      "raw": "v_hint=\"us~brk.a.n~\\u4f2f\\u514b\\u5e0c\\u5c14~bkxe~GP\""
+    },
+    {
+      "q": "TCEHY",
+      "url": "https://smartbox.gtimg.cn/s3/?q=TCEHY&t=all",
+      "status": 200,
+      "raw": "v_hint=\"us~tcehy.ps~\\u817e\\u8baf\\u63a7\\u80a1(adr)~txkgadr~GP\""
+    },
+    {
+      "q": "AAPL",
+      "url": "https://smartbox.gtimg.cn/s3/?q=AAPL&t=all",
+      "status": 200,
+      "raw": "v_hint=\"us~aapl.oq~\\u82f9\\u679c~pg~GP\""
+    },
+    {
+      "q": "02800",
+      "url": "https://smartbox.gtimg.cn/s3/?q=02800&t=all",
+      "status": 200,
+      "raw": "v_hint=\"hk~02800~\\u76c8\\u5bcc\\u57fa\\u91d1~yfjj~GP^jj~028004~\\u946b\\u5143\\u91d1\\u946b\\u56de\\u62a5\\u6df7\\u5408A~xyjxhbhha~KJ^sz~002800~\\u5929\\u987a\\u80a1\\u4efd~tsgf~GP-A\""
+    }
+  ]
+}

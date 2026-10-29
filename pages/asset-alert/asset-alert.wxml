@@ -1,146 +1,61 @@
-<view class="page theme-{{theme}}">
-  <view class="hero-title">{{asset ? asset.name + '提醒' : '提醒设置'}}</view
-  ><view wx:if="{{asset}}" class="hero-sub"
-    >{{asset.code}} · {{asset.market}} · {{asset.unit}}</view
-  >
-  <view wx:if="{{loading}}" class="muted" role="status">正在加载提醒设置…</view>
-  <view wx:if="{{asset && !following && !loading}}" class="panel"
-    ><view class="muted">先加入自选，即可设置该品种的行情提醒。</view
-    ><button
-      class="primary"
-      bindtap="follow"
-      loading="{{busy}}"
-      disabled="{{busy}}"
-    >
-      加入自选
-    </button></view
-  >
+<page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
+<view class="page asset-alert-page theme-{{theme}}">
+  <view class="settings-header">
+    <view class="hero-title">提醒设置</view>
+    <view wx:if="{{asset}}" class="asset-identity">
+      <view class="asset-name">{{asset.name}}</view>
+      <view class="asset-meta">{{asset.code}} · {{asset.marketText}} · {{asset.kindText}} · {{asset.unit}}</view>
+    </view>
+  </view>
+  <view wx:if="{{loading}}" class="loading-note" role="status">正在加载提醒设置…</view>
+  <view wx:if="{{asset && !following && !loading}}" class="settings-card follow-card">
+    <view class="section-title">先关注，再设置提醒</view>
+    <view class="muted">加入自选后，即可为这个标的设置专属行情提醒。</view>
+    <button class="primary" bindtap="follow" loading="{{busy}}" disabled="{{busy}}" hover-class="control-pressed">加入自选</button>
+  </view>
   <view wx:if="{{errorText && !editing}}" class="error-bar" role="alert">{{errorText}}</view>
   <view wx:if="{{following}}">
-    <view class="panel"
-      ><view class="section-title">添加或编辑提醒</view
-      ><view class="type-grid"
-        ><button
-          wx:for="{{types}}"
-          wx:key="value"
-          class="type-button {{draft.type === item.value && editing ? 'selected' : ''}}"
-          data-type="{{item.value}}"
-          bindtap="editRule"
-          disabled="{{busy}}"
-          aria-pressed="{{draft.type === item.value && editing}}"
-        >
-          {{item.label}}
-        </button></view
-      ><view class="foot">每个品种每类可设置一条提醒，点击已有类型可修改。</view></view
-    >
-    <view wx:if="{{editing}}" class="panel editor"
-      ><view class="section-title">{{editLabel}}</view>
-      <view
-        wx:if="{{draft.type === 'priceAbove' || draft.type === 'priceBelow'}}"
-        class="price-editor"
-        ><view class="field-label">目标价格</view><view class="input-row"><input
-          type="digit"
-          value="{{draft.value}}"
-          bindinput="onValue"
-          placeholder="输入目标价格"
-          aria-label="目标价格，{{asset.unit}}"
-          maxlength="12"
-          placeholder-style="color: var(--text-sub);"
-        /><text class="muted">{{asset.unit}}</text></view></view
-      >
-      <picker
-        wx:elif="{{draft.type === 'dailyMove' || draft.type === 'rapidMove'}}"
-        range="{{pctOptions}}"
-        value="{{pctIndex}}"
-        bindchange="onPercent"
-        disabled="{{busy}}"
-        aria-label="选择涨跌幅阈值"
-        ><view class="picker-row"
-          ><text>涨跌幅阈值</text><text class="picker-value">{{pctOptions[pctIndex]}}%</text
-          ><view class="picker-arrow" aria-hidden="true"
-            ><view class="picker-chevron"></view></view></view
-      ></picker>
-      <view wx:elif="{{draft.type === 'scheduled'}}"
-        ><picker mode="time" value="{{draft.time}}" bindchange="onTime" disabled="{{busy}}" aria-label="选择播报时间"
-          ><view class="picker-row"
-            ><text>播报时间</text><text class="picker-value">{{draft.time}}</text
-            ><view class="picker-arrow" aria-hidden="true"
-              ><view class="picker-chevron"></view></view></view></picker
-        ><view class="setting-row"
-          ><text>仅周一至周五</text
-          ><switch
-            checked="{{draft.weekdaysOnly}}"
-            bindchange="onWeekdays"
-            color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}"
-            aria-label="仅周一至周五播报" /></view
-        ><view class="foot">按星期安排，不代表交易日历。</view></view
-      >
-      <view wx:elif="{{draft.type === 'close'}}" class="muted"
-        >根据当日有效收盘报价播报，行情缺失时等待有效报价。</view
-      >
-      <view class="setting-row"
-        ><text>开启此提醒</text
-        ><switch
-          checked="{{draft.enabled}}"
-          bindchange="onEnabled"
-          color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}"
-          aria-label="开启此提醒" /></view
-      ><view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view><button
-        class="primary"
-        bindtap="saveRule"
-        loading="{{busy}}"
-        disabled="{{busy}}"
-      >
-        保存提醒</button
-      ><button
-        class="text-button centered"
-        bindtap="cancelEdit"
-        disabled="{{busy}}"
-      >
-        取消编辑
-      </button>
-    </view>
-    <view class="panel"
-      ><view class="section-title">已设置 · {{rules.length}} 条</view
-      ><view wx:if="{{!rules.length}}" class="muted"
-        >尚未设置提醒，选择上方类型开始。</view
-      >
-      <view wx:for="{{rules}}" wx:key="id" class="rule-row">
-        <view
-          class="rule-copy"
-          data-type="{{item.type}}"
-          bindtap="editRule"
-          role="button"
-          aria-label="编辑{{item.summary}}"
-        >
-          <view>{{item.summary}}</view>
-          <text class="micro">点击编辑提醒条件</text>
-        </view>
-        <view class="rule-actions">
-          <view class="rule-toggle">
-            <switch
-              checked="{{item.enabled}}"
-              disabled="{{busy}}"
-              data-id="{{item.id}}"
-              bindchange="toggleRule"
-              color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}"
-              aria-label="切换{{item.summary}}"
-            />
-            <text class="rule-status">{{item.enabled ? '已开启' : '已暂停'}}</text>
-          </view>
-          <button
-            class="rule-delete"
-            data-id="{{item.id}}"
-            bindtap="deleteRule"
-            disabled="{{busy}}"
-            aria-label="删除{{item.summary}}提醒"
-          >删除</button>
-        </view>
+    <view class="settings-card types-card">
+      <view class="section-heading"><view class="section-title">选择提醒类型</view><text class="section-caption">按需设置</text></view>
+      <view class="type-grid">
+        <button wx:for="{{types}}" wx:key="value" class="type-button {{draft.type === item.value && editing ? 'selected' : ''}}" data-type="{{item.value}}" bindtap="editRule" disabled="{{busy}}" aria-pressed="{{draft.type === item.value && editing}}" hover-class="control-pressed">
+          <view class="type-label">{{item.label}}</view>
+          <view class="type-description">{{item.value === 'priceAbove' ? '达到目标高价' : item.value === 'priceBelow' ? '达到目标低价' : item.value === 'dailyMove' ? '关注日内涨跌' : item.value === 'rapidMove' ? '捕捉短时波动' : item.value === 'scheduled' ? '按设定时间播报' : '查看当日收盘'}}</view>
+        </button>
       </view>
+      <view class="helper">每个标的每类可设置一条提醒，点击已有类型可修改。股票与 ETF 的价格、波动提醒按对应市场常规交易时段监测。</view>
     </view>
 
+    <view wx:if="{{editing}}" class="settings-card editor">
+      <view class="section-heading"><view class="section-title">{{editLabel}}</view><text class="editor-badge">{{draft.id ? '编辑提醒' : '新建提醒'}}</text></view>
+      <view wx:if="{{draft.type === 'priceAbove' || draft.type === 'priceBelow'}}" class="price-editor">
+        <view class="field-label">目标价格</view>
+        <view class="input-row"><input type="digit" value="{{draft.value}}" bindinput="onValue" disabled="{{busy}}" placeholder="输入目标价格" aria-label="目标价格，{{asset.unit}}" maxlength="12" placeholder-style="color: var(--text-mid);" /><text class="input-unit">{{asset.unit}}</text></view>
+        <view class="helper">{{draft.type === 'priceAbove' ? '价格达到或高于目标价时提醒' : '价格达到或低于目标价时提醒'}}，触发后自动关闭。</view>
+      </view>
+      <picker wx:elif="{{draft.type === 'dailyMove' || draft.type === 'rapidMove'}}" range="{{pctOptions}}" value="{{pctIndex}}" bindchange="onPercent" disabled="{{busy}}" aria-label="选择涨跌幅阈值">
+        <view class="picker-field"><view class="field-label">涨跌幅阈值</view><view class="picker-content"><text class="picker-value">{{pctOptions[pctIndex]}}<text class="value-unit">%</text></text><view class="picker-chevron" aria-hidden="true"></view></view></view>
+      </picker>
+      <view wx:elif="{{draft.type === 'scheduled'}}">
+        <picker mode="time" value="{{draft.time}}" bindchange="onTime" disabled="{{busy}}" aria-label="选择播报时间">
+          <view class="picker-field"><view class="field-label">播报时间 · 北京时间</view><view class="picker-content"><text class="picker-value">{{draft.time}}</text><view class="picker-chevron" aria-hidden="true"></view></view></view>
+        </picker>
+        <view class="setting-row"><view class="setting-copy"><view>仅周一至周五</view><view class="setting-description">按星期安排，不代表交易日历</view></view><switch checked="{{draft.weekdaysOnly}}" disabled="{{busy}}" bindchange="onWeekdays" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="仅周一至周五播报" /></view>
+      </view>
+      <view wx:elif="{{draft.type === 'close'}}" class="close-description">根据当日有效收盘报价播报，行情缺失时等待有效报价。</view>
+      <view class="setting-row enabled-setting"><view class="setting-copy"><view>开启此提醒</view><view class="setting-description">{{draft.enabled ? '保存后按设定条件监测' : '保存条件，暂不触发推送'}}</view></view><switch checked="{{draft.enabled}}" disabled="{{busy}}" bindchange="onEnabled" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="开启此提醒" /></view>
+      <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
+      <view class="editor-actions"><button class="primary" bindtap="saveRule" loading="{{busy}}" disabled="{{busy}}" hover-class="control-pressed">{{busy ? '正在保存' : '保存提醒'}}</button><button class="cancel-button" bindtap="cancelEdit" disabled="{{busy}}" hover-class="control-pressed">取消编辑</button></view>
+    </view>
+
+    <view class="section-heading rules-heading"><view class="section-title">已设置提醒</view><text class="section-caption">{{rules.length}} 条规则</text></view>
+    <view class="settings-card rules-card">
+      <view wx:if="{{!rules.length}}" class="empty-rules"><view class="empty-title">还没有提醒规则</view><view class="muted">选择上方类型，设置你的第一条提醒。</view></view>
+      <view wx:for="{{rules}}" wx:key="id" class="rule-row">
+        <button class="rule-copy" data-type="{{item.type}}" bindtap="editRule" disabled="{{busy}}" aria-label="编辑{{item.summary}}" hover-class="control-pressed"><view class="rule-summary">{{item.summary}}</view><view class="edit-hint"><text>编辑提醒条件</text><view class="chevron" aria-hidden="true"></view></view></button>
+        <view class="rule-actions"><view class="rule-toggle"><switch checked="{{item.enabled}}" disabled="{{busy}}" data-id="{{item.id}}" bindchange="toggleRule" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="切换{{item.summary}}" /><text class="rule-status">{{item.enabled ? '已开启' : '已暂停'}}</text></view><button class="rule-delete" data-id="{{item.id}}" bindtap="deleteRule" disabled="{{busy}}" aria-label="删除{{item.summary}}提醒" hover-class="control-pressed">删除</button></view>
+      </view>
+    </view>
   </view>
-  <view class="foot"
-    >后台约每 1 分钟监测。消息送达需订阅授权；到价类提醒触发后自动关闭。</view
-  >
+  <view class="page-footer"><view class="footer-title">提醒说明</view><view>后台约每 1 分钟监测，行情和消息送达可能延迟。消息送达需订阅授权；到价类提醒触发后自动关闭。</view></view>
 </view>

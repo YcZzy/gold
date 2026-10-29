@@ -1,6 +1,9 @@
 "use strict";
 // Pure adapters and createService are exported for callers and offline tests.
 const https = require("https");
+const instruments = require("./instruments");
+const { localTime, localLabel } = require("./market-time");
+const { session } = require("./market-calendar");
 const FRESH_MS = 15 * 60 * 1000;
 const CACHE_MS = 7 * 86400000;
 const GOLD = {
@@ -29,33 +32,11 @@ const GOLD = {
     precision: 2,
   },
 };
-function stockAsset(market, code, name) {
-  if (
-    !(
-      (market === "SH" && /^(60|68)\d{4}$/.test(code)) ||
-      (market === "SZ" && /^(000|001|002|003|300|301)\d{3}$/.test(code))
-    )
-  )
-    throw Error("不支持的资产代码");
-  return {
-    id: market.toLowerCase() + code,
-    name: name || code,
-    code,
-    market,
-    kind: "stock",
-    currency: "CNY",
-    unit: "元/股",
-    secid: (market === "SH" ? "1." : "0.") + code,
-    quoteCode: market.toLowerCase() + code,
-    precision: 2,
-  };
-}
+const stockAsset = instruments.stockAsset;
 function canonical(id) {
-  if (typeof id !== "string") throw Error("无效资产代码");
-  if (Object.prototype.hasOwnProperty.call(GOLD, id)) return { ...GOLD[id] };
-  const m = /^(sh|sz)(\d{6})$/.exec(id || "");
-  if (!m) throw Error("无效资产代码");
-  return stockAsset(m[1].toUpperCase(), m[2]);
+  if (typeof id === "string" && Object.prototype.hasOwnProperty.call(GOLD, id))
+    return { ...GOLD[id] };
+  return instruments.canonical(id);
 }
 function positive(v) {
   if (v === null || v === undefined || v === "" || v === "-") return null;
@@ -99,6 +80,17 @@ function quoteShape(asset, fields, source, time, now) {
   if (!price) throw Error("行情价格无效");
   return {
     assetId: asset.id,
+    ...(asset.kind !== "gold"
+      ? {
+          timezone: asset.timezone || "Asia/Shanghai",
+          sessionDate:
+            time === null
+              ? null
+              : localLabel(time, asset.timezone || "Asia/Shanghai", false),
+          volumeUnit: null,
+          marketState: session(asset, now).phase,
+        }
+      : {}),
     price,
     prevClose: positive(fields.prevClose),
     change: number(fields.change),
@@ -135,52 +127,49 @@ function parseTencentSearch(input) {
   const match = /^v_hint\s*=\s*("(?:\\.|[^"\\])*")\s*;?\s*$/.exec(body);
   if (!match) throw Error("搜索响应无效");
   const value = JSON.parse(match[1]);
-  const assets = new Map();
-  for (const row of value.split("^")) {
-    const [market, code, name, initials, type] = row.split("~");
-    if (type !== "GP-A" || !["sh", "sz"].includes(market) || !name) continue;
-    try {
-      const asset = stockAsset(market.toUpperCase(), code, name);
-      assets.set(asset.id, asset);
-    } catch (_) {}
-  }
-  return [...assets.values()];
+  return instruments.searchCandidates(value);
 }
 function parseTencentQuotes(input, assets, now = Date.now()) {
   const body = decodeTencent(input),
     result = [];
   for (const asset of assets) {
-    const re = new RegExp(
-      "(?:^|[;\\s])v_" + asset.quoteCode + '="([^"\\r\\n]*)"',
-    );
-    const match = re.exec(body);
-    if (!match) continue;
-    const p = match[1].split("~");
-    if (p[2] !== asset.code) continue;
+    const p = instruments.quoteFields(body, asset);
+    const verified = instruments.verifiedQuoteAsset(asset, p);
+    if (!verified) continue;
     try {
-      result.push(
-        quoteShape(
-          asset,
-          {
-            price: p[3],
-            prevClose: p[4],
-            open: p[5],
-            volume: p[6],
-            change: p[31],
-            changePct: p[32],
-            high: p[33],
-            low: p[34],
-            amount: number(p[37]) === null ? null : Number(p[37]) * 10000,
-          },
-          "tencent",
-          sourceTime(p[30], now),
-          now,
-        ),
+      const time =
+        asset.market === "US" || asset.market === "HK"
+          ? localTime(p[30], asset.timezone, now)
+          : sourceTime(p[30], now);
+      const international = ["US", "HK"].includes(asset.market);
+      const q = quoteShape(
+        asset,
+        {
+          price: p[3],
+          prevClose: p[4],
+          open: p[5],
+          volume: international ? null : p[6],
+          change: p[31],
+          changePct: p[32],
+          high: p[33],
+          low: p[34],
+          amount:
+            number(p[37]) === null
+              ? null
+              : Number(p[37]) * (international ? 1 : 10000),
+        },
+        "tencent",
+        time,
+        now,
       );
+      if (asset.market === "HK" && !asset.quoteCode.startsWith("r_hk"))
+        q.status = "delayed";
+      result.push(q);
     } catch (_) {}
   }
   return result;
 }
+
 // Field mappings verified against Sina's own datas/hq.js (CN/HF updaters).
 // SGE previous close/volume fields are deliberately unknown until documented.
 function parseSinaQuotes(input, assets, now = Date.now()) {
@@ -192,7 +181,7 @@ function parseSinaQuotes(input, assets, now = Date.now()) {
         ? "SGE_AU9999"
         : asset.id === "gold-xauusd"
           ? "hf_XAU"
-          : asset.quoteCode;
+          : asset.providers?.sina || asset.quoteCode;
     if (!symbol) continue;
     const match = new RegExp(
       "(?:^|[;\\s])(?:var\\s+)?hq_str_" + symbol + '="([^"\\r\\n]*)"',
@@ -220,6 +209,23 @@ function parseSinaQuotes(input, assets, now = Date.now()) {
         changePct: price && prev ? (price / prev - 1) * 100 : null,
       };
       timestamp = (p[12] || "") + " " + (p[6] || "");
+    } else if (asset.market === "US") {
+      continue;
+    } else if (asset.market === "HK") {
+      const prev = positive(p[3]),
+        price = positive(p[6]);
+      fields = {
+        price,
+        prevClose: prev,
+        open: p[2],
+        high: p[4],
+        low: p[5],
+        amount: p[11],
+        volume: null,
+        change: price && prev ? price - prev : null,
+        changePct: price && prev ? (price / prev - 1) * 100 : null,
+      };
+      timestamp = (p[17] || "") + " " + (p[18] || "");
     } else {
       const prev = positive(p[2]),
         price = positive(p[3]);
@@ -238,7 +244,15 @@ function parseSinaQuotes(input, assets, now = Date.now()) {
     }
     try {
       quotes.push(
-        quoteShape(asset, fields, "sina", sourceTime(timestamp, now), now),
+        quoteShape(
+          asset,
+          fields,
+          "sina",
+          asset.market === "HK"
+            ? localTime(timestamp, asset.timezone, now)
+            : sourceTime(timestamp, now),
+          now,
+        ),
       );
     } catch (_) {}
   }
@@ -250,9 +264,23 @@ function newerQuote(first, second) {
     return second;
   return first;
 }
+function parseYahooQuote(input, asset, now = Date.now()) {
+  const data = require('./yahoo-quote').parse(json(input), asset, now);
+  const quote = quoteShape(asset, data.fields, 'yahoo', data.time, now);
+  quote.session = 'regular';
+  if (data.delayed) { quote.status = 'delayed'; quote.isDelayed = true; }
+  return quote;
+}
 function parseEastmoneyQuote(input, asset, now = Date.now()) {
   const d = json(input)?.data;
-  if (!d || String(d.f57).toUpperCase() !== asset.code.toUpperCase())
+  if (
+    !d ||
+    String(d.f57).toUpperCase() !==
+      (asset.market === "US"
+        ? asset.secid.split(".").slice(1).join(".")
+        : asset.code
+      ).toUpperCase()
+  )
     throw Error("行情资产不匹配");
   const precision = Number(d.f59);
   if (!Number.isInteger(precision) || precision < 0 || precision > 6)
@@ -277,23 +305,27 @@ function parseEastmoneyQuote(input, asset, now = Date.now()) {
     now,
   );
 }
-function periodStart(period, now) {
+function periodStart(period, now, zone = "Asia/Shanghai") {
   const months = { "1mo": 1, "3mo": 3, "1y": 12, "5y": 60 }[period];
   if (!months) return null;
-  const date = new Date(now + 8 * 3600000);
+  const date = new Date(localLabel(now, zone, false) + "T12:00:00Z");
   date.setUTCMonth(date.getUTCMonth() - months);
   return date.toISOString().slice(0, 10);
 }
 function checkedRows(rows, asset, period, source, now, prevClose) {
   if (!Array.isArray(rows) || !rows.length) throw Error("暂无图表数据");
   const intra = period === "intraday";
-  const start = periodStart(period, now);
+  const start = periodStart(period, now, asset.timezone);
+  const rawRows = rows;
   if (start) rows = rows.filter((row) => String(row[0]) >= start);
   if (!rows.length) throw Error("该周期暂无图表数据");
   let lastTime = 0;
   const values = rows.map((p) => {
-    const t = sourceTime(p[0], now);
-    if (!t || t < lastTime) throw Error("图表时间无效");
+    const t =
+      asset.kind === "gold"
+        ? sourceTime(p[0], now)
+        : localTime(p[0], asset.timezone || "Asia/Shanghai", now);
+    if (!t || t <= lastTime) throw Error("图表时间无效");
     lastTime = t;
     if (intra) {
       if (!positive(p[1])) throw Error("分时价格无效");
@@ -305,11 +337,35 @@ function checkedRows(rows, asset, period, source, now, prevClose) {
       };
     }
     const [o, c, h, l] = p.slice(1, 5).map(positive);
-    if (!o || !c || !h || !l || h < Math.max(o, c, l) || l > Math.min(o, c, h))
+    if (
+      !o ||
+      !c ||
+      !h ||
+      !l ||
+      h < Math.max(o, c, l) ||
+      l > Math.min(o, c, h) ||
+      h / l > 4
+    )
       throw Error("K线价格无效");
     return { time: p[0], o, c, h, l, v: number(p[5]) };
   });
   return {
+    ...(asset.kind !== "gold"
+      ? {
+          timezone: asset.timezone,
+          volumeUnit: null,
+          ...(!intra
+            ? {
+                coverage: require("./history-coverage").coverage(
+                  rawRows,
+                  rows,
+                  asset,
+                  start,
+                ),
+              }
+            : {}),
+        }
+      : {}),
     mode: intra ? "intraday" : "candle",
     [intra ? "points" : "candles"]: values,
     prevClose: positive(prevClose),
@@ -321,20 +377,52 @@ function checkedRows(rows, asset, period, source, now, prevClose) {
 }
 function parseEastmoneyChart(input, asset, period, now = Date.now()) {
   const d = json(input)?.data;
-  if (!d || String(d.code).toUpperCase() !== asset.code.toUpperCase())
+  if (
+    !d ||
+    String(d.code).toUpperCase() !==
+      (asset.market === "US" && asset.providers?.eastmoney
+        ? asset.providers.eastmoney.split(".").slice(1).join(".")
+        : asset.code
+      ).toUpperCase()
+  )
     throw Error("图表资产不匹配");
-  const rows =
+  let rows =
     period === "intraday"
       ? (d.trends || []).map((line) => {
           const p = line.split(",");
           return [p[0], p[2], p[7], p[5]];
         })
       : (d.klines || []).map((line) => line.split(","));
-  return checkedRows(rows, asset, period, "eastmoney", now, d.preClose);
+  if (period === "intraday" && !d.trends && d.klines)
+    rows = d.klines.map((line) => {
+      const p = line.split(",");
+      return [p[0], p[2], null, p[5]];
+    });
+  if (period === "intraday" && asset.market === "US")
+    rows = rows.map((row) => {
+      const time = localTime(row[0], "Asia/Shanghai", now);
+      if (time === null) throw Error("分时日期无效");
+      return [localLabel(time, asset.timezone), ...row.slice(1)];
+    });
+  return checkedRows(
+    rows,
+    ["SH", "SZ"].includes(asset.market) &&
+      asset.kind === "stock" &&
+      d.market === undefined
+      ? { ...asset, historyLegacy: true }
+      : asset,
+    period,
+    "eastmoney",
+    now,
+    d.preClose,
+  );
 }
 function parseTencentChart(input, asset, period, now = Date.now()) {
-  const d = json(input)?.data?.[asset.quoteCode];
+  const code = asset.providers?.tencentChart || asset.quoteCode;
+  const d = json(input)?.data?.[code];
   if (!d) throw Error("图表资产不匹配");
+  if (d.qt?.[code] && !instruments.verifiedQuoteAsset(asset, d.qt[code]))
+    throw Error("图表行情身份不匹配");
   if (period === "intraday") {
     const date = String(d.data?.date || "");
     const ymd = /^\d{8}$/.test(date)
@@ -344,21 +432,17 @@ function parseTencentChart(input, asset, period, now = Date.now()) {
       const p = line.split(" ");
       return [`${ymd} ${p[0].slice(0, 2)}:${p[0].slice(2)}`, p[1], null, p[2]];
     });
-    return checkedRows(
-      rows,
-      asset,
-      period,
-      "tencent",
-      now,
-      d.qt?.[asset.quoteCode]?.[4],
-    );
+    return checkedRows(rows, asset, period, "tencent", now, d.qt?.[code]?.[4]);
   }
   // qfqday/hfqday intentionally rejected: all providers use unadjusted prices.
   return checkedRows(d.day, asset, period, "tencent", now, null);
 }
 function request(url, timeout = 3000) {
   const host = new URL(url).hostname;
-  const headers = { "User-Agent": "Mozilla/5.0" };
+  const headers = {
+    "User-Agent": "Mozilla/5.0",
+    Referer: "https://quote.eastmoney.com/",
+  };
   if (["hq.sinajs.cn", "stock2.finance.sina.com.cn"].includes(host))
     headers.Referer = "https://finance.sina.com.cn/";
   if (host === "www.sge.com.cn") headers.Referer = "https://www.sge.com.cn/";
@@ -395,6 +479,7 @@ function createService(options = {}) {
     search: async () => [],
   };
   const failures = new Map();
+  const instrumentWrites = new Map();
   async function get(c, k) {
     try {
       return await store.get(c, k);
@@ -407,14 +492,29 @@ function createService(options = {}) {
       await store.set(c, k, v);
     } catch (_) {}
   }
+  async function saveInstrument(asset) {
+    const id=asset.id;
+    const pending=(instrumentWrites.get(id) || Promise.resolve()).catch(() => {}).then(async () => {
+      if (typeof store.setInstrument === 'function') return store.setInstrument(asset, now());
+      const previous=await get('instruments', id);
+      const merged=instruments.mergeEvidence(previous?.asset, asset);
+      await set('instruments', id, {asset:merged,updatedAt:now()});
+      return merged;
+    });
+    instrumentWrites.set(id,pending);
+    try { return await pending; } catch (_) { return asset; }
+    finally { if (instrumentWrites.get(id) === pending) instrumentWrites.delete(id); }
+  }
   async function remote(key, url, parse) {
     if ((failures.get(key) || 0) > now()) throw Error("数据源冷却中");
+    // Observed cold requests: Tencent suggest ~3.3s, Yahoo regular quote ~4.4s.
+    const timeout = /^(search-|yahoo-quote-)/.test(key) ? 6000 : 3000;
     let timer;
     try {
       const raw = await Promise.race([
-        fetch(url, 3000),
+        fetch(url, timeout),
         new Promise((_, reject) => {
-          timer = setTimeout(() => reject(Error("行情请求超时")), 3000);
+          timer = setTimeout(() => reject(Error("行情请求超时")), timeout);
         }),
       ]);
       return parse(raw);
@@ -425,8 +525,37 @@ function createService(options = {}) {
       clearTimeout(timer);
     }
   }
+  function annotateAsset(asset) {
+    return asset.kind === "gold"
+      ? asset
+      : { ...asset, supportsClose: session(asset, now()).known };
+  }
   async function resolve(id, verify = false) {
-    const base = canonical(id);
+    const asset = await resolveInstrument(id, verify);
+    return annotateAsset(await ensureEastmoneyMapping(asset));
+  }
+  async function resolveInstrument(id, verify = false) {
+    let base;
+    try {
+      base = canonical(id);
+    } catch (error) {
+      if (!/^us[A-Z][A-Z0-9]*(?:\.[A-Z])?$/.test(id || "")) throw error;
+      const saved = await get("instruments", id);
+      if (saved?.asset?.providers?.tencentIdentity) {
+        base = instruments.usAsset(
+          saved.asset.providers.tencentIdentity,
+          saved.asset.name,
+          saved.asset.kind,
+        );
+        if (base.id !== id) throw error;
+      } else {
+        const found = (await search(id.slice(2))).assets.find(
+          (a) => a.id === id,
+        );
+        if (!found) throw error;
+        return found;
+      }
+    }
     if (base.kind === "gold") return base;
     const saved = await get("instruments", id);
     if (
@@ -434,17 +563,66 @@ function createService(options = {}) {
       typeof saved.asset.name === "string" &&
       saved.asset.name !== base.code
     )
-      return { ...base, name: saved.asset.name };
-    if (!verify) return base;
-    const result = await search(base.code);
+      return instruments.restoreAsset(saved.asset);
+    if ((!verify && base.kind !== "lof") || ["HK", "BJ"].includes(base.market)) return base;
+    const result = await search(base.code, id);
     const exact = result.assets.find((asset) => asset.id === id);
-    if (!exact) throw Error("未找到该沪深 A 股，请通过搜索选择资产");
+    if (!exact) throw Error("未找到该资产，请通过搜索选择");
     return exact;
+  }
+
+  async function ensureEastmoneyMapping(asset) {
+    if (
+      asset.market !== "US" ||
+      asset.providers?.eastmoney ||
+      !asset.identityVerified
+    )
+      return asset;
+    const candidate = instruments.eastmoneyCandidate(asset);
+    if (!candidate) return asset;
+    const mapped = {
+      ...asset,
+      secid: candidate.secid,
+      providers: { ...asset.providers, eastmoney: candidate.secid },
+    };
+    try {
+      await remote("us-em-identity-" + asset.id, quoteUrl(mapped), (raw) => {
+        const d = json(raw)?.data;
+        if (
+          !d ||
+          String(d.f57) !== candidate.code ||
+          (d.f13 !== undefined && Number(d.f13) !== candidate.market)
+        )
+          throw Error("美股备用报价身份不匹配");
+        parseEastmoneyQuote(raw, mapped, now());
+        return true;
+      });
+      await remote(
+        "us-em-history-identity-" + asset.id,
+        chartUrl(mapped, "5y"),
+        (raw) => {
+          const d = json(raw)?.data;
+          if (
+            !d ||
+            Number(d.market) !== candidate.market ||
+            String(d.code) !== candidate.code
+          )
+            throw Error("美股备用历史身份不匹配");
+          const parsed = parseEastmoneyChart(raw, mapped, "5y", now());
+          if (!parsed.candles?.length) throw Error("美股备用历史无效");
+          return true;
+        },
+      );
+      mapped.providers.eastmoneyVerified = "metadata+raw-chart";
+      return await saveInstrument(mapped);
+    } catch (_) {
+      return asset;
+    }
   }
   const quoteUrl = (a) =>
     "https://push2.eastmoney.com/api/qt/stock/get?secid=" +
     a.secid +
-    "&fields=f57,f58,f59,f43,f44,f45,f46,f47,f48,f60,f86,f124,f169,f170";
+    "&fields=f13,f57,f58,f59,f43,f44,f45,f46,f47,f48,f60,f86,f124,f169,f170";
   function chartUrl(a, p, host = "https://push2his.eastmoney.com") {
     if (p === "intraday")
       return (
@@ -473,7 +651,13 @@ function createService(options = {}) {
       now() - q.fetchedAt < CACHE_MS &&
       q.fetchedAt <= now()
     ) {
-      return { ...q, stale: true, status: "delayed" };
+      return {
+        ...q,
+        stale: true,
+        cached: true,
+        status: "delayed",
+        ...(a.kind !== "gold" ? { marketState: session(a, now()).phase } : {}),
+      };
     }
     throw Error("行情暂不可用，请稍后重试");
   }
@@ -547,7 +731,7 @@ function createService(options = {}) {
       if (result.asset) assets.push(result.asset);
       else errors.push(result.error);
     }
-    const stocks = assets.filter((a) => a.kind === "stock");
+    const stocks = assets.filter((a) => a.kind !== "gold");
     let primary = [];
     const goldRequests = new Map(
       assets
@@ -569,28 +753,58 @@ function createService(options = {}) {
             const parsed = parseTencentQuotes(r, stocks, now());
             const body = decodeTencent(r);
             for (const asset of stocks) {
-              const match = new RegExp(
-                "v_" + asset.quoteCode + '="([^"\\r\\n]*)"',
-              ).exec(body);
-              const fields = match && match[1].split("~");
-              if (
-                parsed.some((q) => q.assetId === asset.id) &&
-                fields &&
-                fields[2] === asset.code &&
-                fields[1]
-              )
-                asset.name = fields[1];
+              const verified = instruments.verifiedQuoteAsset(
+                asset,
+                instruments.quoteFields(body, asset),
+              );
+              if (verified && parsed.some((q) => q.assetId === asset.id))
+                Object.assign(asset, annotateAsset(instruments.mergeEvidence(asset, verified)));
             }
             return parsed;
           },
         );
       } catch (_) {}
+      const missingEtfs = stocks.filter(
+        (a) =>
+          ["etf", "lof"].includes(a.kind) &&
+          ["SH", "SZ"].includes(a.market) &&
+          !primary.some((q) => q.assetId === a.id),
+      );
+      await Promise.all(
+        missingEtfs.map(async (a) => {
+          try {
+            const parsed = await remote(
+              "tencent-etf-identity-" + a.id,
+              "https://qt.gtimg.cn/q=" + a.quoteCode,
+              (raw) => parseTencentQuotes(raw, [a], now()),
+            );
+            primary.push(...parsed);
+          } catch (_) {}
+        }),
+      );
+      const delayedHK = stocks
+        .filter(
+          (a) => a.market === "HK" && !primary.some((q) => q.assetId === a.id),
+        )
+        .map((a) => ({ ...a, quoteCode: "hk" + a.code }));
+      if (delayedHK.length) {
+        try {
+          primary.push(
+            ...(await remote(
+              "tencent-hk-delayed",
+              "https://qt.gtimg.cn/q=" +
+                delayedHK.map((a) => a.quoteCode).join(","),
+              (raw) => parseTencentQuotes(raw, delayedHK, now()),
+            )),
+          );
+        } catch (_) {}
+      }
     }
     await Promise.all(
       stocks
         .filter((asset) => asset.name !== asset.code)
         .map((asset) =>
-          set("instruments", asset.id, { asset, updatedAt: now() }),
+          saveInstrument(asset),
         ),
     );
     let sinaStocksPromise;
@@ -599,7 +813,10 @@ function createService(options = {}) {
         sinaStocksPromise = remote(
           "sina-stock-quotes",
           "https://hq.sinajs.cn/list=" +
-            stocks.map((asset) => asset.quoteCode).join(","),
+            stocks
+              .filter((asset) => asset.market !== "US")
+              .map((asset) => asset.providers?.sina || asset.quoteCode)
+              .join(","),
           (raw) => {
             const result = parseSinaQuotes(raw, stocks, now());
             if (!result.length) throw Error("新浪股票行情无效");
@@ -618,7 +835,16 @@ function createService(options = {}) {
             if (result.error) throw result.error;
             q = result.quote;
           } else if (!q || q.status !== "fresh") {
+            // Numeric fund ranges cannot prove either ETF or LOF provider identity.
+            if (
+              ["etf", "lof"].includes(a.kind) &&
+              ["SH", "SZ"].includes(a.market) &&
+              !old &&
+              !a.typeVerified
+            )
+              return await staleQuote(a);
             try {
+              if (!a.providers?.eastmoney) throw Error("暂无已验证东财映射");
               q = await remote("em-quote-" + a.id, quoteUrl(a), (r) =>
                 parseEastmoneyQuote(r, a, now()),
               );
@@ -628,9 +854,9 @@ function createService(options = {}) {
               q = old;
             }
             if (!q || q.status !== "fresh") {
-              const independent = (await sinaStocks()).find(
-                (quote) => quote.assetId === a.id,
-              );
+              const independent = a.market === 'US'
+                ? await remote('yahoo-quote-' + a.id, require('./yahoo-quote').url(a), raw => parseYahooQuote(raw, a, now())).catch(() => null)
+                : (await sinaStocks()).find(quote => quote.assetId === a.id);
               q = newerQuote(q, independent);
             }
             if (!q) q = await staleQuote(a);
@@ -652,7 +878,7 @@ function createService(options = {}) {
   async function chart(a, p) {
     if (!["intraday", "1mo", "3mo", "1y", "5y"].includes(p))
       throw Error("不支持的图表周期");
-    const key = a.id + "-" + p,
+    const key = (a.kind === "gold" ? "" : "v3-") + a.id + "-" + p,
       cached = await get("chartCache", key);
     if (
       cached &&
@@ -660,6 +886,105 @@ function createService(options = {}) {
       now() - cached.chart?.fetchedAt < 60000
     )
       return { ...cached.chart };
+    if (a.kind !== "gold") {
+      let result, limited;
+      const failures = [],
+        retryable = [];
+      const parseRoute = (route, raw) => {
+        const parsed =
+          route.parser === "tencent"
+            ? parseTencentChart(raw, a, p, now())
+            : route.parser === "eastmoney"
+              ? parseEastmoneyChart(raw, a, p, now())
+              : checkedRows(
+                  require("./security-charts").sinaRows(raw, p === 'intraday'),
+                  a,
+                  p,
+                  "sina",
+                  now(),
+                  null,
+                );
+        if (parsed.coverage?.status === "truncated")
+          throw Error("图表历史被截断，已验证更早历史");
+        return parsed;
+      };
+      const routes = require("./security-charts").routes(a, p, chartUrl(a, p));
+      async function attempt(route, i, retry = false) {
+        try {
+          const candidate = await remote(
+            "security-chart-" + key + "-" + i + (retry ? "-retry" : ""),
+            route.url,
+            (raw) => parseRoute(route, raw),
+          );
+          if (candidate.coverage?.status === "unverified") {
+            if (
+              limited &&
+              limited.source !== candidate.source &&
+              require("./history-coverage").confirm(limited, candidate)
+            ) {
+              candidate.coverage = {
+                ...candidate.coverage,
+                status: "limited",
+                verified: true,
+                basis: "independent-history-range-confirmed",
+              };
+              result = candidate;
+              return true;
+            }
+            if (
+              !limited ||
+              candidate.coverage.actualStart < limited.coverage.actualStart
+            )
+              limited = candidate;
+            return false;
+          }
+          result = candidate;
+          return true;
+        } catch (error) {
+          const transport =
+            /socket|ECONN|HTTP 5|timeout|超时|offline|unavailable|network/i.test(
+              error.message,
+            );
+          failures.push({
+            source: route.parser,
+            transport,
+            retry,
+            hint: error.message,
+          });
+          if (!retry && a.market === "BJ" && transport)
+            retryable.push([route, i]);
+          return false;
+        }
+      }
+      for (const [i, route] of routes.entries())
+        if (await attempt(route, i)) break;
+      // A single retry per BJ route recovers transport interruptions, never invalid price rows.
+      if (!result)
+        for (const [route, i] of retryable)
+          if (await attempt(route, i, true)) break;
+      if (!result && limited) result = limited;
+      if (result && failures.length) result.sourceErrors = failures;
+      if (!result) {
+        if (
+          cached?.assetId === a.id &&
+          now() - cached.chart?.fetchedAt < CACHE_MS
+        )
+          return { ...cached.chart, stale: true, cached: true };
+        throw Error("图表暂不可用，请稍后重试");
+      }
+      if (result.coverage?.verified) {
+        a.historyAvailableFrom = [a.historyAvailableFrom, result.coverage.rawStart].filter(Boolean).sort()[0];
+        if (result.coverage.basis === 'independent-history-range-confirmed')
+          a.historyRangeConfirmedFrom = result.coverage.rawStart;
+        await saveInstrument(a);
+      }
+      await set("chartCache", key, {
+        assetId: a.id,
+        chart: result,
+        expiresAt: now() + CACHE_MS,
+      });
+      return result;
+    }
     let c;
     try {
       c = await remote("em-chart-" + key, chartUrl(a, p), (r) =>
@@ -668,33 +993,24 @@ function createService(options = {}) {
     } catch (_) {
       try {
         const url =
-          a.kind === "stock"
+          a.id === "gold-au9999"
             ? p === "intraday"
-              ? "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=" +
-                a.quoteCode
-              : "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=" +
-                a.quoteCode +
-                ",day,,,1500,"
-            : a.id === "gold-au9999"
-              ? p === "intraday"
-                ? "https://www.sge.com.cn/graph/quotations?instid=Au99.99"
-                : "https://www.sge.com.cn/graph/Dailyhq?instid=Au99.99"
-              : p === "intraday"
-                ? "https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%20_min=/GlobalFuturesService.getGlobalFuturesMinLine?symbol=XAU"
-                : "https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%20_daily=/GlobalFuturesService.getGlobalFuturesDailyKLine?symbol=XAU";
-        c = await remote("backup-chart-" + key, url, (r) =>
-          a.kind === "stock"
-            ? parseTencentChart(r, a, p, now())
+              ? "https://www.sge.com.cn/graph/quotations?instid=Au99.99"
+              : "https://www.sge.com.cn/graph/Dailyhq?instid=Au99.99"
             : p === "intraday"
-              ? require("./gold-history").parseGoldIntraday(r, a, now())
-              : require("./gold-history").parseGoldHistory(r, a, p, now()),
+              ? "https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%20_min=/GlobalFuturesService.getGlobalFuturesMinLine?symbol=XAU"
+              : "https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%20_daily=/GlobalFuturesService.getGlobalFuturesDailyKLine?symbol=XAU";
+        c = await remote("backup-chart-" + key, url, (r) =>
+          p === "intraday"
+            ? require("./gold-history").parseGoldIntraday(r, a, now())
+            : require("./gold-history").parseGoldHistory(r, a, p, now()),
         );
       } catch (_) {
         if (
           cached?.assetId === a.id &&
           now() - cached.chart?.fetchedAt < CACHE_MS
         )
-          return { ...cached.chart, stale: true };
+          return { ...cached.chart, stale: true, cached: true };
         throw Error("图表暂不可用，请稍后重试");
       }
     }
@@ -705,7 +1021,7 @@ function createService(options = {}) {
     });
     return c;
   }
-  async function search(keyword) {
+  async function search(keyword, exactId = null) {
     if (
       typeof keyword !== "string" ||
       !keyword.trim() ||
@@ -718,17 +1034,34 @@ function createService(options = {}) {
         .toLowerCase()
         .includes(keyword.toLowerCase()),
     );
-    const key = Buffer.from(keyword.toLowerCase()).toString("hex"),
+    const local = instruments.catalogSearch(keyword);
+    const key =
+        "v2-" +
+        instruments.catalogVersion +
+        "-" +
+        Buffer.from(keyword.toLowerCase()).toString("hex"),
       cached = await get("searchCache", key);
     if (cached && now() - cached.fetchedAt < 300000)
-      return { ok: true, assets: cached.assets, source: "cache", stale: false };
+      return {
+        ok: true,
+        assets: cached.assets.flatMap((a) => {
+          try { return [annotateAsset(a.kind === "lof" ? instruments.restoreAsset(a) : a)]; }
+          catch (_) { return []; }
+        }),
+        source: "cache",
+        stale: false,
+      };
     try {
       const parseSearch = (raw) => {
         const data = json(raw)?.QuotationCodeTable?.Data;
         if (!Array.isArray(data)) throw Error("搜索响应无效");
         const found = [];
         for (const item of data) {
-          if (!["沪A", "深A", "沪A股", "深A股"].includes(item.SecurityTypeName))
+          if (
+            !["沪A", "深A", "沪A股", "深A股", "沪ETF", "深ETF", "ETF"].includes(
+              item.SecurityTypeName,
+            )
+          )
             continue;
           try {
             const market =
@@ -737,33 +1070,100 @@ function createService(options = {}) {
                 : String(item.MktNum) === "0"
                   ? "SZ"
                   : "";
-            found.push(stockAsset(market, item.Code, item.Name));
+            const candidate = stockAsset(market, item.Code, item.Name);
+            // LOF search labels are verified on Tencent; do not infer a new Eastmoney type.
+            if (candidate.kind === "lof") continue;
+            found.push(candidate);
           } catch (_) {}
         }
         return [...gold, ...found];
       };
-      let assets,
-        source = "eastmoney";
-      try {
-        assets = await remote(
-          "search-eastmoney",
-          "https://searchapi.eastmoney.com/api/suggest/get?input=" +
-            encodeURIComponent(keyword) +
-            "&type=14&count=8",
-          parseSearch,
-        );
-      } catch (_) {
-        assets = await remote(
+      const primaryRequest = remote(
+        "search-eastmoney",
+        "https://searchapi.eastmoney.com/api/suggest/get?input=" +
+          encodeURIComponent(keyword) +
+          "&type=14&count=8",
+        parseSearch,
+      );
+      let secondaryRequested = true;
+      const tencentRequest = () =>
+        remote(
           "search-tencent",
           "https://smartbox.gtimg.cn/s3/?q=" +
             encodeURIComponent(keyword) +
             "&t=all",
-          (raw) => [...gold, ...parseTencentSearch(raw)],
+          (raw) => parseTencentSearch(raw),
         );
-        source = "tencent";
+      // Exact resolve only needs one exact identity; user search always unions both sources.
+      const secondaryRequest = exactId
+        ? primaryRequest.then(
+            (assets) => {
+              if (assets.some((a) => a.id === exactId)) {
+                secondaryRequested = false;
+                return [];
+              }
+              return tencentRequest();
+            },
+            () => tencentRequest(),
+          )
+        : tencentRequest();
+      const sources = await Promise.allSettled([
+        primaryRequest,
+        secondaryRequest,
+      ]);
+      if (sources.every((result) => result.status === "rejected"))
+        throw Error("搜索源均不可用");
+      let assets = [
+        ...new Map(
+          sources
+            .flatMap((result) =>
+              result.status === "fulfilled" ? result.value : [],
+            )
+            .map((a) => [a.id, a]),
+        ).values(),
+      ];
+      const source =
+        sources[0].status === "fulfilled" &&
+        sources[1].status === "fulfilled" &&
+        secondaryRequested
+          ? "eastmoney+tencent"
+          : sources[0].status === "fulfilled"
+            ? "eastmoney"
+            : "tencent";
+      // US search type GP also denotes ETFs; quote identity is the classification authority.
+      const verifyAssets = assets.filter(
+        (a) => a.market === "US" || ["etf", "lof"].includes(a.kind),
+      );
+      if (verifyAssets.length) {
+        let body = "";
+        try {
+          body = decodeTencent(
+            await remote(
+              "search-identity",
+              "https://qt.gtimg.cn/q=" +
+                verifyAssets.map((a) => a.quoteCode).join(","),
+              (raw) => raw,
+            ),
+          );
+        } catch (_) {}
+        assets = assets.flatMap((a) => {
+          if (!verifyAssets.includes(a)) return [a];
+          const verified = instruments.verifiedQuoteAsset(
+            a,
+            instruments.quoteFields(body, a),
+          );
+          return verified ? [verified] : [];
+        });
       }
-      for (const asset of assets)
-        await set("instruments", asset.id, { asset, updatedAt: now() });
+      assets = [
+        ...new Map(
+          [...gold, ...local, ...assets].map((a) => [a.id, a]),
+        ).values(),
+      ];
+      assets = (await Promise.all(assets.map(ensureEastmoneyMapping))).map(
+        annotateAsset,
+      );
+      assets = await Promise.all(assets.map(saveInstrument));
       await set("searchCache", key, {
         assets,
         fetchedAt: now(),
@@ -774,7 +1174,10 @@ function createService(options = {}) {
       if (cached && now() - cached.fetchedAt < 86400000)
         return {
           ok: true,
-          assets: cached.assets,
+          assets: cached.assets.flatMap((a) => {
+          try { return [annotateAsset(a.kind === "lof" ? instruments.restoreAsset(a) : a)]; }
+          catch (_) { return []; }
+        }),
           source: "cache",
           stale: true,
         };
@@ -785,15 +1188,19 @@ function createService(options = {}) {
       const safe = directory.flatMap((row) => {
         try {
           const a = row.asset || row;
-          return [{ ...canonical(a.id), name: a.name }];
+          return [annotateAsset(instruments.restoreAsset(a))];
         } catch (_) {
           return [];
         }
       });
-      if (gold.length || safe.length)
+      if (gold.length || local.length || safe.length)
         return {
           ok: true,
-          assets: [...gold, ...safe],
+          assets: [
+            ...new Map(
+              [...gold, ...local, ...safe].map((a) => [a.id, annotateAsset(a)]),
+            ).values(),
+          ],
           source: "catalog",
           stale: true,
         };
@@ -834,6 +1241,20 @@ function createService(options = {}) {
 function databaseStore(db) {
   const sweptAt = new Map();
   return {
+    async setInstrument(asset, updatedAt) {
+      return db.runTransaction(async tx => {
+        const ref=tx.collection('instruments').doc(asset.id);
+        let previous;
+        try { previous=(await ref.get()).data; }
+        catch (error) {
+          if (!['DOCUMENT_NOT_FOUND','DATABASE_DOCUMENT_NOT_EXIST'].includes(error.code) &&
+              !/document.*(?:does not exist|not found|not exist)/i.test(String(error.errMsg || error.message))) throw error;
+        }
+        const merged=instruments.mergeEvidence(previous?.asset,asset);
+        await ref.set({data:{asset:merged,updatedAt}});
+        return merged;
+      });
+    },
     async get(collection, key) {
       const r = await db.collection(collection).doc(key).get();
       return r.data;
@@ -893,6 +1314,7 @@ module.exports = {
   request,
   parseTencentSearch,
   parseEastmoneyQuote,
+  parseYahooQuote,
   parseEastmoneyChart,
   parseTencentChart,
   decodeTencent,

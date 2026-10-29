@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-29",
+  "checks": [
+    {
+      "assetId": "sh600519",
+      "url": "https://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=sh600519&scale=240&ma=no&datalen=1500",
+      "count": 1500,
+      "first": "2020-08-18",
+      "last": "2026-10-28",
+      "comparisons": [
+        {
+          "date": "2020-08-18",
+          "expected": [
+            1697.38,
+            1705,
+            1720,
+            1691
+          ],
+          "actual": [
+            1697.38,
+            1705,
+            1720,
+            1691
+          ]
+        },
+        {
+          "date": "2020-08-19",
+          "expected": [
+            1700,
+            1687,
+            1717,
+            1682.99
+          ],
+          "actual": [
+            1700,
+            1687,
+            1717,
+            1682.99
+          ]
+        }
+      ],
+      "ok": true
+    },
+    {
+      "assetId": "sh510300",
+      "url": "https://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=sh510300&scale=240&ma=no&datalen=1500",
+      "count": 1500,
+      "first": "2020-08-18",
+      "last": "2026-10-28",
+      "comparisons": [
+        {
+          "date": "2020-08-18",
+          "expected": [
+            4.882,
+            4.87,
+            4.892,
+            4.844
+          ],
+          "actual": [
+            4.882,
+            4.87,
+            4.892,
+            4.844
+          ]
+        },
+        {
+          "date": "2020-08-19",
+          "expected": [
+            4.867,
+            4.794,
+            4.871,
+            4.791
+          ],
+          "actual": [
+            4.867,
+            4.794,
+            4.871,
+            4.791
+          ]
+        }
+      ],
+      "ok": true
+    },
+    {
+      "assetId": "sz159915",
+      "url": "https://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=sz159915&scale=240&ma=no&datalen=1500",
+      "count": 1500,
+      "first": "2020-08-17",
+      "last": "2026-10-28",
+      "comparisons": [
+        {
+          "date": "2020-08-17",
+          "expected": [
+            2.591,
+            2.607,
+            2.608,
+            2.56
+          ],
+          "actual": [
+            2.591,
+            2.607,
+            2.608,
+            2.56
+          ]
+        },
+        {
+          "date": "2020-08-18",
+          "expected": [
+            2.608,
+            2.605,
+            2.631,
+            2.595
+          ],
+          "actual": [
+            2.608,
+            2.605,
+            2.631,
+            2.595
+          ]
+        }
+      ],
+      "ok": true
+    }
+  ]
+}

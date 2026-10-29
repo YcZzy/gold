@@ -1,0 +1,231 @@
+{
+  "checkedAt": "2026-10-29T01:47:08.611Z",
+  "environment": "local-node-readonly",
+  "tests": [
+    {
+      "label": "search:茅",
+      "ok": true,
+      "elapsedMs": 3289,
+      "source": "tencent",
+      "count": 1,
+      "expectedAsset": "sh600519"
+    },
+    {
+      "label": "search:gzmt",
+      "ok": true,
+      "elapsedMs": 90,
+      "source": "tencent",
+      "count": 1,
+      "expectedAsset": "sh600519"
+    },
+    {
+      "label": "search:600519",
+      "ok": true,
+      "elapsedMs": 98,
+      "source": "tencent",
+      "count": 1,
+      "expectedAsset": "sh600519"
+    },
+    {
+      "label": "search:平安",
+      "ok": true,
+      "elapsedMs": 329,
+      "source": "tencent",
+      "count": 5,
+      "expectedAsset": "sz000001"
+    },
+    {
+      "label": "search:300750",
+      "ok": true,
+      "elapsedMs": 88,
+      "source": "tencent",
+      "count": 1,
+      "expectedAsset": "sz300750"
+    },
+    {
+      "label": "mixed-batch-quotes",
+      "ok": true,
+      "elapsedMs": 457,
+      "quotes": [
+        {
+          "assetId": "sh600519",
+          "name": "贵州茅台",
+          "unit": "元/股",
+          "source": "tencent",
+          "timestampPresent": true,
+          "sourceTime": "2026-10-29T01:47:09.000Z",
+          "status": "fresh",
+          "stale": false
+        },
+        {
+          "assetId": "sz000001",
+          "name": "平安银行",
+          "unit": "元/股",
+          "source": "tencent",
+          "timestampPresent": true,
+          "sourceTime": "2026-10-29T01:47:09.000Z",
+          "status": "fresh",
+          "stale": false
+        },
+        {
+          "assetId": "sz300750",
+          "name": "宁德时代",
+          "unit": "元/股",
+          "source": "eastmoney",
+          "timestampPresent": true,
+          "sourceTime": "2026-10-29T01:47:09.000Z",
+          "status": "fresh",
+          "stale": false
+        },
+        {
+          "assetId": "gold-au9999",
+          "name": "沪金 Au99.99",
+          "unit": "元/克",
+          "source": "eastmoney",
+          "timestampPresent": true,
+          "sourceTime": "2026-10-29T01:47:10.000Z",
+          "status": "fresh",
+          "stale": false
+        },
+        {
+          "assetId": "gold-xauusd",
+          "name": "伦敦金现",
+          "unit": "美元/盎司",
+          "source": "eastmoney",
+          "timestampPresent": true,
+          "sourceTime": "2026-10-29T01:47:12.000Z",
+          "status": "fresh",
+          "stale": false
+        }
+      ]
+    },
+    {
+      "label": "chart:sh600519:intraday",
+      "ok": true,
+      "elapsedMs": 210,
+      "source": "tencent",
+      "mode": "intraday",
+      "count": 19,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:48",
+      "stale": false
+    },
+    {
+      "label": "chart:sh600519:1mo",
+      "ok": true,
+      "elapsedMs": 379,
+      "source": "tencent",
+      "mode": "candle",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29",
+      "stale": false
+    },
+    {
+      "label": "chart:sz300750:intraday",
+      "ok": true,
+      "elapsedMs": 742,
+      "source": "eastmoney",
+      "mode": "intraday",
+      "count": 19,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:48",
+      "stale": false
+    },
+    {
+      "label": "chart:sz300750:1mo",
+      "ok": true,
+      "elapsedMs": 507,
+      "source": "eastmoney",
+      "mode": "candle",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29",
+      "stale": false
+    },
+    {
+      "label": "chart:gold-au9999:intraday",
+      "ok": true,
+      "elapsedMs": 439,
+      "source": "sge",
+      "mode": "intraday",
+      "count": 195,
+      "first": "2026-10-29 00:00",
+      "last": "2026-10-29 09:43",
+      "stale": false
+    },
+    {
+      "label": "chart:gold-au9999:1mo",
+      "ok": true,
+      "elapsedMs": 318,
+      "source": "eastmoney",
+      "mode": "candle",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29",
+      "stale": false
+    },
+    {
+      "label": "chart:gold-xauusd:intraday",
+      "ok": true,
+      "elapsedMs": 231,
+      "source": "eastmoney",
+      "mode": "intraday",
+      "count": 229,
+      "first": "2026-10-29 06:00",
+      "last": "2026-10-29 09:48",
+      "stale": false
+    },
+    {
+      "label": "chart:gold-xauusd:1mo",
+      "ok": true,
+      "elapsedMs": 225,
+      "source": "eastmoney",
+      "mode": "candle",
+      "count": 23,
+      "first": "2026-09-29",
+      "last": "2026-10-29",
+      "stale": false
+    },
+    {
+      "label": "forced-fallback:search",
+      "ok": true,
+      "elapsedMs": 95,
+      "source": "tencent"
+    },
+    {
+      "label": "forced-fallback:quotes",
+      "ok": true,
+      "elapsedMs": 246,
+      "sources": [
+        {
+          "assetId": "sh600519",
+          "source": "eastmoney",
+          "timestampPresent": true,
+          "status": "fresh"
+        },
+        {
+          "assetId": "sz000001",
+          "source": "eastmoney",
+          "timestampPresent": true,
+          "status": "fresh"
+        }
+      ]
+    },
+    {
+      "label": "forced-fallback:chart:intraday",
+      "ok": true,
+      "elapsedMs": 93,
+      "source": "tencent",
+      "count": 19
+    },
+    {
+      "label": "forced-fallback:chart:1mo",
+      "ok": false,
+      "elapsedMs": 63,
+      "error": "图表暂不可用，请稍后重试"
+    }
+  ],
+  "passed": 17,
+  "failed": 1
+}

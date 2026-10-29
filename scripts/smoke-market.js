@@ -90,7 +90,7 @@ async function run() {
   for (const period of ["intraday", "1mo"]) await check("forced-fallback:chart:" + period, async () => {
     const result = requireOk(await fallback.handle({ action: "chart", assetId: "sh600519", period }));
     const rows = result.chart.points || result.chart.candles || [];
-    if (!rows.length || result.chart.source !== "tencent") throw Error("no usable Tencent fallback chart");
+    if (!rows.length || !["tencent", "sina"].includes(result.chart.source) || result.chart.stale) throw Error("no usable validated fallback chart");
     return { source: result.chart.source, count: rows.length };
   });
   report.passed = report.tests.filter(row => row.ok).length;

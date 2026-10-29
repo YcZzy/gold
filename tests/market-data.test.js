@@ -249,7 +249,9 @@ test("gold quote fallback and unadjusted charts retain actual bar timestamps", a
   });
   assert.equal(r.chart.mode, "candle");
   assert.equal(r.chart.candles[0].c, 1500);
-  assert.ok(urls.at(-1).includes("fqt=0"));
+  const rawKlineUrls=urls.filter(url=>url.includes('/stock/kline/get?'));
+  assert.ok(rawKlineUrls.length);
+  assert.ok(rawKlineUrls.every(url=>url.includes('fqt=0')));
   assert.equal(
     (await c.handle({ action: "chart", assetId: "sh600519", period: "evil" }))
       .ok,

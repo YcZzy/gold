@@ -1,0 +1,3142 @@
+{
+  "asOfDate": "2026-10-28",
+  "generatedAt": "2026-10-28T08:13:58.904743+00:00",
+  "scope": "Read-only live HTTP validation. No application code changed. 10 assets cover SSE/SZSE stocks and ETFs, BSE stock, HK stock/ETF, US stock/ETF, US class-share symbol.",
+  "protocol": {
+    "tls": "Default trusted CA verification enabled for every HTTPS request. No verify=False or insecure flags.",
+    "requestTimeoutSeconds": 10,
+    "headers": {
+      "User-Agent": "Mozilla/5.0",
+      "Referer": "Public provider quote site"
+    },
+    "acceptance": [
+      "HTTP 200 alone is not success: provider code, expected data key, nonempty samples, identity, chronological coverage, dates, and adjustment semantics checked.",
+      "Daily cycle routes fetch at least 5y of unadjusted daily bars, then filter calendar boundaries listed below. No aggregation/resampling needed.",
+      "Main/backup use different providers. Eastmoney alternate hosts are same-provider transport fallbacks only.",
+      "Historical source rows are preserved as small first/last excerpts with SHA-256 and response size; full downloaded responses were used in validation but are not committed.",
+      "No inference of current trade date from host clock alone: China/HK latest 2026-10-28, US latest completed session 2026-10-27.",
+      "US Tencent/ Yahoo minutes use New York exchange dates; Eastmoney US minute strings use Asia/Shanghai and cross midnight.",
+      "Reject empty response, empty klines, malformed JSON, unknown identity, partial coverage, and adjusted key when strict unadjusted requested; record errors."
+    ]
+  },
+  "periodStartInclusive": {
+    "1mo": "2026-09-28",
+    "3mo": "2026-07-28",
+    "1y": "2025-10-28",
+    "5y": "2021-10-28"
+  },
+  "assets": [
+    {
+      "asset": "sh510300",
+      "yahooSymbol": "510300.SS",
+      "eastmoneySecid": "1.510300",
+      "timezone": "Asia/Shanghai",
+      "currency": "CNY",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=sh510300,day,,,1500,",
+        "identity": [
+          "1",
+          "沪深300ETF华泰柏瑞",
+          "510300",
+          "4.152",
+          "4.123",
+          "4.155",
+          "10986237",
+          "5668491",
+          "5317746",
+          "4.152",
+          "36146",
+          "4.151",
+          "7180",
+          "4.150",
+          "40099",
+          "4.149",
+          "2117",
+          "4.148",
+          "10882",
+          "4.153",
+          "13520",
+          "4.154",
+          "9639",
+          "4.155",
+          "10532",
+          "4.156",
+          "7510",
+          "4.157",
+          "10960",
+          "",
+          "20261028160816",
+          "0.029",
+          "0.70",
+          "4.166",
+          "4.132",
+          "4.152/10986237/4558577920",
+          "10986237",
+          "455858",
+          "3.03",
+          "",
+          "",
+          "4.166",
+          "4.132",
+          "0.82",
+          "1504.61",
+          "1504.61",
+          "0.00",
+          "4.535",
+          "3.711",
+          "0.45",
+          "44263",
+          "4.149",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "455857.7920",
+          "570.1526",
+          "13732",
+          "   A",
+          "ETF",
+          "-10.32",
+          "-0.79",
+          "",
+          "",
+          "",
+          "5.095",
+          "4.031",
+          "-3.31",
+          "-9.99",
+          "-10.27",
+          "36238087700",
+          "36238087700",
+          "29.79",
+          "-11.88",
+          "36238087700",
+          "-0.15",
+          "4.1583",
+          "-11.26",
+          "0.00",
+          "4.1259",
+          "CNY",
+          "0",
+          "___D__F__N",
+          "4.160",
+          "-20708",
+          ""
+        ],
+        "status": "ok",
+        "count": 1501,
+        "earliest": "2020-08-17",
+        "latest": "2026-10-28",
+        "responseSha256": "593b6ca4d49557436f7fef959787e425363eb566be75ede9570211aba488a773"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.510300&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "510300",
+          "market": 1,
+          "name": "沪深300ETF华泰柏瑞",
+          "decimal": 3,
+          "dktotal": 3503,
+          "preKPrice": 4.97
+        },
+        "status": "ok",
+        "count": 1212,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-28",
+        "responseSha256": "731102f26931ce66fff2c2cfbf60ed7ca4b26cb346707bcbd42b0612ae69c3a3"
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=sh510300",
+        "date": "20261028",
+        "count": 267,
+        "first": "0930 4.155 157045 65252198.00",
+        "last": "1530 4.152 10999969 4564279363.41",
+        "timezone": "Asia/Shanghai",
+        "priceDecimalPlacesObserved": [
+          3
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.510300&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 240,
+        "first": "2026-10-28 09:31,4.155,4.149,4.156,4.143,774081,321270736.000,0.32,0.63,0.026,0.21",
+        "last": "2026-10-28 15:00,4.152,4.152,4.152,4.152,77191,32049704.000,0.00,0.00,0.000,0.02",
+        "rawTimestampTimezone": "Asia/Shanghai",
+        "pricePrecisionMetadata": 3
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1212,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 0,
+          "maximumDifference": 0.0,
+          "largestDifferenceDate": "2026-10-28",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                4.96,
+                4.949,
+                4.977,
+                4.926
+              ],
+              "backupOHLC": [
+                4.96,
+                4.949,
+                4.977,
+                4.926
+              ]
+            },
+            {
+              "date": "2026-10-28",
+              "primaryOHLC": [
+                4.155,
+                4.152,
+                4.166,
+                4.132
+              ],
+              "backupOHLC": [
+                4.155,
+                4.152,
+                4.166,
+                4.132
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action."
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/510300.SS?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635384600,
+          "local": "2021-10-28T09:30:00+08:00",
+          "open": 4.960000038146973,
+          "close": 4.948999881744385,
+          "high": 4.9770002365112305,
+          "low": 4.926000118255615,
+          "volume": 441341200,
+          "adjustedClose": 4.477235794067383
+        },
+        "mainSameDateOHLC": [
+          4.96,
+          4.949,
+          4.977,
+          4.926
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1501,
+        "dailyBackup": 1212,
+        "minutePrimary": 267,
+        "minuteBackup": 240,
+        "dailyDateSemantics": "Exchange local civil date in Asia/Shanghai",
+        "minutePrimaryTimeSemantics": "Asia/Shanghai exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Shanghai civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "sz159915",
+      "yahooSymbol": "159915.SZ",
+      "eastmoneySecid": "0.159915",
+      "timezone": "Asia/Shanghai",
+      "currency": "CNY",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=sz159915,day,,,1500,",
+        "identity": [
+          "51",
+          "创业板ETF易方达",
+          "159915",
+          "2.649",
+          "2.563",
+          "2.594",
+          "44221509",
+          "22295575",
+          "21925933",
+          "2.648",
+          "19286",
+          "2.647",
+          "5489",
+          "2.646",
+          "2968",
+          "2.645",
+          "5364",
+          "2.644",
+          "1632",
+          "2.649",
+          "34773",
+          "2.650",
+          "61078",
+          "2.651",
+          "19063",
+          "2.652",
+          "17567",
+          "2.653",
+          "7604",
+          "",
+          "20261028160815",
+          "0.086",
+          "3.36",
+          "2.665",
+          "2.578",
+          "2.649/44221509/11607322263",
+          "44221509",
+          "1160732",
+          "12.58",
+          "",
+          "",
+          "2.665",
+          "2.578",
+          "3.39",
+          "930.98",
+          "930.98",
+          "0.00",
+          "3.076",
+          "2.050",
+          "0.88",
+          "-105346",
+          "2.625",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "1160732.2263",
+          "550.8596",
+          "20795",
+          "   A",
+          "ETF",
+          "-16.85",
+          "-2.36",
+          "",
+          "",
+          "",
+          "4.395",
+          "2.511",
+          "-8.37",
+          "-22.54",
+          "-21.04",
+          "35144454936",
+          "35144454936",
+          "-60.26",
+          "-19.85",
+          "35144454936",
+          "-0.12",
+          "2.6523",
+          "-17.35",
+          "0.00",
+          "2.5649",
+          "CNY",
+          "0",
+          "",
+          "2.640",
+          "40576",
+          ""
+        ],
+        "status": "ok",
+        "count": 1501,
+        "earliest": "2020-08-14",
+        "latest": "2026-10-28",
+        "responseSha256": "752e59e8dff7c570e3791c63fb7e9a83e9f1c81b84a47a2c29a2d990a0da850b"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.159915&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "159915",
+          "market": 0,
+          "name": "创业板ETF易方达",
+          "decimal": 3,
+          "dktotal": 3611,
+          "preKPrice": 3.205
+        },
+        "status": "ok",
+        "count": 1212,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-28",
+        "responseSha256": "3566fd1f0bce2801a6dfb7af3093f98592113aab16da5556a8eb57fd6108991e"
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=sz159915",
+        "date": "20261028",
+        "count": 267,
+        "first": "0930 2.594 477303 123812398.20",
+        "last": "1530 2.649 44242304 11612830934.51",
+        "timezone": "Asia/Shanghai",
+        "priceDecimalPlacesObserved": [
+          3
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.159915&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 240,
+        "first": "2026-10-28 09:31,2.594,2.596,2.609,2.593,2018480,524789166.000,0.62,1.29,0.033,0.57",
+        "last": "2026-10-28 15:00,2.649,2.649,2.649,2.649,334161,88519248.000,0.00,0.00,0.000,0.10",
+        "rawTimestampTimezone": "Asia/Shanghai",
+        "pricePrecisionMetadata": 3
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1212,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 0,
+          "maximumDifference": 0.0,
+          "largestDifferenceDate": "2026-10-28",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                3.196,
+                3.178,
+                3.232,
+                3.163
+              ],
+              "backupOHLC": [
+                3.196,
+                3.178,
+                3.232,
+                3.163
+              ]
+            },
+            {
+              "date": "2026-10-28",
+              "primaryOHLC": [
+                2.594,
+                2.649,
+                2.665,
+                2.578
+              ],
+              "backupOHLC": [
+                2.594,
+                2.649,
+                2.665,
+                2.578
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action."
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/159915.SZ?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635384600,
+          "local": "2021-10-28T09:30:00+08:00",
+          "close": 3.177999973297119,
+          "high": 3.2320001125335693,
+          "volume": 129880004,
+          "low": 3.1630001068115234,
+          "open": 3.196000099182129,
+          "adjustedClose": 3.177999973297119
+        },
+        "mainSameDateOHLC": [
+          3.196,
+          3.178,
+          3.232,
+          3.163
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1501,
+        "dailyBackup": 1212,
+        "minutePrimary": 267,
+        "minuteBackup": 240,
+        "dailyDateSemantics": "Exchange local civil date in Asia/Shanghai",
+        "minutePrimaryTimeSemantics": "Asia/Shanghai exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Shanghai civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "bj920185",
+      "yahooSymbol": "920185.BJ",
+      "eastmoneySecid": "0.920185",
+      "timezone": "Asia/Shanghai",
+      "currency": "CNY",
+      "dailyPrimary": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.920185&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "920185",
+          "market": 0,
+          "name": "贝特瑞",
+          "decimal": 2,
+          "dktotal": 1516,
+          "preKPrice": 175.75
+        },
+        "status": "ok",
+        "count": 1212,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-28",
+        "responseSha256": "32408cba7eaf1fef29f9b347a134c8351fcd3e38585757b98be0eeebf4e3d857"
+      },
+      "dailyBackup": {
+        "source": "sina",
+        "url": "https://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=bj920185&scale=240&ma=no&datalen=1500",
+        "identity": {
+          "requestedSymbol": "bj920185",
+          "nameInPayload": null,
+          "identityProof": "OHLC dates overlap and match 0.920185 贝特瑞 from Eastmoney; Sina array has no security identity fields"
+        },
+        "status": "ok",
+        "count": 1500,
+        "earliest": "2020-08-18",
+        "latest": "2026-10-28",
+        "responseSha256": "3588cd05aa6457a5e28d9141631bd18b4803fcaac79346a949cf2b4c3de7c990"
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=bj920185",
+        "date": "20261028",
+        "count": 242,
+        "first": "0930 18.58 216",
+        "last": "1500 18.43 61260",
+        "timezone": "Asia/Shanghai",
+        "priceDecimalPlacesObserved": [
+          2
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.920185&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 240,
+        "first": "2026-10-28 09:31,18.58,18.50,18.70,18.50,2853,5307706.00,1.08,-0.16,-0.03,0.03",
+        "last": "2026-10-28 15:00,18.43,18.43,18.43,18.43,651,1199719.00,0.00,0.00,0.00,0.01",
+        "rawTimestampTimezone": "Asia/Shanghai",
+        "pricePrecisionMetadata": 2
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "fqt=0",
+        "backupParameter": "Sina unadjusted default, cross-checked against explicit fqt=0",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1212,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 0,
+          "maximumDifference": 0.0,
+          "largestDifferenceDate": "2026-10-28",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                175.75,
+                170.0,
+                177.0,
+                168.51
+              ],
+              "backupOHLC": [
+                175.75,
+                170.0,
+                177.0,
+                168.51
+              ]
+            },
+            {
+              "date": "2026-10-28",
+              "primaryOHLC": [
+                18.58,
+                18.43,
+                18.88,
+                18.39
+              ],
+              "backupOHLC": [
+                18.58,
+                18.43,
+                18.88,
+                18.39
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action."
+        }
+      },
+      "checkedRows": {
+        "dailyPrimary": 1212,
+        "dailyBackup": 1500,
+        "minutePrimary": 242,
+        "minuteBackup": 240,
+        "dailyDateSemantics": "Exchange local civil date in Asia/Shanghai",
+        "minutePrimaryTimeSemantics": "Asia/Shanghai exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Shanghai civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "hk00700",
+      "yahooSymbol": "0700.HK",
+      "eastmoneySecid": "116.00700",
+      "timezone": "Asia/Hong_Kong",
+      "currency": "HKD",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=hk00700,day,,,1500,",
+        "identity": [
+          "100",
+          "腾讯控股",
+          "00700",
+          "387.600",
+          "385.200",
+          "384.000",
+          "12439106.0",
+          "0",
+          "0",
+          "387.600",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "387.600",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "12439106.0",
+          "2026/10/28 16:07:59",
+          "2.400",
+          "0.62",
+          "390.800",
+          "384.000",
+          "387.600",
+          "12439106.0",
+          "4814482238.109",
+          "0",
+          "14.16",
+          "",
+          "0",
+          "0",
+          "1.77",
+          "35243.0914",
+          "35243.0914",
+          "TENCENT",
+          "1.37",
+          "658.700",
+          "378.000",
+          "0.38",
+          "-16.95",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "13.00",
+          "2.71",
+          "0.14",
+          "100",
+          "-34.71",
+          "-1.57",
+          "GP",
+          "20.41",
+          "11.00",
+          "-8.84",
+          "-11.87",
+          "-20.96",
+          "9092644829.00",
+          "9092644829.00",
+          "13.41",
+          "5.315",
+          "387.044",
+          "-34.66",
+          "HKD",
+          "1",
+          "45"
+        ],
+        "status": "ok",
+        "count": 1501,
+        "earliest": "2020-09-22",
+        "latest": "2026-10-28",
+        "responseSha256": "f48c0ed596f0452db2b791c11b3dd85bbee3855ea60c9fd15af104df24634db4"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=116.00700&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "00700",
+          "market": 116,
+          "name": "腾讯控股",
+          "decimal": 3,
+          "dktotal": 5512,
+          "preKPrice": 487.0
+        },
+        "status": "ok",
+        "count": 1229,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-28",
+        "responseSha256": "d473ebaddb8784b17bb9db7d08f77a32e0da67855c09ecd1b8d5b18ca9d56246"
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=hk00700",
+        "date": "20261028",
+        "count": 332,
+        "first": "0930 384.000 510600 196105924.933",
+        "last": "1607 387.600 12439106 4814482238.109",
+        "timezone": "Asia/Hong_Kong",
+        "priceDecimalPlacesObserved": [
+          3
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=116.00700&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 330,
+        "first": "2026-10-28 09:31,384.000,387.800,388.400,384.000,898700,346384360.000,1.14,0.67,2.600,0.01",
+        "last": "2026-10-28 16:00,387.200,387.600,387.600,387.000,30300,11730560.000,0.15,0.10,0.400,0.00",
+        "rawTimestampTimezone": "Asia/Hong_Kong",
+        "pricePrecisionMetadata": 3
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 21,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 21,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 246,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 246,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1232,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1229,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1229,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 0,
+          "maximumDifference": 0.0,
+          "largestDifferenceDate": "2026-10-28",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                485.8,
+                488.2,
+                494.0,
+                485.8
+              ],
+              "backupOHLC": [
+                485.8,
+                488.2,
+                494.0,
+                485.8
+              ]
+            },
+            {
+              "date": "2026-10-28",
+              "primaryOHLC": [
+                384.0,
+                387.6,
+                390.8,
+                384.0
+              ],
+              "backupOHLC": [
+                384.0,
+                387.6,
+                390.8,
+                384.0
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action."
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/0700.HK?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635384600,
+          "local": "2021-10-28T09:30:00+08:00",
+          "low": 447.8378601074219,
+          "volume": 14832277,
+          "open": 447.8378601074219,
+          "high": 455.3970947265625,
+          "close": 450.0503234863281,
+          "adjustedClose": 432.012451171875
+        },
+        "mainSameDateOHLC": [
+          485.8,
+          488.2,
+          494.0,
+          485.8
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1501,
+        "dailyBackup": 1229,
+        "minutePrimary": 332,
+        "minuteBackup": 330,
+        "dailyDateSemantics": "Exchange local civil date in Asia/Hong_Kong",
+        "minutePrimaryTimeSemantics": "Asia/Hong_Kong exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Hong_Kong civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "hk02800",
+      "yahooSymbol": "2800.HK",
+      "eastmoneySecid": "116.02800",
+      "timezone": "Asia/Hong_Kong",
+      "currency": "HKD",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=hk02800,day,,,1500,",
+        "identity": [
+          "100",
+          "盈富基金",
+          "02800",
+          "23.780",
+          "23.700",
+          "23.740",
+          "472021134.0",
+          "0",
+          "0",
+          "23.780",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "23.780",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "472021134.0",
+          "2026/10/28 16:08:00",
+          "0.080",
+          "0.34",
+          "23.840",
+          "23.680",
+          "23.780",
+          "472021134.0",
+          "11214018784.560",
+          "0",
+          "0.00",
+          "",
+          "0",
+          "0",
+          "0.68",
+          "1254.6310",
+          "1254.6310",
+          "TRACKER FUND",
+          "0.00",
+          "28.113",
+          "22.920",
+          "0.77",
+          "9.16",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0.00",
+          "0.00",
+          "8.95",
+          "500",
+          "-7.22",
+          "-2.30",
+          "GP-FUND",
+          "",
+          "",
+          "-4.96",
+          "-6.01",
+          "-10.13",
+          "5275992500.00",
+          "5275992500.00",
+          "0.00",
+          "0.000",
+          "23.757",
+          "-11.08",
+          "HKD",
+          "1",
+          "45"
+        ],
+        "status": "ok",
+        "count": 1501,
+        "earliest": "2020-09-22",
+        "latest": "2026-10-28",
+        "responseSha256": "a7cf92d600a3c2926499c132e0dcf1dc79b4c2284f35db364dd9b2bbfb9dcc8a"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=116.02800&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "02800",
+          "market": 116,
+          "name": "盈富基金",
+          "decimal": 3,
+          "dktotal": 6620,
+          "preKPrice": 26.28
+        },
+        "status": "ok",
+        "count": 1229,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-28",
+        "responseSha256": "0f2fe8f305fd4e8e013f3bf95abe1cae4797eeeabf1c10bba273f417d100eb23"
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=hk02800",
+        "date": "20261028",
+        "count": 332,
+        "first": "0930 23.740 20508 486859.280",
+        "last": "1608 23.780 472021134 11214018784.560",
+        "timezone": "Asia/Hong_Kong",
+        "priceDecimalPlacesObserved": [
+          3
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=116.02800&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 330,
+        "first": "2026-10-28 09:31,23.740,23.760,23.800,23.700,11341000,269444366.000,0.42,0.25,0.060,0.00",
+        "last": "2026-10-28 16:00,23.780,23.780,23.780,23.760,3173500,75465470.000,0.08,0.00,0.000,0.00",
+        "rawTimestampTimezone": "Asia/Hong_Kong",
+        "pricePrecisionMetadata": 3
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 21,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 21,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 246,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 246,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1232,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1229,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1229,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 0,
+          "maximumDifference": 0.0,
+          "largestDifferenceDate": "2026-10-28",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                26.28,
+                26.18,
+                26.4,
+                26.12
+              ],
+              "backupOHLC": [
+                26.28,
+                26.18,
+                26.4,
+                26.12
+              ]
+            },
+            {
+              "date": "2026-10-28",
+              "primaryOHLC": [
+                23.74,
+                23.78,
+                23.84,
+                23.68
+              ],
+              "backupOHLC": [
+                23.74,
+                23.78,
+                23.84,
+                23.68
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action."
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/2800.HK?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635384600,
+          "local": "2021-10-28T09:30:00+08:00",
+          "high": 26.399999618530273,
+          "open": 26.280000686645508,
+          "close": 26.18000030517578,
+          "low": 26.1200008392334,
+          "volume": 133484358,
+          "adjustedClose": 22.04707908630371
+        },
+        "mainSameDateOHLC": [
+          26.28,
+          26.18,
+          26.4,
+          26.12
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1501,
+        "dailyBackup": 1229,
+        "minutePrimary": 332,
+        "minuteBackup": 330,
+        "dailyDateSemantics": "Exchange local civil date in Asia/Hong_Kong",
+        "minutePrimaryTimeSemantics": "Asia/Hong_Kong exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Hong_Kong civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "usAAPL.OQ",
+      "yahooSymbol": "AAPL",
+      "eastmoneySecid": "105.AAPL",
+      "timezone": "America/New_York",
+      "currency": "USD",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usAAPL.OQ,day,,,1500,",
+        "identity": [
+          "delay",
+          "苹果",
+          "AAPL.OQ",
+          "347.10",
+          "343.91",
+          "343.17",
+          "39984395",
+          "0",
+          "0",
+          "347.10",
+          "360",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "347.15",
+          "80",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "",
+          "2026-10-27 16:00:01",
+          "3.19",
+          "0.93",
+          "347.78",
+          "342.39",
+          "USD",
+          "39984395",
+          "13846336858",
+          "0.27",
+          "39.81",
+          "",
+          "46.53",
+          "",
+          "1.57",
+          "50624.91292",
+          "50656.39878",
+          "Apple Inc.",
+          "8.72",
+          "351.73",
+          "242.76",
+          "280",
+          "47.11",
+          "0.31",
+          "50656.39878",
+          "28.02",
+          "2.24",
+          "GP",
+          "148.75",
+          "36.08",
+          "1.71",
+          "5.37",
+          "14.50",
+          "14594180000",
+          "14585108878",
+          "1.00",
+          "37.84",
+          "1.06",
+          "346.29",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "status": "ok",
+        "count": 1500,
+        "earliest": "2020-11-05",
+        "latest": "2026-10-27",
+        "responseSha256": "6cb8c02bbfd44295c1c270385fae590c439b2e58feddef8462afaaafdc53d81c"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=105.AAPL&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "AAPL",
+          "market": 105,
+          "name": "苹果",
+          "decimal": 3,
+          "dktotal": 10618,
+          "preKPrice": 148.85
+        },
+        "status": "ok",
+        "count": 1254,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-27",
+        "responseSha256": "fc43e7da6c4825cc41064e13e846b84f90b42f1a24b9e22e301f7f7161b90fad",
+        "useCondition": "Conditional: validate every bar; reject nonpositive OHLC, invalid OHLC relations, and extreme intraday ratios (e.g. high/low>4) or other anomalies. If rejected, attempt verified same-source Tencent transport fallback or omit; do not silently substitute Yahoo split-normalized daily bars."
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/usMinute/query?code=usAAPL.OQ",
+        "date": "20261027",
+        "count": 391,
+        "first": "0930 343.61 306218",
+        "last": "1600 347.10 39984395",
+        "timezone": "America/New_York",
+        "priceDecimalPlacesObserved": [
+          2
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=105.AAPL&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 390,
+        "first": "2026-10-27 21:31,343.535,343.605,344.430,343.150,697219,239610957.000,0.37,-0.09,-0.305,0.00",
+        "last": "2026-10-28 04:00,347.150,347.100,347.160,346.900,15070311,5230285568.000,0.07,-0.01,-0.050,0.10",
+        "rawTimestampTimezone": "Asia/Shanghai",
+        "pricePrecisionMetadata": 3
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 22,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 22,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 251,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 251,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1254,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1254,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1254,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 2,
+          "maximumDifference": 0.1599999999999966,
+          "largestDifferenceDate": "2022-01-07",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                149.82,
+                152.57,
+                153.17,
+                149.72
+              ],
+              "backupOHLC": [
+                149.82,
+                152.57,
+                153.165,
+                149.72
+              ]
+            },
+            {
+              "date": "2026-10-27",
+              "primaryOHLC": [
+                343.17,
+                347.1,
+                347.78,
+                342.39
+              ],
+              "backupOHLC": [
+                343.165,
+                347.1,
+                347.78,
+                342.39
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action.",
+          "anomalies": [
+            {
+              "date": "2022-01-07",
+              "field": "open",
+              "tencent": 172.89,
+              "eastmoney": 172.73,
+              "yahoo": 172.88999938964844
+            },
+            {
+              "date": "2022-05-27",
+              "field": "high",
+              "tencent": 149.66,
+              "eastmoney": 149.68,
+              "yahoo": 149.67999267578125
+            }
+          ]
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635427800,
+          "local": "2021-10-28T09:30:00-04:00",
+          "open": 149.82000732421875,
+          "high": 153.1699981689453,
+          "close": 152.57000732421875,
+          "low": 149.72000122070312,
+          "volume": 100077900,
+          "adjustedClose": 148.8123779296875
+        },
+        "mainSameDateOHLC": [
+          149.82,
+          152.57,
+          153.17,
+          149.72
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1500,
+        "dailyBackup": 1254,
+        "minutePrimary": 391,
+        "minuteBackup": 390,
+        "dailyDateSemantics": "Exchange local civil date in America/New_York",
+        "minutePrimaryTimeSemantics": "America/New_York exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Shanghai civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "usSPY.AM",
+      "yahooSymbol": "SPY",
+      "eastmoneySecid": "107.SPY",
+      "timezone": "America/New_York",
+      "currency": "USD",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usSPY.AM,day,,,1500,",
+        "identity": [
+          "delay",
+          "标普500指数ETF-SPDR",
+          "SPY.AM",
+          "769.66",
+          "765.37",
+          "767.34",
+          "28631659",
+          "0",
+          "0",
+          "769.96",
+          "40",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "770.00",
+          "120",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "",
+          "2026-10-27 16:00:01",
+          "4.29",
+          "0.56",
+          "771.14",
+          "765.21",
+          "USD",
+          "28631659",
+          "22020886563",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "0.77",
+          "",
+          "",
+          "State Street Spdr S&P 500 Etf",
+          "",
+          "781.62",
+          "626.07",
+          "-80",
+          "",
+          "",
+          "",
+          "13.75",
+          "0.08",
+          "GP-ETF",
+          "",
+          "",
+          "-1.07",
+          "0.71",
+          "1.84",
+          "",
+          "",
+          "0.77",
+          "",
+          "",
+          "769.11",
+          "",
+          "",
+          "",
+          "1063282000",
+          ""
+        ],
+        "status": "ok",
+        "count": 1500,
+        "earliest": "2020-11-05",
+        "latest": "2026-10-27",
+        "responseSha256": "e7695ec25adfa72b9017476743ed693edafab50850350ec54f3d07df4a4a8a9a"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=107.SPY&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "SPY",
+          "market": 107,
+          "name": "标普500ETF-SPDR",
+          "decimal": 3,
+          "dktotal": 6492,
+          "preKPrice": 453.94
+        },
+        "status": "ok",
+        "count": 1254,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-27",
+        "responseSha256": "162c7e44343b89262b36ef3741520c3896ef7ee00288f40b0ad6e2e5ece8b428",
+        "qualityStatus": "Transport, identity, unadjusted prices, and all periods passed; historical low anomaly requires validation/reconciliation before plotting.",
+        "useCondition": "Conditional: validate every bar; reject nonpositive OHLC, invalid OHLC relations, and extreme intraday ratios (e.g. high/low>4) or other anomalies. If rejected, attempt verified same-source Tencent transport fallback or omit; do not silently substitute Yahoo split-normalized daily bars."
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/usMinute/query?code=usSPY.AM",
+        "date": "20261027",
+        "count": 391,
+        "first": "0930 767.40 796125",
+        "last": "1600 769.66 28631659",
+        "timezone": "America/New_York",
+        "priceDecimalPlacesObserved": [
+          2
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=107.SPY&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 390,
+        "first": "2026-10-27 21:31,767.390,767.400,767.580,767.220,221417,169893778.000,0.05,0.27,2.030,0.00",
+        "last": "2026-10-28 04:00,769.980,769.660,769.980,769.610,6052251,4641864192.000,0.05,-0.04,-0.335,0.00",
+        "rawTimestampTimezone": "Asia/Shanghai",
+        "pricePrecisionMetadata": 3
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 22,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 22,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 251,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 251,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1254,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1254,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1254,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 1,
+          "maximumDifference": 620.42,
+          "largestDifferenceDate": "2026-02-02",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                455.46,
+                458.32,
+                458.4,
+                455.45
+              ],
+              "backupOHLC": [
+                455.46,
+                458.32,
+                458.4,
+                455.45
+              ]
+            },
+            {
+              "date": "2026-10-27",
+              "primaryOHLC": [
+                767.34,
+                769.66,
+                771.14,
+                765.21
+              ],
+              "backupOHLC": [
+                767.34,
+                769.66,
+                771.14,
+                765.21
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action.",
+          "anomalies": [
+            {
+              "date": "2026-02-02",
+              "field": "low",
+              "tencent": 689.425,
+              "eastmoney": 69.005,
+              "yahoo": 689.4199829101562,
+              "action": "Reject/reconcile anomalous backup bar; do not silently change its value or claim exact full-series agreement."
+            }
+          ]
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635427800,
+          "local": "2021-10-28T09:30:00-04:00",
+          "volume": 51437900,
+          "close": 458.32000732421875,
+          "open": 455.4599914550781,
+          "high": 458.3999938964844,
+          "low": 455.45001220703125,
+          "adjustedClose": 428.66778564453125
+        },
+        "mainSameDateOHLC": [
+          455.46,
+          458.32,
+          458.4,
+          455.45
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1500,
+        "dailyBackup": 1254,
+        "minutePrimary": 391,
+        "minuteBackup": 390,
+        "dailyDateSemantics": "Exchange local civil date in America/New_York",
+        "minutePrimaryTimeSemantics": "America/New_York exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Shanghai civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "usBRK.B.N",
+      "yahooSymbol": "BRK-B",
+      "eastmoneySecid": "106.BRK_B",
+      "timezone": "America/New_York",
+      "currency": "USD",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usBRK.B.N,day,,,1500,",
+        "identity": [
+          "delay",
+          "伯克希尔B",
+          "BRK.B.N",
+          "542.99",
+          "548.56",
+          "547.97",
+          "3082206",
+          "0",
+          "0",
+          "541.55",
+          "280",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "542.65",
+          "40",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "",
+          "2026-10-27 16:06:36",
+          "-5.57",
+          "-1.02",
+          "548.60",
+          "542.90",
+          "USD",
+          "3082206",
+          "1677201395",
+          "0.14",
+          "13.65",
+          "",
+          "17.49",
+          "",
+          "1.04",
+          "6774.41499",
+          "11623.84011",
+          "Berkshire Hathaway Inc. New",
+          "39.77",
+          "549.96",
+          "464.01",
+          "240",
+          "1.55",
+          "",
+          "11623.84011",
+          "8.03",
+          "0.59",
+          "GP",
+          "12.11",
+          "7.07",
+          "4.30",
+          "8.09",
+          "5.82",
+          "2140709794",
+          "1247613213",
+          "0.61",
+          "16.36",
+          "",
+          "544.16",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "status": "ok",
+        "count": 1500,
+        "earliest": "2020-11-05",
+        "latest": "2026-10-27",
+        "responseSha256": "610acf9267f805ead5a1bf1092007c65c1cbfc968320eb375f0378fe9452e1e2"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=106.BRK_B&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "BRK_B",
+          "market": 106,
+          "name": "伯克希尔哈撒韦-B",
+          "decimal": 3,
+          "dktotal": 3919,
+          "preKPrice": 287.78
+        },
+        "status": "ok",
+        "count": 1254,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-27",
+        "responseSha256": "67daf18b8fab4d9bc8a7cea773d8eb42c90b005a1e03d182949f27855a10e83f",
+        "useCondition": "Conditional: validate every bar; reject nonpositive OHLC, invalid OHLC relations, and extreme intraday ratios (e.g. high/low>4) or other anomalies. If rejected, attempt verified same-source Tencent transport fallback or omit; do not silently substitute Yahoo split-normalized daily bars."
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/usMinute/query?code=usBRK.B.N",
+        "date": "20261027",
+        "count": 391,
+        "first": "0930 548.56 163985",
+        "last": "1600 542.99 3082206",
+        "timezone": "America/New_York",
+        "priceDecimalPlacesObserved": [
+          2
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=106.BRK_B&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 390,
+        "first": "2026-10-27 21:31,548.560,548.560,548.560,548.560,166191,91159340.000,0.00,0.00,0.000,0.01",
+        "last": "2026-10-28 04:00,543.440,542.990,543.485,542.920,888224,481719648.000,0.10,-0.08,-0.450,0.06",
+        "rawTimestampTimezone": "Asia/Shanghai",
+        "pricePrecisionMetadata": 3
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 22,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 22,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 65,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 251,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 251,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1254,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1254,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-27",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1254,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 0,
+          "maximumDifference": 0.005000000000109139,
+          "largestDifferenceDate": "2025-03-25",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                288.21,
+                289.72,
+                289.86,
+                287.2
+              ],
+              "backupOHLC": [
+                288.21,
+                289.72,
+                289.86,
+                287.2
+              ]
+            },
+            {
+              "date": "2026-10-27",
+              "primaryOHLC": [
+                547.97,
+                542.99,
+                548.6,
+                542.9
+              ],
+              "backupOHLC": [
+                547.965,
+                542.99,
+                548.6,
+                542.9
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action."
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/BRK-B?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635427800,
+          "local": "2021-10-28T09:30:00-04:00",
+          "low": 287.20001220703125,
+          "open": 288.2099914550781,
+          "high": 289.8599853515625,
+          "volume": 3300100,
+          "close": 289.7200012207031,
+          "adjustedClose": 289.7200012207031
+        },
+        "mainSameDateOHLC": [
+          288.21,
+          289.72,
+          289.86,
+          287.2
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1500,
+        "dailyBackup": 1254,
+        "minutePrimary": 391,
+        "minuteBackup": 390,
+        "dailyDateSemantics": "Exchange local civil date in America/New_York",
+        "minutePrimaryTimeSemantics": "America/New_York exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Shanghai civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "sh600519",
+      "yahooSymbol": "600519.SS",
+      "eastmoneySecid": "1.600519",
+      "timezone": "Asia/Shanghai",
+      "currency": "CNY",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=sh600519,day,,,1500,",
+        "identity": [
+          "1",
+          "贵州茅台",
+          "600519",
+          "1330.75",
+          "1355.90",
+          "1354.98",
+          "38805",
+          "17108",
+          "21696",
+          "1330.75",
+          "9",
+          "1330.72",
+          "3",
+          "1330.71",
+          "12",
+          "1330.70",
+          "1",
+          "1330.59",
+          "1",
+          "1330.77",
+          "5",
+          "1330.96",
+          "1",
+          "1330.99",
+          "1",
+          "1331.00",
+          "1",
+          "1331.07",
+          "22",
+          "",
+          "20261028160808",
+          "-25.15",
+          "-1.85",
+          "1354.98",
+          "1322.60",
+          "1330.75/38805/5187324618",
+          "38805",
+          "518732",
+          "0.31",
+          "20.43",
+          "",
+          "1354.98",
+          "1322.60",
+          "2.39",
+          "16635.46",
+          "16635.46",
+          "6.62",
+          "1491.49",
+          "1220.31",
+          "0.91",
+          "-4",
+          "1336.77",
+          "18.68",
+          "20.21",
+          "",
+          "",
+          "0.03",
+          "518732.4618",
+          "106.4600",
+          "8",
+          "   A",
+          "GP-A",
+          "-1.36",
+          "1.61",
+          "3.91",
+          "32.41",
+          "27.30",
+          "1539.98",
+          "1151.01",
+          "3.48",
+          "6.14",
+          "0.81",
+          "1250081601",
+          "1250081601",
+          "-7.14",
+          "1.28",
+          "1250081601",
+          "",
+          "",
+          "-4.47",
+          "-0.04",
+          "",
+          "CNY",
+          "0",
+          "___D__F__N",
+          "1330.50",
+          "4",
+          ""
+        ],
+        "status": "ok",
+        "count": 1501,
+        "earliest": "2020-08-17",
+        "latest": "2026-10-28",
+        "responseSha256": "20282f07de8fb4658ff8a9c408162839c1bb3debd369b6b5f064f5ecc5541bd3"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.600519&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "600519",
+          "market": 1,
+          "name": "贵州茅台",
+          "decimal": 2,
+          "dktotal": 6030,
+          "preKPrice": 1819.0
+        },
+        "status": "ok",
+        "count": 1212,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-28",
+        "responseSha256": "f462d9b78e0f68e4f31d50ef8d66caff5480765afcabfb2df35a69fb8d71f9ba"
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=sh600519",
+        "date": "20261028",
+        "count": 267,
+        "first": "0930 1354.98 1537 208260426.00",
+        "last": "1530 1330.75 38813 5188398575.38",
+        "timezone": "Asia/Shanghai",
+        "priceDecimalPlacesObserved": [
+          2
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.600519&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 240,
+        "first": "2026-10-28 09:31,1354.98,1353.00,1354.98,1340.00,3186,430524378.00,1.10,-0.21,-2.90,0.03",
+        "last": "2026-10-28 15:00,1330.71,1330.75,1330.75,1330.71,1519,202154233.00,0.00,0.00,0.04,0.01",
+        "rawTimestampTimezone": "Asia/Shanghai",
+        "pricePrecisionMetadata": 2
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1212,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 0,
+          "maximumDifference": 0.0,
+          "largestDifferenceDate": "2026-10-28",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                1825.2,
+                1825.49,
+                1843.78,
+                1802.0
+              ],
+              "backupOHLC": [
+                1825.2,
+                1825.49,
+                1843.78,
+                1802.0
+              ]
+            },
+            {
+              "date": "2026-10-28",
+              "primaryOHLC": [
+                1354.98,
+                1330.75,
+                1354.98,
+                1322.6
+              ],
+              "backupOHLC": [
+                1354.98,
+                1330.75,
+                1354.98,
+                1322.6
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action."
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/600519.SS?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635384600,
+          "local": "2021-10-28T09:30:00+08:00",
+          "open": 1825.199951171875,
+          "high": 1843.780029296875,
+          "close": 1825.489990234375,
+          "volume": 2949093,
+          "low": 1802.0,
+          "adjustedClose": 1577.7410888671875
+        },
+        "mainSameDateOHLC": [
+          1825.2,
+          1825.49,
+          1843.78,
+          1802.0
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1501,
+        "dailyBackup": 1212,
+        "minutePrimary": 267,
+        "minuteBackup": 240,
+        "dailyDateSemantics": "Exchange local civil date in Asia/Shanghai",
+        "minutePrimaryTimeSemantics": "Asia/Shanghai exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Shanghai civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    },
+    {
+      "asset": "sz000001",
+      "yahooSymbol": "000001.SZ",
+      "eastmoneySecid": "0.000001",
+      "timezone": "Asia/Shanghai",
+      "currency": "CNY",
+      "dailyPrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=sz000001,day,,,1500,",
+        "identity": [
+          "51",
+          "平安银行",
+          "000001",
+          "11.31",
+          "11.47",
+          "11.43",
+          "1687009",
+          "635733",
+          "1051276",
+          "11.31",
+          "1784",
+          "11.30",
+          "4070",
+          "11.29",
+          "3357",
+          "11.28",
+          "2334",
+          "11.27",
+          "3175",
+          "11.32",
+          "5672",
+          "11.33",
+          "1992",
+          "11.34",
+          "3308",
+          "11.35",
+          "5341",
+          "11.36",
+          "5330",
+          "",
+          "20261028160800",
+          "-0.16",
+          "-1.39",
+          "11.50",
+          "11.22",
+          "11.31/1687009/1911547804",
+          "1687009",
+          "191155",
+          "0.87",
+          "5.05",
+          "",
+          "11.50",
+          "11.22",
+          "2.44",
+          "2194.78",
+          "2194.81",
+          "0.46",
+          "12.62",
+          "10.32",
+          "1.32",
+          "-6923",
+          "11.33",
+          "4.20",
+          "5.15",
+          "",
+          "",
+          "0.17",
+          "191154.7804",
+          "21.4890",
+          "190",
+          "   A",
+          "GP-A",
+          "4.71",
+          "-0.88",
+          "5.38",
+          "7.81",
+          "0.73",
+          "11.89",
+          "9.74",
+          "-1.65",
+          "-1.32",
+          "3.28",
+          "19405684991",
+          "19405918198",
+          "-19.04",
+          "9.26",
+          "19405684991",
+          "",
+          "",
+          "4.13",
+          "0.00",
+          "",
+          "CNY",
+          "0",
+          "",
+          "11.22",
+          "15019",
+          ""
+        ],
+        "status": "ok",
+        "count": 1501,
+        "earliest": "2020-08-17",
+        "latest": "2026-10-28",
+        "responseSha256": "5c5ce327ec978c83465e1f5590f1f90f1a08227bb2df8fd8a62ea7156d721f36"
+      },
+      "dailyBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.000001&klt=101&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "identity": {
+          "code": "000001",
+          "market": 0,
+          "name": "平安银行",
+          "decimal": 2,
+          "dktotal": 8505,
+          "preKPrice": 19.92
+        },
+        "status": "ok",
+        "count": 1212,
+        "earliest": "2021-10-28",
+        "latest": "2026-10-28",
+        "responseSha256": "c33bcf9a4efcc2585a8f9d0fa7cf952cb29cc10cba27ecbb1cf26105de7dccd6"
+      },
+      "minutePrimary": {
+        "source": "tencent",
+        "url": "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=sz000001",
+        "date": "20261028",
+        "count": 267,
+        "first": "0930 11.43 19643 22451949.00",
+        "last": "1530 11.31 1687199 1911762388.47",
+        "timezone": "Asia/Shanghai",
+        "priceDecimalPlacesObserved": [
+          2
+        ]
+      },
+      "minuteBackup": {
+        "source": "eastmoney",
+        "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=0.000001&klt=1&fqt=0&beg=20211028&end=20500101&lmt=1500&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61",
+        "count": 240,
+        "first": "2026-10-28 09:31,11.43,11.45,11.50,11.43,69192,79213172.00,0.61,-0.17,-0.02,0.04",
+        "last": "2026-10-28 15:00,11.31,11.31,11.31,11.31,12184,13779990.00,0.00,0.00,0.00,0.01",
+        "rawTimestampTimezone": "Asia/Shanghai",
+        "pricePrecisionMetadata": 2
+      },
+      "periodValidation": {
+        "1mo": {
+          "primary": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 18,
+            "earliest": "2026-09-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "3mo": {
+          "primary": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 61,
+            "earliest": "2026-07-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "1y": {
+          "primary": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 243,
+            "earliest": "2025-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        },
+        "5y": {
+          "primary": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "backup": {
+            "count": 1212,
+            "earliest": "2021-10-28",
+            "latest": "2026-10-28",
+            "historyCoversStart": true,
+            "expectedLatestSessionReached": true,
+            "strictlyChronologicalUnique": true
+          },
+          "passed": true
+        }
+      },
+      "identityVerification": "Tencent quote identity and Eastmoney name/code agree; for BJ Sina daily endpoint has no identity metadata and is cross-checked against Eastmoney date/OHLC.",
+      "adjustmentEvidence": {
+        "primaryParameter": "Tencent param final adjustment token empty; returned key day",
+        "backupParameter": "Eastmoney fqt=0 explicitly requests no adjustment",
+        "comparisonToleranceAbsolute": 0.011,
+        "crossProviderOHLC": {
+          "sharedDates": 1212,
+          "toleranceAbsolute": 0.011,
+          "disagreementsAboveTolerance": 0,
+          "maximumDifference": 0.0,
+          "largestDifferenceDate": "2026-10-28",
+          "samples": [
+            {
+              "date": "2021-10-28",
+              "primaryOHLC": [
+                19.8,
+                19.72,
+                19.94,
+                19.37
+              ],
+              "backupOHLC": [
+                19.8,
+                19.72,
+                19.94,
+                19.37
+              ]
+            },
+            {
+              "date": "2026-10-28",
+              "primaryOHLC": [
+                11.43,
+                11.31,
+                11.5,
+                11.22
+              ],
+              "backupOHLC": [
+                11.43,
+                11.31,
+                11.5,
+                11.22
+              ]
+            }
+          ],
+          "caution": "This verifies observed historical prices and no-adjustment parameter semantics; it is not an SLA or guarantee of every future corporate action."
+        }
+      },
+      "yahooDailyCandidate": {
+        "url": "https://query1.finance.yahoo.com/v8/finance/chart/000001.SZ?interval=1d&range=5y&events=div%2Csplits&includeAdjustedClose=true",
+        "first": {
+          "timestamp": 1635384600,
+          "local": "2021-10-28T09:30:00+08:00",
+          "low": 19.3700008392334,
+          "volume": 61901089,
+          "high": 19.940000534057617,
+          "open": 19.799999237060547,
+          "close": 19.719999313354492,
+          "adjustedClose": 15.542078018188477
+        },
+        "mainSameDateOHLC": [
+          19.8,
+          19.72,
+          19.94,
+          19.37
+        ],
+        "strictUnadjustedApproved": false
+      },
+      "checkedRows": {
+        "dailyPrimary": 1501,
+        "dailyBackup": 1212,
+        "minutePrimary": 267,
+        "minuteBackup": 240,
+        "dailyDateSemantics": "Exchange local civil date in Asia/Shanghai",
+        "minutePrimaryTimeSemantics": "Asia/Shanghai exchange local clock, combine with provider data.date only.",
+        "minuteBackupTimeSemantics": "Asia/Shanghai civil datetime string; for US convert full date/time to America/New_York before exchange-date grouping or display. Never splice US market date onto a Beijing HH:mm string."
+      },
+      "volumeUnits": {
+        "tencent": null,
+        "eastmoney": null,
+        "sina": null,
+        "note": "Volume units not independently certified in this validation. Keep null pending provider documentation or separate validation. Do not compare raw volumes across sources."
+      }
+    }
+  ],
+  "findings": [
+    {
+      "topic": "All requested routes",
+      "result": "All 10 assets and four periods have usable safe routes. Tencent is strict-unadjusted primary except BJ; Eastmoney is conditional fallback with anomalous rows rejected. Coverage and provider bar quality are distinct; no blanket approval of every Eastmoney row.",
+      "passed": true
+    },
+    {
+      "topic": "US exact symbol mapping",
+      "result": "Tencent usAAPL.OQ / usSPY.AM / usBRK.B.N; Eastmoney 105.AAPL / 107.SPY / 106.BRK_B; Yahoo AAPL / SPY / BRK-B. Wrong Eastmoney 106.SPY / 106.BRK.B / 106.BRK-B return no rows."
+    },
+    {
+      "topic": "BSE code migration",
+      "result": "Tencent bj920185 daily returns only current day. Legacy nq835185 historical bars end 2025-09-30 and cannot replace the new-code series. Use Eastmoney 0.920185 fqt=0; independent Sina bj920185 returns current complete 1500-day history."
+    },
+    {
+      "topic": "Specialized US daily route",
+      "result": "usfqkline blank adjustment token returns bad params. qfq640 returns qfqday; qfq1500 returns limit error. hfq640 returns key day, whose key alone does not prove raw data because the request asks adjustment. Do not use this specialized route for strict raw. Generic fqkline blank token is the validated raw route, including pre/post AAPL split evidence."
+    },
+    {
+      "topic": "US split proof",
+      "result": "Generic Tencent blank-adjustment AAPL 2020-08-03 close=435.750 before 4-for-1 split, and 2020-09-15 close=115.540 after split. This confirms historical prices are not automatically split-normalized. See extra historical request in charts-usAAPL.OQ.json."
+    },
+    {
+      "topic": "Yahoo HK strict unadjusted rejection",
+      "result": "0700.HK Yahoo 2021-10-28 quote close=450.0503234863281 while Tencent and Eastmoney fqt=0 close=488.200. Merely choosing quote.close instead of adjclose does not guarantee strict unadjusted historical prices."
+    },
+    {
+      "topic": "Minute semantics",
+      "result": "Tencent minute string is time, price, cumulative volume, optional cumulative turnover; Eastmoney klt=1 is minute OHLC and per-bar volume, not cumulative. Extract close when used as a line. Do not sum Tencent cumulative values. CN Tencent ETF/stock267 points extend beyond15:00; HK332 points can include closing auction to16:06. Yahoo raw minute ranges contain null/lunch rows. These must not be coerced to zero."
+    },
+    {
+      "topic": "Time zones",
+      "result": "Tencent US minute 09:30-16:00 is America/New_York on 2026-10-27. Eastmoney US 2026-10-27 21:31 to 2026-10-28 04:00 is Asia/Shanghai; exchange-date normalization must happen before day filtering. Yahoo timestamps are epoch seconds with exchangeTimezoneName metadata."
+    },
+    {
+      "topic": "Precision and volume",
+      "result": "Keep source numeric precision. Tencent daily commonly has three decimal places; ETF tick formatting can differ from storage decimals. Eastmoney decimal metadata is available. Volume units were not independently certified and are null in per-asset results; do not compare, sum, or convert cross-provider volumes without a separate unit contract."
+    },
+    {
+      "topic": "Operational limitation",
+      "result": "This is a point-in-time public unauthenticated endpoint validation, not an availability promise. Eastmoney requires a browser User-Agent/Referer in this environment; bare urllib probes were remotely closed. Primary and backup responses can differ in minute opening marks and rounded highs."
+    },
+    {
+      "topic": "SPY backup historical low anomaly",
+      "result": "Eastmoney 107.SPY 2026-02-02 low=69.005 disagrees with Tencent689.425 and Yahoo689.4199829, while open/close/high agree. Explicit fqt=0 establishes no-adjustment request semantics but does not certify bar correctness. Require bar validation or reconcile with third source. AAPL has two smaller historical open/high differences, documented per asset."
+    }
+  ],
+  "requestSummary": {
+    "total": 86,
+    "statuses": {
+      "adjusted-route-rejected": 1,
+      "adjustment-request-ignored": 6,
+      "error": 2,
+      "no-data": 10,
+      "ok": 67
+    },
+    "fixtures": "tests/fixtures/markets/charts-*.json",
+    "additionalRawPayloadRequests": 8,
+    "totalIncludingRawPayloadRequests": 94,
+    "additionalTransportRequests": 3
+  },
+  "rawFixtures": [
+    {
+      "path": "tests/fixtures/markets/charts-raw-tencent-us-minute.json",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/usMinute/query?code=usAAPL.OQ",
+      "requestedAt": "2026-10-28T08:13:58.512742+00:00",
+      "httpStatus": 200,
+      "serverDate": "Wed, 28 Oct 2026 08:13:58 GMT",
+      "bytes": 10939,
+      "sha256": "3ff734e0d7a7beee6a66887da801e4c788fbb506cdb37f3c9a6aefa5569d813a",
+      "format": "Complete original JSON payload, no wrapper, no truncation, directly usable by source parsers."
+    },
+    {
+      "path": "tests/fixtures/markets/charts-raw-tencent-us-day.json",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usAAPL.OQ,day,,,10,",
+      "requestedAt": "2026-10-28T08:13:58.513400+00:00",
+      "httpStatus": 200,
+      "serverDate": "Wed, 28 Oct 2026 08:13:58 GMT",
+      "bytes": 2224,
+      "sha256": "74b22d4bc3b450d1e85f32dd9d65a63da0b279e90d2f22eb33d5a5d59be88444",
+      "format": "Complete original JSON payload, no wrapper, no truncation, directly usable by source parsers."
+    },
+    {
+      "path": "tests/fixtures/markets/charts-raw-eastmoney-us-minute.json",
+      "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&fqt=0&beg=20211028&end=20500101&lmt=10&secid=105.AAPL&klt=1",
+      "requestedAt": "2026-10-28T08:13:58.513459+00:00",
+      "httpStatus": 200,
+      "serverDate": "Wed, 28 Oct 2026 08:13:58 GMT",
+      "bytes": 36000,
+      "sha256": "b2b8b86c5372ac95a00e374736baf021a2d594812f7f3f6a41aeb948717b546a",
+      "format": "Complete original JSON payload, no wrapper, no truncation, directly usable by source parsers."
+    },
+    {
+      "path": "tests/fixtures/markets/charts-raw-eastmoney-us-day.json",
+      "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&fqt=0&beg=20211028&end=20500101&lmt=10&secid=105.AAPL&klt=101",
+      "requestedAt": "2026-10-28T08:13:58.513564+00:00",
+      "httpStatus": 200,
+      "serverDate": "Wed, 28 Oct 2026 08:13:58 GMT",
+      "bytes": 115163,
+      "sha256": "f5ff5e36b8d082c2ff4a0399b4a0984edeaab00b29275c81a0f49bb47a5179b9",
+      "format": "Complete original JSON payload, no wrapper, no truncation, directly usable by source parsers."
+    },
+    {
+      "path": "tests/fixtures/markets/charts-raw-eastmoney-hk-day.json",
+      "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&fqt=0&beg=20211028&end=20500101&lmt=10&secid=116.00700&klt=101",
+      "requestedAt": "2026-10-28T08:13:58.513627+00:00",
+      "httpStatus": 200,
+      "serverDate": "Wed, 28 Oct 2026 08:13:58 GMT",
+      "bytes": 112747,
+      "sha256": "8c544e699be69941c52fefa0d38b1e1a2480a9aa611ad9bb852ab88386cd0d31",
+      "format": "Complete original JSON payload, no wrapper, no truncation, directly usable by source parsers."
+    },
+    {
+      "path": "tests/fixtures/markets/charts-raw-sina-bj-day.json",
+      "url": "https://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=bj920185&scale=240&ma=no&datalen=10",
+      "requestedAt": "2026-10-28T08:13:58.513671+00:00",
+      "httpStatus": 200,
+      "serverDate": "Wed, 28 Oct 2026 08:13:58 GMT",
+      "bytes": 1042,
+      "sha256": "16ccb22ad33110cb38eabd5c46e347b88f1fc3c5bf3ca64202cc9b2b2527964b",
+      "format": "Complete original JSON payload, no wrapper, no truncation, directly usable by source parsers."
+    },
+    {
+      "path": "tests/fixtures/markets/charts-raw-eastmoney-bj-day.json",
+      "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&fqt=0&beg=20211028&end=20500101&lmt=10&secid=0.920185&klt=101",
+      "requestedAt": "2026-10-28T08:13:58.513714+00:00",
+      "httpStatus": 200,
+      "serverDate": "Wed, 28 Oct 2026 08:13:58 GMT",
+      "bytes": 93012,
+      "sha256": "6c5a65d82663f7393580619e9712d36e1e51835ea85eba28b8449d15c2a44788",
+      "format": "Complete original JSON payload, no wrapper, no truncation, directly usable by source parsers."
+    },
+    {
+      "path": "tests/fixtures/markets/charts-raw-tencent-bj-minute.json",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=bj920185",
+      "requestedAt": "2026-10-28T08:13:58.513753+00:00",
+      "httpStatus": 200,
+      "serverDate": "Wed, 28 Oct 2026 08:13:58 GMT",
+      "bytes": 6127,
+      "sha256": "f95fb997e721697b2dedf86126ce83aa0faab07bc5b88291d89d2372f313cc1f",
+      "format": "Complete original JSON payload, no wrapper, no truncation, directly usable by source parsers."
+    }
+  ],
+  "overallVerdict": "Safe available routing validated: Tencent raw daily primary; Eastmoney explicit fqt=0 backup with row validation, rejecting SPY historical low anomaly; BSE Eastmoney primary and Sina cross-checked backup. Every required period has verified usable history. This is not a claim that every provider bar is correct. Yahoo is not approved as a generic strict-unadjusted daily fallback.",
+  "tencentSameSourceTransportFallbacks": [
+    {
+      "route": "direct",
+      "url": "https://ifzq.gtimg.cn/appstock/app/fqkline/get?param=usSPY.AM,day,,,10,",
+      "requestedAt": "2026-10-28T08:14:56.490145+00:00",
+      "provider": "Tencent, same source as web.ifzq.gtimg.cn; transport fallback only, not independent data.",
+      "httpStatus": 200,
+      "providerCode": 0,
+      "providerMessage": "",
+      "count": 10,
+      "first": [
+        "2026-10-14",
+        "774.920",
+        "769.600",
+        "776.350",
+        "766.710",
+        "55715372.000"
+      ],
+      "last": [
+        "2026-10-27",
+        "767.340",
+        "769.660",
+        "771.140",
+        "765.210",
+        "28631659.000"
+      ],
+      "sha256": "218986bce94bede5f94fe31dfe78ebf6cd4fc986c8fa52b41be57d6b3595c253",
+      "responseBytes": 2173,
+      "status": "ok",
+      "rawFixture": "tests/fixtures/markets/charts-raw-tencent-direct.json"
+    },
+    {
+      "route": "qq-proxy",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get?param=usSPY.AM,day,,,10,",
+      "requestedAt": "2026-10-28T08:14:56.490867+00:00",
+      "provider": "Tencent, same source as web.ifzq.gtimg.cn; transport fallback only, not independent data.",
+      "httpStatus": 200,
+      "providerCode": 0,
+      "providerMessage": "",
+      "count": 10,
+      "first": [
+        "2026-10-14",
+        "774.920",
+        "769.600",
+        "776.350",
+        "766.710",
+        "55715372.000"
+      ],
+      "last": [
+        "2026-10-27",
+        "767.340",
+        "769.660",
+        "771.140",
+        "765.210",
+        "28631659.000"
+      ],
+      "sha256": "218986bce94bede5f94fe31dfe78ebf6cd4fc986c8fa52b41be57d6b3595c253",
+      "responseBytes": 2173,
+      "status": "ok",
+      "rawFixture": "tests/fixtures/markets/charts-raw-tencent-qq-proxy.json"
+    },
+    {
+      "route": "qq-proxy-minute",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/usMinute/query?code=usSPY.AM",
+      "requestedAt": "2026-10-28T08:14:56.490938+00:00",
+      "provider": "Tencent, same source as web.ifzq.gtimg.cn; transport fallback only, not independent data.",
+      "httpStatus": 200,
+      "providerCode": 0,
+      "providerMessage": "",
+      "count": 391,
+      "first": "0930 767.40 796125",
+      "last": "1600 769.66 28631659",
+      "sha256": "4cd2131f2b8e6b60129076696107ecfe588b755490bc9dfa9d159c2f24b922d6",
+      "responseBytes": 10863,
+      "status": "ok",
+      "rawFixture": "tests/fixtures/markets/charts-raw-tencent-qq-proxy-minute.json"
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+@import "../styles/glass.wxss";
+
+.dock {
+  position: fixed;
+  z-index: 100;
+  left: 48rpx;
+  right: 48rpx;
+  bottom: 20rpx;
+  bottom: calc(20rpx + env(safe-area-inset-bottom));
+}
+.dock-items {
+  position: relative;
+  display: flex;
+  padding: 10rpx;
+}
+.dock-indicator-track {
+  position: absolute;
+  top: 10rpx;
+  bottom: 10rpx;
+  left: 10rpx;
+  right: 10rpx;
+  pointer-events: none;
+}
+.dock-indicator-position {
+  width: 33.333333%;
+  height: 100%;
+}
+/* Each path has explicit endpoints, so no initial painted frame is required. */
+.dock-indicator-moving {
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dock-slide-0-1 { animation-name: dock-slide-0-1; }
+.dock-slide-1-0 { animation-name: dock-slide-1-0; }
+.dock-slide-1-2 { animation-name: dock-slide-1-2; }
+.dock-slide-2-1 { animation-name: dock-slide-2-1; }
+.dock-slide-0-2 { animation-name: dock-slide-0-2; }
+.dock-slide-2-0 { animation-name: dock-slide-2-0; }
+@keyframes dock-slide-0-1 {
+  from { transform: translateX(0%); }
+  to { transform: translateX(100%); }
+}
+@keyframes dock-slide-1-0 {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0%); }
+}
+@keyframes dock-slide-1-2 {
+  from { transform: translateX(100%); }
+  to { transform: translateX(200%); }
+}
+@keyframes dock-slide-2-1 {
+  from { transform: translateX(200%); }
+  to { transform: translateX(100%); }
+}
+@keyframes dock-slide-0-2 {
+  from { transform: translateX(0%); }
+  to { transform: translateX(200%); }
+}
+@keyframes dock-slide-2-0 {
+  from { transform: translateX(200%); }
+  to { transform: translateX(0%); }
+}
+.dock-indicator {
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0 3rpx;
+  border: 1rpx solid var(--glass-selected-edge);
+  border-radius: 999rpx;
+  background: var(--glass-selected);
+  box-shadow: inset 0 2rpx 2rpx var(--glass-sheen), 0 2rpx 8rpx var(--glass-shadow);
+}
+.dock-tab {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 48px;
+  height: 104rpx;
+  margin: 0;
+  padding: 10rpx 6rpx;
+  border: 0;
+  border-radius: 999rpx;
+  background: transparent;
+  color: var(--glass-muted);
+  font-family: inherit;
+  font-size: 22rpx;
+  line-height: 1.4;
+  transition: transform 140ms ease-out;
+}
+.dock-tab::after { border: 0; }
+.dock-tab-selected { color: var(--glass-accent); font-weight: 600; }
+.dock-tab-pressed { transform: scale(0.94); }
+.dock-icon { position: relative; display: block; width: 44rpx; height: 44rpx; margin-bottom: 5rpx; }
+.dock-icon-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.dock-icon-selected { opacity: 0; }
+.dock-tab-selected .dock-icon-selected { opacity: 1; }
+.dock-tab-selected .dock-icon-normal { opacity: 0; }
+.dock-label { display: block; }
+/* Handoff near arrival; semantic selection already follows the actual route. */
+.dock-motion .dock-tab-arriving .dock-icon-selected,
+.dock-motion .dock-tab-leaving .dock-icon-normal {
+  animation: dock-icon-arrive 250ms linear;
+}
+.dock-motion .dock-tab-leaving .dock-icon-selected,
+.dock-motion .dock-tab-arriving .dock-icon-normal {
+  animation: dock-icon-leave 250ms linear;
+}
+.dock-motion .dock-tab-arriving .dock-label { animation: dock-label-arrive 250ms linear; }
+.dock-motion .dock-tab-leaving .dock-label { animation: dock-label-leave 250ms linear; }
+.dock-motion-long .dock-indicator-moving,
+.dock-motion-long .dock-tab .dock-icon-image,
+.dock-motion-long .dock-tab .dock-label { animation-duration: 320ms; }
+@keyframes dock-icon-arrive {
+  0%, 65% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes dock-icon-leave {
+  0%, 65% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes dock-label-arrive {
+  0%, 65% { color: var(--glass-muted); font-weight: 400; }
+  100% { color: var(--glass-accent); font-weight: 600; }
+}
+@keyframes dock-label-leave {
+  0%, 65% { color: var(--glass-accent); font-weight: 600; }
+  100% { color: var(--glass-muted); font-weight: 400; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock-indicator-position, .dock-tab { transition: none; }
+  .dock-motion .dock-indicator-moving,
+  .dock-motion .dock-tab .dock-icon-image,
+  .dock-motion .dock-tab .dock-label { animation: none; }
+  .dock-tab-pressed { transform: none; }
+}

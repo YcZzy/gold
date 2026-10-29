@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "glass-surface": "/components/glass-surface/index"
+  }
+}

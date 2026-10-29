@@ -101,10 +101,12 @@ Page({
     priceErrors: {},
     saveError: "",
     recent: [],
-    theme: "paper"
+    theme: themeUtil.getTheme()
   },
 
   onLoad() {
+    this.setData({ theme: themeUtil.getTheme() });
+    themeUtil.applyChrome(this.data.theme);
     if (!wx.cloud) {
       console.warn("基础库过低");
       return;
@@ -112,16 +114,23 @@ Page({
     if (cloudEnv === "YOUR_ENV_ID") {
       console.warn("请先配置云环境");
     }
-    this.setData({ theme: themeUtil.getTheme() });
-    themeUtil.applyChrome(this.data.theme);
   },
 
   onShow() {
+    this._visible = true;
+    this.setData({ theme: themeUtil.getTheme() });
+    themeUtil.applyChrome(this.data.theme);
     if (wx.cloud) return this.refreshStatus();
+  },
+
+  onHide() {
+    this._visible = false;
+    this._statusRequest = (this._statusRequest || 0) + 1;
   },
 
   onUnload() {
     this._unloaded = true;
+    this.onHide();
     if (this._saveTimer) clearTimeout(this._saveTimer);
     this._saveTimer = null;
     this.doSave();
@@ -133,7 +142,8 @@ Page({
     try {
       const r = await statusClient.getStatus(wx);
       if (!r.ok) throw new Error(r.err || "status-failed");
-      if (request === this._statusRequest) this.applyStatus(r, version);
+      if (!this._unloaded && this._visible !== false && request === this._statusRequest)
+        this.applyStatus(r, version);
     } catch (e) {
       // Keep the last successful status.
     }

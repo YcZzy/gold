@@ -41,7 +41,7 @@ function load(file, clients = {}) {
         p.includes("market-client")
           ? clients.market
           : p.includes("portfolio-client")
-            ? clients.portfolio
+            ? clients.portfolio || {}
             : p.includes("theme")
               ? theme
               : p.includes("gold-api")
@@ -92,6 +92,198 @@ const state = {
   limits: { watchlist: 5, activeRules: 30 },
   revision: 2,
 };
+
+test('detail annotation editing keeps drafts through refresh and saves only on explicit submit', async () => {
+  const saves = [];
+  const saved = { ...state, annotations: { [a.id]: { note: '长期观察', tags: ['消费'] } } };
+  const { page } = load('pages/detail/detail.js', { portfolio: {
+    saveAnnotation: async (...args) => { saves.push(args); return { ...saved, revision: 3,
+      annotations: { [a.id]: { note: args[1], tags: args[2] } } }; },
+  } });
+  page.onLoad({ assetId: a.id }); page._visible = true;
+  page.applyPortfolio(saved);
+  page.startNoteEdit();
+  page.onNoteInput({ detail: { value: '等待回调' } });
+  page.onTagsInput({ detail: { value: '观察,消费' } });
+  page.applyPortfolio({ ...saved, revision: 3 });
+  assert.equal(page.data.noteDraft, '等待回调');
+  assert.equal(saves.length, 0);
+  await page.saveNote();
+  assert.deepEqual(JSON.parse(JSON.stringify(saves)), [[a.id, '等待回调', ['观察', '消费'], 2]]);
+  assert.equal(page.data.annotation.note, '等待回调');
+  assert.equal(page.data.noteEditing, false);
+  page.startNoteEdit();
+  page.onNoteInput({ detail: { value: '取消的改动' } });
+  page.cancelNoteEdit();
+  assert.equal(page.data.annotation.note, '等待回调');
+});
+
+test('annotation failures preserve drafts and field limits prevent cloud submissions', async () => {
+  let calls = 0;
+  const { page } = load('pages/detail/detail.js', { portfolio: {
+    saveAnnotation: async () => { calls++; throw Error('请联网后重试'); },
+  } });
+  page.onLoad({ assetId: a.id }); page._visible = true; page.applyPortfolio(state); page.startNoteEdit();
+  page.onNoteInput({ detail: { value: 'a'.repeat(121) } });
+  await page.saveNote(); assert.equal(calls, 0); assert.match(page.data.noteError, /120/);
+  page.onNoteInput({ detail: { value: '保留草稿' } });
+  await page.saveNote();
+  assert.equal(calls, 1); assert.equal(page.data.noteDraft, '保留草稿');
+  assert.equal(page.data.noteEditing, true); assert.match(page.data.noteError, /联网/);
+  page.onTagsInput({ detail: { value: '一,二,三,四' } });
+  await page.saveNote(); assert.equal(calls, 1); assert.match(page.data.noteError, /3/);
+});
+
+test('indicator settings restore locally, validate drafts and update charts without market requests', () => {
+  const { page, wx } = load('pages/detail/detail.js');
+  wx.getStorageSync = key => key === 'chart-indicators-v1' ? { maPeriods: [20, 99], maEnabled: false, subIndicator: 'macd' } : null;
+  const writes = []; wx.setStorageSync = (...args) => writes.push(args);
+  page.onLoad({ assetId: a.id });
+  assert.equal(page.data.indicatorSettings.subIndicator, 'macd');
+  assert.equal(page.data.maLegend, '均线已关闭');
+  let renders = 0;
+  page.chart = { setPrecision() {}, setIndicators() {}, setTargets() {}, renderIntraday() { renders++; } };
+  page.toggleIndicatorEditor();
+  page.onMaInput({ detail: { value: '5,5' } });
+  page.saveIndicators();
+  assert.match(page.data.indicatorError, /重复/);
+  assert.equal(writes.length, 0);
+  page.onMaInput({ detail: { value: '5,128,225' } });
+  page.onMaToggle({ detail: { value: true } });
+  page.saveIndicators();
+  assert.equal(page.data.maLegend, 'MA5 / MA128 / MA225');
+  assert.equal(writes[0][0], 'chart-indicators-v1'); assert.equal(renders, 1);
+  assert.equal(page.data.indicatorEditing, false);
+});
+
+test('price targets follow active rules and quote updates without adding independent reminders', async () => {
+  const { page } = load('pages/detail/detail.js', { market: {
+    quote: async () => ({ quote: { price: 100, sourceTime: Date.now() } }),
+  } });
+  page.onLoad({ assetId: a.id }); page._visible = true;
+  page.data.asset = a;
+  page.applyPortfolio({ ...state, rules: [
+    { id: 'up', assetId: a.id, type: 'priceAbove', value: 110, enabled: true },
+    { id: 'other', assetId: 'usSPY', type: 'priceBelow', value: 90, enabled: true },
+  ] });
+  await page.loadQuote();
+  assert.equal(page.data.priceTargets.length, 1);
+  assert.equal(page.data.priceTargets[0].distanceText, '+10.00%');
+  page.applyPortfolio({ ...state, rules: [] });
+  assert.equal(page.data.priceTargets.length, 0);
+});
+
+test('watchlist annotations clear after deletion and price details preserve fund precision and quote time', async () => {
+  const asset = { ...a, id: 'sh510300', code: '510300', kind: 'etf', precision: 3 };
+  const sourceTime = Date.parse('2026-10-29T02:05:00Z');
+  const { page } = load('pages/index/index.js', {
+    portfolio: { list: async () => ({ ...state, items: [asset], annotations: { [asset.id]: { note: '观察量能', tags: ['宽基'] } } }) },
+    market: { quotes: async () => ({ quotes: [{ assetId: asset.id, price: 4.152, change: 0.003, sourceTime }] }) },
+  });
+  await page.onShow();
+  assert.equal(page.data.rows[0].note, '观察量能');
+  assert.equal(page.data.rows[0].tags[0], '宽基');
+  assert.equal(page.data.rows[0].changeText, '+0.003');
+  assert.match(page.data.rows[0].timeText, /10:05/);
+  page.applyState({ ...state, items: [asset], annotations: {} });
+  assert.equal(page.data.rows[0].note, '');
+  assert.equal(page.data.rows[0].tags.length, 0);
+  page.onHide();
+});
+
+test('pending period switches keep the existing chart mode during portfolio and indicator updates', () => {
+  const { page } = load('pages/detail/detail.js');
+  page.onLoad({ assetId: a.id });
+  const ctx = new Proxy({}, { get(target, key) { return target[key] || (() => {}); },
+    set(target, key, value) { target[key] = value; return true; } });
+  page.chart = require('../utils/candle-chart').createKlineChart({ ctx, width: 350, height: 300 });
+  page.bars = [{ time: '2026-10-29 10:00', price: 100, avg: 100, v: 50 }];
+  page._displayPeriod = 'intraday'; page.data.period = '1mo';
+  assert.doesNotThrow(() => page.applyPortfolio(state));
+  assert.equal(page.data.chartPeriod, 'intraday');
+  page.toggleIndicatorEditor();
+  assert.doesNotThrow(() => page.saveIndicators());
+  page.onTouch({ touches: [{ x: 50 }] });
+  assert.match(page.data.selectedInfo, /价 100.00/);
+  assert.doesNotMatch(page.data.selectedInfo, /开 --/);
+});
+
+test('reloading an annotation after a conflict does not discard drafts when offline', async () => {
+  const { page } = load('pages/detail/detail.js', { portfolio: { list: async () => ({ ...state, offline: true }) } });
+  page.onLoad({ assetId: a.id }); page._visible = true;
+  page.applyPortfolio(state); page.startNoteEdit();
+  page.onNoteInput({ detail: { value: '不能丢的草稿' } });
+  page.data.noteConflict = true;
+  await page.reloadAnnotation();
+  assert.equal(page.data.noteDraft, '不能丢的草稿');
+  assert.equal(page.data.noteConflict, true);
+  assert.match(page.data.noteError, /草稿.*保留/);
+});
+test('verified HK/US ETFs expose close reminders and disabled capabilities remain hidden', async()=>{
+  for(const asset of [
+    {...a,id:'hk02800',market:'HK',kind:'etf',supportsClose:true},
+    {...a,id:'usSPY',market:'US',kind:'etf',supportsClose:true},
+    {...a,supportsClose:false},
+  ]){
+    const {page}=load('pages/asset-alert/asset-alert.js',{
+      market:{resolve:async()=>({asset})},portfolio:{list:async()=>({...state,items:[asset]})},
+    });
+    page.onLoad({assetId:asset.id});await page.onShow();
+    assert.equal(page.data.types.some(t=>t.value==='close'),asset.supportsClose);
+  }
+});
+test('server chart cache fallback exposes stale data as cache even without client cached flag',async()=>{
+  const {page}=load('pages/detail/detail.js',{
+    market:{chart:async()=>({chart:{points:[{time:'2026-10-28 10:00',price:4.152}],source:'tencent',stale:true}})},
+  });
+  page.onLoad({assetId:'sh510300'});page._visible=true;await page.loadChart();
+  assert.equal(page.data.hasChart,true);
+  assert.match(page.data.chartHint,/缓存/);
+  assert.match(page.data.chartError,/刷新失败/);
+});
+test('charts with unconfirmed volume units hide volume bars and disclose unverified history',async()=>{
+  const {page}=load('pages/detail/detail.js',{
+    market:{chart:async()=>({chart:{points:[{time:'2026-10-28 10:00',price:4.152,v:1000}],source:'tencent',volumeUnit:null,coverage:{status:'unverified'}}})},
+  });
+  page.onLoad({assetId:'sh510300'});page._visible=true;await page.loadChart();
+  assert.equal(page.bars[0].v,null);
+  assert.match(page.data.chartHint,/历史数据可能不完整/);
+});
+test("first watchlist entry displays saved rows before the network returns", () => {
+  const { page } = load("pages/index/index.js", {
+    portfolio: { getCached: () => state, list: () => new Promise(() => {}) },
+  });
+  page.onShow();
+  assert.equal(page.data.loading, false);
+  assert.equal(page.data.rows[0].id, a.id);
+  page.onHide();
+});
+
+test("first reminders entry displays cached rules and quota without waiting for cloud", () => {
+  const saved = { ...state, rules: [{ id: "r1", assetId: a.id, type: "price", enabled: true, target: 100 }] };
+  const { page, wx } = load("pages/reminders/reminders.js", {
+    portfolio: { getCached: () => saved, list: () => new Promise(() => {}) },
+  });
+  wx.getStorageSync = key => key === "last-good-v1:status"
+    ? { version: 1, value: { ok: true, remaining: {}, recentTasks: [] } } : null;
+  page.onShow();
+  assert.equal(page.data.loading, false);
+  assert.equal(page.data.groups[0].rules[0].id, "r1");
+  assert.equal(page.data.hasStatus, true);
+});
+
+test("first Mine entry restores saved settings before cloud responds without restoring cached theme", () => {
+  const { page, wx } = load("pages/mine/mine.js", {
+    portfolio: { getCached: () => state, list: () => new Promise(() => {}) },
+  });
+  wx.getStorageSync = key => key === "last-good-v1:status"
+    ? { version: 1, value: { ok: true, prefs: { theme: "blackgold", dndStart: "22:00" }, remaining: {} } } : null;
+  page.onShow();
+  assert.equal(page.data.hasStatus, true);
+  assert.equal(page.data.hasPortfolio, true);
+  assert.equal(page.data.prefs.dndStart, "22:00");
+  assert.equal(page.data.theme, "paper", "cached status must not change the current theme");
+});
 test("watchlist retains quotes by asset while reload waits for fresh prices", async () => {
   const b = { ...a, id: "sz000001", name: "平安银行" };
   let finish;
@@ -581,10 +773,11 @@ test("unfollowed detail asks before adding and opening reminder settings", async
   let modal;
   const adds = [];
   const { page, wx, routes } = load("pages/detail/detail.js", {
-    portfolio: { add: async id => { adds.push(id); } },
+    portfolio: { add: async id => { adds.push(id); return state; } },
   });
   page.assetId = a.id;
   page._alive = true;
+  page.data.followingReady = true;
   wx.showModal = options => {
     assert.ok(Array.from(options.confirmText || "确定").length <= 4, "微信弹窗确认按钮最多 4 个字符");
     assert.ok(Array.from(options.cancelText || "取消").length <= 4, "微信弹窗取消按钮最多 4 个字符");
@@ -611,6 +804,7 @@ test("failed follow never opens reminders, followed asset opens directly", async
   });
   page.assetId = a.id;
   page._alive = true;
+  page.data.followingReady = true;
   wx.showModal = options => {
     assert.ok(Array.from(options.confirmText || "确定").length <= 4, "微信弹窗确认按钮最多 4 个字符");
     assert.ok(Array.from(options.cancelText || "取消").length <= 4, "微信弹窗取消按钮最多 4 个字符");
@@ -631,6 +825,7 @@ test("failed follow never opens reminders, followed asset opens directly", async
 test("reminder prerequisite stays visible if native dialog fails", () => {
   const { page, wx, routes } = load("pages/detail/detail.js");
   page._alive = true;
+  page.data.followingReady = true;
   wx.showModal = options => options.fail({ errMsg: "showModal:fail" });
   page.openAlert();
   assert.match(page.data.errorText, /加入自选后才可设置提醒/);
@@ -733,4 +928,148 @@ test('cached chart fallback exposes a retry message while retaining plotted data
   assert.equal(page.data.hasChart,true);
   assert.match(page.data.chartError,/刷新失败/);
   assert.match(page.data.chartHint,/缓存/);
+});
+
+test('detail restores cached following before the first network response', () => {
+  const { page } = load('pages/detail/detail.js', {
+    portfolio: { getCached: () => state },
+  });
+  page.onLoad({ assetId: a.id });
+  assert.equal(page.data.following, true);
+  assert.equal(page.data.followingReady, true);
+});
+
+test('detail loads portfolio even while asset resolution is pending', async () => {
+  let resolveAsset;
+  const { page } = load('pages/detail/detail.js', {
+    market: {
+      resolve: () => new Promise(r => { resolveAsset = r; }),
+      quote: async () => ({ quote: { price: 100 } }),
+      chart: async () => ({ chart: { points: [] } }),
+    },
+    portfolio: { list: async () => state },
+  });
+  page.onLoad({ assetId: a.id });
+  const show = page.onShow();
+  await new Promise(r => setImmediate(r));
+  assert.equal(page.data.following, true);
+  resolveAsset({ asset: a });
+  await show;
+  page.onHide();
+});
+
+test('early reminder taps wait for shared portfolio check without a false modal', async () => {
+  let finish;
+  let calls = 0;
+  const { page, wx, routes } = load('pages/detail/detail.js', {
+    portfolio: { list: () => { calls++; return new Promise(r => { finish = r; }); } },
+  });
+  let modals = 0;
+  wx.showModal = () => { modals++; };
+  page.onLoad({ assetId: a.id });
+  page._visible = true;
+  const loading = page.loadPortfolio();
+  const tap = page.openAlert();
+  assert.equal(modals, 0);
+  assert.equal(routes.length, 0);
+  finish(state);
+  await Promise.all([loading, tap]);
+  assert.equal(calls, 1);
+  assert.equal(modals, 0);
+  assert.equal(routes.length, 1);
+});
+
+test('unknown following state never adds or prompts when portfolio check fails', async () => {
+  let adds = 0, modals = 0;
+  const { page, wx, routes } = load('pages/detail/detail.js', {
+    portfolio: {
+      list: async () => { throw Error('连接失败'); },
+      add: async () => { adds++; return state; },
+    },
+  });
+  wx.showModal = () => { modals++; };
+  page.onLoad({ assetId: a.id });
+  page._visible = true;
+  await page.toggleFollow();
+  await page.openAlert();
+  assert.equal(adds, 0);
+  assert.equal(modals, 0);
+  assert.equal(routes.length, 0);
+  assert.equal(page.data.followingReady, false);
+});
+
+test('detail ignores list started before a successful follow', async () => {
+  let finish;
+  const { page } = load('pages/detail/detail.js', {
+    portfolio: {
+      list: () => new Promise(r => { finish = r; }),
+      add: async () => state,
+    },
+  });
+  page.onLoad({ assetId: a.id });
+  page._visible = true;
+  const loading = page.loadPortfolio();
+  await page.follow();
+  finish({ ...state, items: [] });
+  await loading;
+  assert.equal(page.data.following, true);
+});
+
+test('reminder tap during a follow mutation does not show a prerequisite modal', () => {
+  const { page, wx } = load('pages/detail/detail.js');
+  let modals = 0;
+  wx.showModal = () => { modals++; };
+  page.data.busy = true;
+  page.openAlert();
+  assert.equal(modals, 0);
+});
+
+test('offline defaults do not confirm the detail following state', async () => {
+  const { page, wx } = load('pages/detail/detail.js', {
+    portfolio: { list: async () => ({ ...state, offline: true }), getCached: () => null },
+  });
+  let modals = 0;
+  wx.showModal = () => { modals++; };
+  page.onLoad({ assetId: a.id });
+  page._visible = true;
+  await page.openAlert();
+  assert.equal(page.data.followingReady, false);
+  assert.equal(modals, 0);
+  assert.match(page.data.errorText, /无法确认/);
+});
+
+test('leaving detail during prerequisite check cancels reminder navigation', async () => {
+  let finish;
+  const { page, routes } = load('pages/detail/detail.js', {
+    portfolio: { list: () => new Promise(r => { finish = r; }) },
+  });
+  page.onLoad({ assetId: a.id });
+  page._visible = true;
+  const tap = page.openAlert();
+  page.onHide();
+  finish(state);
+  await tap;
+  assert.equal(routes.length, 0);
+  assert.equal(page.data.followingReady, false);
+});
+
+test('removing a followed asset applies returned state without a second list round trip', async () => {
+  let modal;
+  let lists = 0;
+  const { page, wx } = load('pages/detail/detail.js', {
+    portfolio: {
+      getCached: () => state,
+      remove: async () => ({ ...state, items: [], rules: [], revision: 3 }),
+      list: async () => { lists++; return state; },
+    },
+  });
+  wx.showModal = options => { modal = options; };
+  page.onLoad({ assetId: a.id });
+  page._visible = true;
+  await page.toggleFollow();
+  await modal.success({ confirm: true });
+  assert.equal(page.data.following, false);
+  assert.equal(page.data.followingReady, true);
+  assert.equal(page.data.rules.length, 0);
+  assert.equal(lists, 0);
 });

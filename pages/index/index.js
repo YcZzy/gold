@@ -5,7 +5,7 @@ const cache = require("../../utils/read-cache");
 const fmt = require("../../utils/asset-format");
 Page({
   data: {
-    theme: "paper",
+    theme: theme.getTheme(),
     rows: [],
     limits: { watchlist: 5 },
     revision: 0,
@@ -18,6 +18,8 @@ Page({
   },
   onLoad() {
     this._alive = true;
+    this.setData({ theme: theme.getTheme() });
+    theme.applyChrome(this.data.theme);
   },
   async onShow() {
     this._alive = true;
@@ -25,6 +27,10 @@ Page({
     this.setData({ theme: theme.getTheme() });
     theme.applyChrome(this.data.theme);
     this.stopPolling();
+    if (this.data.loading && portfolio.getCached) {
+      const saved = portfolio.getCached();
+      if (saved) this.applyState(saved);
+    }
     await this.reload();
     if (this._visible) this.timer = setInterval(() => this.loadQuotes(), 60000);
   },
@@ -62,6 +68,8 @@ Page({
         ...fmt.quote(previousRows.get(a.id) ||
           ((cache.forPlatform(wx).read("quote:" + a.id) || {}).quote || {}), a),
         ...a,
+        note: (s.annotations && s.annotations[a.id] && s.annotations[a.id].note) || "",
+        tags: (s.annotations && s.annotations[a.id] && s.annotations[a.id].tags) || [],
         activeCount: (s.rules || []).filter(
           (r) => r.assetId === a.id && r.enabled,
         ).length,

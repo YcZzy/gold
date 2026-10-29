@@ -3,7 +3,8 @@ const assert = require("node:assert/strict");
 const { memoryDb } = require("./helpers/asset-db");
 const { createAssetTasks, planRuleTask, buildMessage } = require("../cloudfunctions/sendTask/asset-tasks");
 const { templates } = require("../utils/app-config");
-const now = Date.parse("2026-10-27T09:02:00+08:00");
+// Price/volatility monitoring now requires an actual regular trading session.
+const now = Date.parse("2026-10-27T10:02:00+08:00");
 const asset = { id: "sh600519", name: "贵州茅台", code: "600519", kind: "stock", market: "SH", currency: "CNY", unit: "元/股", precision: 2 };
 const quote = { assetId: asset.id, price: 900, prevClose: 910, change: -10, changePct: -1.1, sourceTime: now, fetchedAt: now, source: "tencent", stale: false, status: "fresh" };
 const rule = { id: "rule-1", assetId: asset.id, type: "priceBelow", value: 900, enabled: true, version: "v1" };
@@ -61,7 +62,7 @@ test("scheduled midnight uses previous calendar date while close requires today'
 test("each existing template includes stock name, units and correct data fields", () => {
   const t = planRuleTask(rule, asset, quote, [], now, "u");
   assert.match(buildMessage(t).thing2.value, /贵州茅台/);
-  const scheduled = planRuleTask({ ...rule, type: "scheduled", time: "09:00" }, asset, quote, [], now, "u");
+  const scheduled = planRuleTask({ ...rule, type: "scheduled", time: "10:00" }, asset, quote, [], now, "u");
   assert.match(buildMessage(scheduled).thing15.value, /贵州茅台/);
   assert.equal(buildMessage(scheduled).amount5.value, "¥900.00");
 });

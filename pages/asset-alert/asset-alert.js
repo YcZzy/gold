@@ -4,7 +4,7 @@ const theme = require("../../utils/theme");
 const fmt = require("../../utils/asset-format");
 Page({
   data: {
-    theme: "paper",
+    theme: theme.getTheme(),
     asset: null,
     rules: [],
     types: fmt.TYPES,
@@ -18,6 +18,8 @@ Page({
     loading: true,
   },
   onLoad(o) {
+    this.setData({ theme: theme.getTheme() });
+    theme.applyChrome(this.data.theme);
     this.assetId = o.assetId;
     this._alive = true;
   },
@@ -33,15 +35,16 @@ Page({
         portfolio.list(),
       ]);
       if (!this._alive) return;
-      const asset = results[0].asset || results[0];
+      const rawAsset = results[0].asset || results[0];
+      const asset = { ...rawAsset, ...fmt.identity(rawAsset) };
       this.setData({
         asset,
         types: fmt.TYPES.filter(
           (t) =>
             t.value !== "close" ||
-            asset.market === "SH" ||
-            asset.market === "SZ" ||
-            asset.id === "gold-au9999",
+            asset.supportsClose === true ||
+            (asset.supportsClose !== false && (asset.market === "SH" ||
+              asset.market === "SZ" || asset.id === "gold-au9999")),
         ),
         loading: false,
       });
@@ -88,7 +91,7 @@ Page({
             ? { value: type.includes("Move") ? 1 : "" }
             : {}),
           ...(type === "scheduled"
-            ? { time: "09:00", weekdaysOnly: this.data.asset.kind === "stock" }
+            ? { time: "09:00", weekdaysOnly: this.data.asset.kind !== "gold" }
             : {}),
         };
     const index = this.data.pctOptions.indexOf(Number(draft.value));
@@ -157,6 +160,14 @@ Page({
     if (r.type === "scheduled" && !/^([01]\d|2[0-3]):[0-5]\d$/.test(r.time)) {
       this.setData({ errorText: "请选择有效时间" });
       return;
+    }
+    if (r.type === 'priceAbove' || r.type === 'priceBelow') {
+      const precision = this.data.asset.precision == null ? 2 : this.data.asset.precision;
+      const pattern = precision === 0 ? /^\d+$/ : new RegExp('^\\d+(?:\\.\\d{1,' + precision + '})?$');
+      if (!pattern.test(String(r.value))) {
+        this.setData({ errorText: '目标价格最多保留 ' + precision + ' 位小数' });
+        return;
+      }
     }
     this.setData({ busy: true, errorText: "" });
     try {

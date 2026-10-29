@@ -2,16 +2,15 @@
  * 主题管理（paper 纸感 / blackgold 黑金）
  * - 本地缓存即时生效：刷新、下次启动直接用上次主题
  * - 云端持久化：savePrefs 写入 preferences.theme，跨设备同步
- * - applyChrome：导航栏 / 窗口背景随主题变化
+ * - applyChrome 显式同步原生顶部导航和自定义底栏；窗口背景由 page-meta 声明
  * - chartColors：K 线 canvas 配色随主题变化（见 utils/candle-chart.js）
  */
 const KEY = "gold-theme";
 const THEMES = ["paper", "blackgold"];
-
-const NAV = {
-  paper: { front: "#000000", bg: "#FAF8F3" },
-  blackgold: { front: "#ffffff", bg: "#14120b" }
-};
+// 本设备已确定的主题是唯一显示依据；存储失败时仍保留本次会话的选择。
+let currentTheme = null;
+let savingTheme = false;
+let queuedTheme = null;
 
 // 图表 canvas 调色板（paper 用 candle-chart.js 内置默认色）
 const CHART_PALETTES = {
@@ -71,9 +70,10 @@ function isValid(t) {
 }
 
 function getTheme() {
+  if (isValid(currentTheme)) return currentTheme;
   try {
     const t = wx.getStorageSync(KEY);
-    if (isValid(t)) return t;
+    if (isValid(t)) return (currentTheme = t);
   } catch (e) {
     /* 缓存读取失败用默认 */
   }
@@ -81,6 +81,7 @@ function getTheme() {
 }
 
 function cacheTheme(theme) {
+  currentTheme = theme;
   try {
     wx.setStorageSync(KEY, theme);
   } catch (e) {
@@ -89,55 +90,66 @@ function cacheTheme(theme) {
 }
 
 function applyChrome(theme) {
-  const nav = NAV[theme] || NAV.paper;
-  try {
+  if (!isValid(theme)) theme = "paper";
+  // The native navigation bar lives outside the page's rendered content.
+  // Use one explicit update path on theme changes and page show; page-meta
+  // only owns window backgrounds so it cannot overwrite this navigation color.
+  if (typeof wx.setNavigationBarColor === "function") {
     wx.setNavigationBarColor({
-      frontColor: nav.front,
-      backgroundColor: nav.bg,
-      fail: () => {}
+      frontColor: theme === "blackgold" ? "#ffffff" : "#000000",
+      backgroundColor: theme === "blackgold" ? "#14120b" : "#FAF8F3",
+      animation: { duration: 0, timingFunc: "linear" },
+      fail: error => console.warn("导航栏主题同步失败", error),
     });
-    if (wx.setBackgroundColor) {
-      wx.setBackgroundColor({ backgroundColor: nav.bg, fail: () => {} });
-    }
-    if (wx.setTabBarStyle) {
-      wx.setTabBarStyle({
-        color: theme === "blackgold" ? "#9a8f6e" : "#8a857b",
-        selectedColor: theme === "blackgold" ? "#d9b45b" : "#2c2c2a",
-        backgroundColor: nav.bg,
-        borderStyle: theme === "blackgold" ? "black" : "white",
-        fail: () => {}
-      });
-    }
-  } catch (e) {
-    /* 基础库过低时忽略 */
   }
+  const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+  const page = pages[pages.length - 1];
+  const bar = page && typeof page.getTabBar === "function" && page.getTabBar();
+  if (bar && typeof bar.syncFromPage === "function") bar.syncFromPage(theme);
+  // An unattached custom bar synchronizes in attached(); never style a native
+  // tab bar as a fallback while waiting for this component to become ready.
 }
 
 function chartColors(theme) {
   return CHART_PALETTES[theme] || {};
 }
 
-/** 切换主题：本地缓存 + 导航栏/背景即时生效 + 云端持久化（fire-and-forget） */
+// 串行保存并合并等待中的切换，避免较早的写入后完成而覆盖最后一次选择。
+async function saveTheme() {
+  if (savingTheme || !queuedTheme || !wx.cloud || !wx.cloud.callFunction) return;
+  const theme = queuedTheme;
+  queuedTheme = null;
+  savingTheme = true;
+  try {
+    await wx.cloud.callFunction({ name: "savePrefs", data: { prefs: { theme } } });
+  } catch (e) {
+    // 云端失败不回滚本设备主题；下次主动切换仍会保存最新选择。
+  } finally {
+    savingTheme = false;
+    if (queuedTheme) saveTheme();
+  }
+}
+
+/** 切换主题：会话状态 / 本地缓存 / 顶部导航和自定义底栏即时生效，异步串行保存云端。 */
 function setTheme(theme) {
   if (!isValid(theme)) theme = "paper";
   cacheTheme(theme);
   applyChrome(theme);
-  if (wx.cloud && wx.cloud.callFunction) {
-    wx.cloud
-      .callFunction({ name: "savePrefs", data: { prefs: { theme } } })
-      .catch(() => {});
-  }
+  queuedTheme = theme;
+  saveTheme();
   return theme;
 }
 
-/** 云端 prefs 回填（新设备首次启动等场景），云端值优先于本地缓存 */
+/** 仅在本设备没有有效主题时从云端初始化，旧响应和离线缓存不能覆盖本地选择。 */
 function syncFromPrefs(prefs) {
-  if (prefs && isValid(prefs.theme) && prefs.theme !== getTheme()) {
+  const local = getTheme();
+  if (isValid(currentTheme)) return local;
+  if (prefs && isValid(prefs.theme)) {
     cacheTheme(prefs.theme);
     applyChrome(prefs.theme);
     return prefs.theme;
   }
-  return getTheme();
+  return local;
 }
 
 module.exports = { getTheme, setTheme, applyChrome, chartColors, syncFromPrefs, themeIcon, bellIcon, ICON_REFRESH, ICON_BELL_GOLD, isValid };

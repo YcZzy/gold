@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-29",
+  "checkedAt": "2026-10-29T02:01:23.271Z",
+  "implementation": "local-complete",
+  "unit": {
+    "passed": 329,
+    "failed": 0,
+    "command": "node --test tests/*.test.js"
+  },
+  "crossMarket": {
+    "passed": 105,
+    "failed": 0,
+    "report": "market-integration-smoke-2026-10-29.json"
+  },
+  "compatibility": {
+    "passed": 18,
+    "failed": 0,
+    "report": "api-smoke-2026-10-29.json"
+  },
+  "catalog": {
+    "version": "2026-10-29T01:44:00.536174+00:00-v2",
+    "BJ": 354,
+    "HK": 3208
+  },
+  "reviews": {
+    "spec": "PASS",
+    "quality": "PASS"
+  },
+  "syntaxFiles": 32,
+  "deploymentRequired": [
+    "marketData",
+    "portfolio",
+    "sendTask",
+    "miniprogram frontend"
+  ],
+  "notExercised": [
+    "WeChat cloud deployment",
+    "native WeChat Developer Tools / physical-device UI",
+    "real WeChat subscription message delivery"
+  ],
+  "limitations": [
+    "US strictly unadjusted history depends on Tencent and same-source alternate transports except independently verified Eastmoney mappings. Yahoo/Nasdaq adjusted history is excluded.",
+    "Calendar coverage: CN2026, HK2026-27, US2026-28. Unknown calendar years disable close briefs.",
+    "Public feeds have no verified availability SLA; caches and source errors are explicitly marked."
+  ]
+}

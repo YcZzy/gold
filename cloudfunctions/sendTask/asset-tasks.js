@@ -1,5 +1,6 @@
 // 多标的提醒：独立于旧黄金规则，保留旧用户的发送与授权账本。
 const MINUTE = 60000;
+const calendar = require('./market-calendar');
 const TARGETS = ["priceAbove", "priceBelow"];
 const TYPES = ["priceAbove", "priceBelow", "dailyMove", "rapidMove", "scheduled", "close"];
 const LABELS = { priceAbove: "涨到价", priceBelow: "跌到价", dailyMove: "日内波动", rapidMove: "短时急变", scheduled: "定时播报", close: "收盘简报" };
@@ -7,6 +8,18 @@ const positive = n => typeof n === "number" && Number.isFinite(n) && n > 0;
 const take20 = text => Array.from(String(text || "")).slice(0, 20).join("");
 const target = type => TARGETS.includes(type);
 const brief = type => type === "scheduled" || type === "close";
+// amount.DATA accepts one currency symbol. Preserve HKD and long prices in text fields.
+function amountTemplate(task) {
+  const {asset,quote}=task.meta;
+  const price=quote.price.toFixed(asset.precision == null ? 2 : asset.precision);
+  return brief(task.type) && ['CNY','USD'].includes(asset.currency) && price.replace(/\D/g,'').length <= 10;
+}
+function countKey(task) {
+  const asset=task.meta && task.meta.asset;
+  const marketDate=asset && asset.market==='US' && task.type!=='scheduled'
+    ? task.marketDate || calendar.session(asset,task.triggerTime).date.replace(/-/g,'') : '';
+  return task.assetId + '_' + task.type + (marketDate ? ':' + marketDate : '');
+}
 
 function parts(ts) {
   const date = new Date(ts + 8 * 3600000);
@@ -23,17 +36,23 @@ function validQuote(quote, asset, now) {
     quote.sourceTime <= now + MINUTE && positive(quote.fetchedAt) && quote.fetchedAt <= now + MINUTE &&
     now - quote.fetchedAt <= 10 * MINUTE && !quote.stale;
 }
-function fresh(quote, asset, now) { return validQuote(quote, asset, now) && now - quote.sourceTime <= 10 * MINUTE; }
+function fresh(quote, asset, now) {
+  if (!validQuote(quote, asset, now) || (quote.status != null && quote.status !== 'fresh') || quote.isDelayed || now - quote.sourceTime > 10 * MINUTE) return false;
+  if (asset.kind === 'gold') return true;
+  const current = calendar.session(asset, now), source = calendar.session(asset, quote.sourceTime);
+  return current.phase === 'regular' && source.phase === 'regular' && current.date === source.date && current.segment === source.segment;
+}
 
 function planRuleTask(rule, asset, quote, samples, now, openid) {
   if (!rule || !rule.enabled || !TYPES.includes(rule.type) || rule.assetId !== asset.id || !validQuote(quote, asset, now)) return null;
   const p = parts(now);
   let date = p.ymd, reason = "", expiry = now + 30 * MINUTE;
+  if (asset.kind !== 'gold') date = calendar.session(asset, now).date.replace(/-/g, '');
   const pct = value => `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
   if (target(rule.type)) {
     if (!positive(rule.value) || !fresh(quote, asset, now)) return null;
     if (rule.type === "priceAbove" ? quote.price < rule.value : quote.price > rule.value) return null;
-    reason = `${LABELS[rule.type]} ${rule.value.toFixed(asset.precision || 2)}`;
+    reason = `${LABELS[rule.type]} ${rule.value.toFixed(asset.precision == null ? 2 : asset.precision)}`;
   } else if (rule.type === "dailyMove") {
     if (!fresh(quote, asset, now) || !positive(rule.value) || !Number.isFinite(quote.changePct) || Math.abs(quote.changePct) < rule.value) return null;
     reason = `较昨收${pct(quote.changePct)}`;
@@ -44,6 +63,10 @@ function planRuleTask(rule, asset, quote, samples, now, openid) {
       quote.sourceTime - s.sourceTime >= 12 * MINUTE && quote.sourceTime - s.sourceTime <= 18 * MINUTE)
       .sort((a, b) => Math.abs(now - a.at - 15 * MINUTE) - Math.abs(now - b.at - 15 * MINUTE))[0];
     if (!previous) return null;
+    if (asset.kind !== 'gold') {
+      const current = calendar.session(asset, now), baseline = calendar.session(asset, previous.sourceTime);
+      if (baseline.phase !== 'regular' || baseline.date !== current.date || baseline.segment !== current.segment || previous.status === 'delayed' || previous.isDelayed) return null;
+    }
     const change = (quote.price / previous.price - 1) * 100;
     if (Math.abs(change) < rule.value) return null;
     reason = `约15分钟${pct(change)}`;
@@ -58,17 +81,25 @@ function planRuleTask(rule, asset, quote, samples, now, openid) {
     date = scheduledDay.ymd;
     reason = "定时行情播报";
   } else {
-    if (asset.id === "gold-xauusd" || [0, 6].includes(p.weekday)) return null;
+    if (asset.id === "gold-xauusd" || asset.supportsClose === false || quote.session === 'post' || quote.session === 'pre') return null;
     const gold = asset.id === "gold-au9999";
-    const due = gold ? 15 * 60 + 40 : 15 * 60 + 10;
-    const source = parts(quote.sourceTime);
-    if (p.minutes < due || p.minutes > due + 45 || source.ymd !== p.ymd || source.minutes < (gold ? 15 * 60 + 30 : 15 * 60)) return null;
+    if (gold) {
+      const source = parts(quote.sourceTime);
+      if ([0,6].includes(p.weekday) || p.minutes < 15*60+40 || p.minutes > 16*60+25 || source.ymd !== p.ymd || source.minutes < 15*60+30) return null;
+    } else {
+      const current = calendar.session(asset, now), source = calendar.session(asset, quote.sourceTime);
+      const close = current.closeTime, auctionWindow = asset.market === 'HK' ? 2*MINUTE : 0;
+      if (!current.known || !close || now < close + 10*MINUTE || now > close + 55*MINUTE ||
+          source.date !== current.date || quote.sourceTime < close - auctionWindow ||
+          (quote.sessionDate && quote.sessionDate !== current.date)) return null;
+    }
     reason = "收盘行情简报";
   }
   return {
     _id: `v2:${rule.id}:${target(rule.type) ? rule.version : date}`,
     schemaVersion: 2, openid, type: rule.type, assetId: asset.id, assetName: asset.name,
     ruleId: rule.id, ruleVersion: rule.version, priority: target(rule.type) ? 1 : 0,
+    marketDate: date,
     triggerTime: now, expireAt: expiry, createdAt: now,
     meta: { asset, quote, reason }
   };
@@ -76,8 +107,8 @@ function planRuleTask(rule, asset, quote, samples, now, openid) {
 
 function buildMessage(task) {
   const { asset, quote, reason } = task.meta;
-  const price = quote.price.toFixed(asset.precision || 2);
-  if (brief(task.type)) {
+  const price = quote.price.toFixed(asset.precision == null ? 2 : asset.precision);
+  if (amountTemplate(task)) {
     return {
       thing15: { value: take20(`${asset.name} ${asset.unit}`) },
       amount5: { value: `${asset.currency === "USD" ? "$" : "¥"}${price}` },
@@ -141,7 +172,7 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
     });
   }
   async function create(task) {
-    const data = { ...task, templateId: brief(task.type) ? templates.dailyBrief : templates.volatility, status: "pending", retryCount: 0 };
+    const data = { ...task, templateId: amountTemplate(task) ? templates.dailyBrief : templates.volatility, status: "pending", retryCount: 0 };
     try { await db.collection("sendTasks").add({ data }); return true; }
     catch (error) {
       if (!/duplicate|exists|重复|已存在/i.test(String(error.errMsg || error.message))) throw error;
@@ -217,7 +248,7 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
       const mapped = task.schemaVersion === 2 ? [task.assetId, task.type] : LEGACY[task.type];
       if (!mapped) continue;
       const [assetId, type] = mapped;
-      const key = assetId + "_" + type;
+      const key = countKey({ ...task, assetId, type });
       budget.counts[key] = (budget.counts[key] || 0) + 1;
       budget[target(type) ? "targets" : "regular"]++;
     }
@@ -226,7 +257,7 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
   async function reserve(task) {
     const time = now(), budgetId = task.openid + ":" + parts(time).ymd;
     const initial = await seedBudget(task.openid, time);
-    const templateId = brief(task.type) ? templates.dailyBrief : templates.volatility;
+    const templateId = amountTemplate(task) ? templates.dailyBrief : templates.volatility;
     const quotaId = task.openid + ":" + templateId;
     return db.runTransaction(async tx => {
       const portfolio = await maybe(tx.collection("portfolios").doc(task.openid));
@@ -236,7 +267,7 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
       const budget = await maybe(ref) || { ...initial, counts: { ...initial.counts }, reservations: { ...initial.reservations } };
       const quotaRef = tx.collection("subscriptions").doc(quotaId);
       const quota = await maybe(quotaRef);
-      const group = target(task.type) ? "targets" : "regular", key = task.assetId + "_" + task.type;
+      const group = target(task.type) ? "targets" : "regular", key = countKey(task);
       budget.counts ||= {};
       budget.reservations ||= {};
       if (budget.reservations[task._id]) return { reason: "pending-check" };

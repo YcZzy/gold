@@ -1,0 +1,78 @@
+[
+  {
+    "route": "direct",
+    "url": "https://ifzq.gtimg.cn/appstock/app/fqkline/get?param=usSPY.AM,day,,,10,",
+    "requestedAt": "2026-10-28T08:14:56.490145+00:00",
+    "provider": "Tencent, same source as web.ifzq.gtimg.cn; transport fallback only, not independent data.",
+    "httpStatus": 200,
+    "providerCode": 0,
+    "providerMessage": "",
+    "count": 10,
+    "first": [
+      "2026-10-14",
+      "774.920",
+      "769.600",
+      "776.350",
+      "766.710",
+      "55715372.000"
+    ],
+    "last": [
+      "2026-10-27",
+      "767.340",
+      "769.660",
+      "771.140",
+      "765.210",
+      "28631659.000"
+    ],
+    "sha256": "218986bce94bede5f94fe31dfe78ebf6cd4fc986c8fa52b41be57d6b3595c253",
+    "responseBytes": 2173,
+    "status": "ok",
+    "rawFixture": "tests/fixtures/markets/charts-raw-tencent-direct.json"
+  },
+  {
+    "route": "qq-proxy",
+    "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get?param=usSPY.AM,day,,,10,",
+    "requestedAt": "2026-10-28T08:14:56.490867+00:00",
+    "provider": "Tencent, same source as web.ifzq.gtimg.cn; transport fallback only, not independent data.",
+    "httpStatus": 200,
+    "providerCode": 0,
+    "providerMessage": "",
+    "count": 10,
+    "first": [
+      "2026-10-14",
+      "774.920",
+      "769.600",
+      "776.350",
+      "766.710",
+      "55715372.000"
+    ],
+    "last": [
+      "2026-10-27",
+      "767.340",
+      "769.660",
+      "771.140",
+      "765.210",
+      "28631659.000"
+    ],
+    "sha256": "218986bce94bede5f94fe31dfe78ebf6cd4fc986c8fa52b41be57d6b3595c253",
+    "responseBytes": 2173,
+    "status": "ok",
+    "rawFixture": "tests/fixtures/markets/charts-raw-tencent-qq-proxy.json"
+  },
+  {
+    "route": "qq-proxy-minute",
+    "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/usMinute/query?code=usSPY.AM",
+    "requestedAt": "2026-10-28T08:14:56.490938+00:00",
+    "provider": "Tencent, same source as web.ifzq.gtimg.cn; transport fallback only, not independent data.",
+    "httpStatus": 200,
+    "providerCode": 0,
+    "providerMessage": "",
+    "count": 391,
+    "first": "0930 767.40 796125",
+    "last": "1600 769.66 28631659",
+    "sha256": "4cd2131f2b8e6b60129076696107ecfe588b755490bc9dfa9d159c2f24b922d6",
+    "responseBytes": 10863,
+    "status": "ok",
+    "rawFixture": "tests/fixtures/markets/charts-raw-tencent-qq-proxy-minute.json"
+  }
+]

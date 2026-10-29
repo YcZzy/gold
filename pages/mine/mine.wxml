@@ -1,17 +1,17 @@
-<view class="page mine-page theme-{{theme}}">
+<page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
+<view class="page mine-page tab-page theme-{{theme}}">
   <view class="mine-header">
     <view class="mine-heading">
       <view class="hero-title">我的</view>
       <view class="hero-sub">管理提醒，按自己的节奏关注行情</view>
     </view>
-    <button class="theme-toggle" bindtap="onThemeTap" hover-class="control-pressed" aria-label="{{theme === 'paper' ? '切换深色主题' : '切换浅色主题'}}">
+    <button class="theme-toggle glass-control" bindtap="onThemeTap" hover-class="glass-control-pressed" aria-label="{{theme === 'paper' ? '切换深色主题' : '切换浅色主题'}}">
       <image class="theme-toggle-icon" src="{{theme === 'paper' ? '/assets/icons/moon.svg' : '/assets/icons/sun.svg'}}" mode="aspectFit" aria-hidden="true" />
       <text>{{theme === 'paper' ? '深色' : '浅色'}}</text>
     </button>
   </view>
 
   <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
-  <view wx:if="{{loading}}" class="loading-note" role="status">正在读取账户设置…</view>
 
   <view class="mine-card subscription-card">
     <view class="section-heading">
@@ -106,6 +106,6 @@
     <view class="question">为什么每次只能增加 1 次？</view>
     <view class="muted">微信订阅消息按模板逐次授权。每次同意一个模板，增加该模板 1 次发送机会；发送成功后消耗 1 次。播报与异动分别计数，可再次点击增加授权并同意订阅。</view>
   </view>
-  <view class="page-footer">后台约每 1 分钟监测。股票按沪深市场规则处理；定时播报中的「仅周一至周五」仅表示星期，不代表完整交易日历。</view>
+  <view class="page-footer">后台约每 1 分钟监测。股票与 ETF 按各自市场的常规交易时段、交易日期及已核验日历处理；定时播报按北京时间，「仅周一至周五」仅表示星期。美股自动处理夏令时。</view>
   <view class="page-footer disclaimer">公开行情仅供参考，不构成投资建议。</view>
 </view>

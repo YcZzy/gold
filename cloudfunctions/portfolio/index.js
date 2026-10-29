@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const securities = require("./securities");
 const hasOwn = (object, key) =>
   Object.prototype.hasOwnProperty.call(object, key);
 const GOLD = {
@@ -36,8 +37,7 @@ const TYPES = [
   "close",
 ];
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
-const validId = (id) =>
-  typeof id === "string" && (hasOwn(GOLD, id) || /^(sh|sz)\d{6}$/.test(id));
+const validId = securities.validId;
 const token = () => crypto.randomBytes(16).toString("hex");
 function fail(err, hint) {
   throw Object.assign(new Error(hint), { businessCode: err });
@@ -128,7 +128,7 @@ function migrate(prefs, now, legacyStates = {}) {
 }
 const positive = (v) =>
   typeof v === "number" && Number.isFinite(v) && v > 0 && v <= 1000000;
-function conditions(event) {
+function conditions(event, asset) {
   if (!TYPES.includes(event.type) || typeof event.enabled !== "boolean")
     fail("bad-rule", "提醒类型或开关格式不正确");
   if (hasOwn(event, "value") && !positive(event.value))
@@ -142,7 +142,11 @@ function conditions(event) {
     fail("bad-rule", "交易日开关格式不正确");
   if (event.type === "close" && event.assetId === "gold-xauusd")
     fail("bad-rule", "国际黄金暂不支持收盘提醒，请使用定时提醒");
+  if (event.type === "close" && event.enabled && asset && asset.supportsClose === false)
+    fail("bad-rule", "该标的暂不支持收盘提醒，请使用定时提醒");
   const out = { enabled: event.enabled };
+  const precision = asset && asset.precision != null ? asset.precision : 2;
+  const pricePattern = precision === 0 ? /^\d+$/ : new RegExp("^\\d+(?:\\.\\d{1," + precision + "})?$");
   if (
     ["priceAbove", "priceBelow", "dailyMove", "rapidMove"].includes(event.type)
   ) {
@@ -154,9 +158,9 @@ function conditions(event) {
       fail("bad-rule", "请选择支持的涨跌幅阈值");
     if (
       ["priceAbove", "priceBelow"].includes(event.type) &&
-      !/^\d+(?:\.\d{1,2})?$/.test(String(event.value))
+      !pricePattern.test(String(event.value))
     )
-      fail("bad-rule", "目标价格最多保留两位小数");
+      fail("bad-rule", "目标价格最多保留 " + precision + " 位小数");
     out.value = event.value;
   }
   if (event.type === "scheduled") {
@@ -166,6 +170,18 @@ function conditions(event) {
     out.weekdaysOnly = event.weekdaysOnly !== false;
   }
   return out;
+}
+function annotation(event) {
+  if (typeof event.note !== "string" || !Array.isArray(event.tags) ||
+      !event.tags.every(tag => typeof tag === "string") ||
+      !Number.isSafeInteger(event.revision) || event.revision < 0)
+    fail("bad-annotation", "备注、标签或版本格式不正确");
+  const note = event.note.trim();
+  const tags = [...new Set(event.tags.map(tag => tag.trim()).filter(Boolean))];
+  if (Array.from(note).length > 120 || tags.length > 3 ||
+      tags.some(tag => Array.from(tag).length > 8))
+    fail("bad-annotation", "备注最多120字，标签最多3个且每个最多8字");
+  return { note, tags };
 }
 function createHandler({ db, getOpenid, resolve, now = Date.now }) {
   return async (event = {}) => {
@@ -180,16 +196,18 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
           "remove",
           "reorder",
           "saveRule",
+          "saveAnnotation",
           "deleteRule",
         ].includes(action)
       )
         fail("bad-action", "不支持的操作");
       if (
-        ["add", "remove", "saveRule"].includes(action) &&
+        ["add", "remove", "saveRule", "saveAnnotation"].includes(action) &&
         !validId(event.assetId)
       )
         fail("bad-asset", "证券代码无效");
-      const patch = action === "saveRule" ? conditions(event) : null;
+      let patch = null;
+      const annotationPatch = action === "saveAnnotation" ? annotation(event) : null;
       if (
         action === "deleteRule" &&
         (typeof event.ruleId !== "string" || !event.ruleId)
@@ -207,43 +225,15 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
       async function asset(id) {
         if (!metadata[id]) {
           const found = await resolve(id);
-          if (
-            !found ||
-            found.id !== id ||
-            !validId(found.id) ||
-            !["SH", "SZ", "SGE", "GLOBAL"].includes(found.market) ||
-            !["stock", "gold"].includes(found.kind) ||
-            !["name", "code", "currency", "unit", "secid"].every(
-              (k) => typeof found[k] === "string" && found[k],
-            ) ||
-            !(
-              (typeof found.quoteCode === "string" && found.quoteCode) ||
-              (found.kind === "gold" && found.quoteCode === null)
-            ) ||
-            !Number.isInteger(found.precision) ||
-            found.precision < 0 ||
-            found.precision > 6
-          )
-            fail("unknown-asset", "未找到可用的证券信息");
-          metadata[id] = Object.fromEntries(
-            [
-              "id",
-              "name",
-              "code",
-              "market",
-              "kind",
-              "currency",
-              "unit",
-              "secid",
-              "quoteCode",
-              "precision",
-            ].map((k) => [k, found[k]]),
-          );
+          const verified = securities.metadata(found, id);
+          if (!verified) fail("unknown-asset", "未找到可用的证券信息");
+          metadata[id] = verified;
         }
         return metadata[id];
       }
       // Resolve remote metadata before entering the transaction: retries stay local.
       if (action === "add") await asset(event.assetId);
+      if (action === "saveRule") patch = conditions(event, await asset(event.assetId));
       const saved = await db.runTransaction(async (tx) => {
         const ref = tx.collection("portfolios").doc(openid),
           prefRef = tx.collection("preferences").doc(openid);
@@ -257,12 +247,14 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
           ? {
               ...existing,
               items: [...existing.items],
+              annotations: { ...(existing.annotations || {}) },
               rules: existing.rules.map((r) => ({ ...r })),
             }
           : {
               openid,
               items: Object.keys(GOLD),
               rules: [],
+              annotations: {},
               revision: 0,
               migrationVersion: 0,
             };
@@ -302,7 +294,28 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
           doc.items.push(event.assetId);
           changed = true;
         }
+        if (action === "saveAnnotation") {
+          if (event.revision !== doc.revision)
+            fail("revision-conflict", "自选列表已更新，请刷新后重试");
+          if (!doc.items.includes(event.assetId))
+            fail("not-watched", "请先将该品种加入自选");
+          const previous = doc.annotations[event.assetId];
+          if (!annotationPatch.note && !annotationPatch.tags.length) {
+            if (hasOwn(doc.annotations, event.assetId)) {
+              delete doc.annotations[event.assetId];
+              changed = true;
+            }
+          } else if (!previous || previous.note !== annotationPatch.note ||
+              JSON.stringify(previous.tags) !== JSON.stringify(annotationPatch.tags)) {
+            doc.annotations[event.assetId] = { ...annotationPatch, updatedAt: timestamp };
+            changed = true;
+          }
+        }
         if (action === "remove") {
+          if (hasOwn(doc.annotations, event.assetId)) {
+            delete doc.annotations[event.assetId];
+            changed = true;
+          }
           const items = doc.items.filter((id) => id !== event.assetId);
           if (items.length !== doc.items.length) {
             doc.items = items;
@@ -383,6 +396,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
         ok: true,
         items,
         rules: saved.rules,
+        annotations: saved.annotations,
         limits: saved.limits,
         revision: saved.revision,
       };

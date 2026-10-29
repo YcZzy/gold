@@ -1,0 +1,17 @@
+{
+  "validationDate": "2026-10-29",
+  "checkedAt": "2026-10-29T01:47:11.988Z",
+  "catalogVersion": "2026-10-29T01:44:00.536174+00:00-v2",
+  "added": {
+    "assetId": "bj920306",
+    "resolved": true,
+    "name": "N天元",
+    "quoteAvailable": true,
+    "source": "tencent",
+    "sourceTime": 1793238427000
+  },
+  "removed": {
+    "assetId": "hk08567",
+    "rejected": true
+  }
+}

@@ -1,0 +1,45 @@
+/* Shared material tokens. A readable tint remains when backdrop blur is unavailable. */
+.theme-paper {
+  --glass-tint: rgba(250, 248, 243, 0.86);
+  --glass-edge: rgba(255, 255, 255, 0.88);
+  --glass-shade: rgba(88, 77, 57, 0.12);
+  --glass-sheen: rgba(255, 255, 255, 0.62);
+  --glass-shadow: rgba(60, 48, 29, 0.12);
+  --glass-text: #2c2c2a;
+  --glass-muted: #6f6a61;
+  --glass-selected: rgba(255, 255, 255, 0.72);
+  --glass-selected-edge: rgba(255, 255, 255, 0.96);
+  --glass-accent: #2c2c2a;
+}
+.theme-blackgold {
+  --glass-tint: rgba(35, 30, 19, 0.90);
+  --glass-edge: rgba(231, 212, 166, 0.24);
+  --glass-shade: rgba(0, 0, 0, 0.32);
+  --glass-sheen: rgba(255, 238, 193, 0.10);
+  --glass-shadow: rgba(0, 0, 0, 0.30);
+  --glass-text: #f2e6c9;
+  --glass-muted: #c8b98c;
+  --glass-selected: rgba(217, 180, 91, 0.16);
+  --glass-selected-edge: rgba(235, 206, 139, 0.45);
+  --glass-accent: #d9b45b;
+}
+
+/* Small native controls share the dock material, without blurring their contents. */
+.glass-control {
+  position: relative;
+  border: 1rpx solid var(--glass-edge);
+  background-color: var(--glass-tint);
+  background-image: linear-gradient(145deg, var(--glass-sheen), transparent 65%);
+  box-shadow: inset 0 1rpx 0 var(--glass-edge), 0 6rpx 20rpx var(--glass-shadow);
+  color: var(--glass-text);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: transform 140ms ease-out;
+}
+.glass-control-pressed {
+  transform: scale(0.96);
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass-control { transition: none; }
+  .glass-control-pressed { transform: none; }
+}

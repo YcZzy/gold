@@ -1,0 +1,5 @@
+<view class="glass-surface theme-{{theme}}">
+  <view class="glass-material {{blur ? 'glass-material-blur' : ''}}" aria-hidden="true"></view>
+  <view class="glass-rim" aria-hidden="true"></view>
+  <view class="glass-content"><slot></slot></view>
+</view>

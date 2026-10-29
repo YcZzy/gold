@@ -13,17 +13,34 @@
     "navigationBarTitleText": "自选行情",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#F4F1EA",
+    "backgroundColorContent": "#F4F1EA",
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
+    "custom": true,
     "color": "#8a857b",
     "selectedColor": "#2c2c2a",
     "backgroundColor": "#FAF8F3",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/index/index", "text": "自选" },
-      { "pagePath": "pages/reminders/reminders", "text": "提醒" },
-      { "pagePath": "pages/mine/mine", "text": "我的" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "自选",
+        "iconPath": "assets/icons/tabbar/watchlist-paper-normal.png",
+        "selectedIconPath": "assets/icons/tabbar/watchlist-paper-selected.png"
+      },
+      {
+        "pagePath": "pages/reminders/reminders",
+        "text": "提醒",
+        "iconPath": "assets/icons/tabbar/reminders-paper-normal.png",
+        "selectedIconPath": "assets/icons/tabbar/reminders-paper-selected.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "assets/icons/tabbar/mine-paper-normal.png",
+        "selectedIconPath": "assets/icons/tabbar/mine-paper-selected.png"
+      }
     ]
   },
   "style": "v2",

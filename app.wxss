@@ -1,3 +1,5 @@
+@import "styles/glass.wxss";
+
 /* 全局样式：双主题变量（paper 纸感浅色 / blackgold 黑金深色）+ 涨红跌绿 */
 /* 变量绑定在各页面根节点 theme-paper / theme-blackgold 类上，向后代级联 */
 
@@ -37,6 +39,12 @@ page {
   box-sizing: border-box;
   background: var(--bg);
   color: var(--text);
+}
+
+/* 124rpx dock + 20rpx floating gap + breathing room + device safe area. */
+.page.tab-page {
+  padding-bottom: 184rpx;
+  padding-bottom: calc(184rpx + env(safe-area-inset-bottom));
 }
 
 /* ---------- 纸感（默认浅色） ---------- */

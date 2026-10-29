@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-28T08:42:35.588Z",
+  "source": "https://developers.weixin.qq.com/miniprogram/dev/server/API/mp-message-management/subscribe-message/api_sendmessage.html",
+  "retrieval": "official HTML via HTTPS; gzip decompressed; no credentials",
+  "verifiedConstraints": {
+    "thing": "20 characters",
+    "amount": "one currency symbol and at most 10 numeric digits, decimals allowed",
+    "time": "24 hour clock, optional date"
+  },
+  "implementation": {
+    "CNY_USD": "existing amount template when numeric digit limit is satisfied; ETF decimal places preserved",
+    "HKD": "existing text-price template, full currency unit; its own authorization ledger is reserved/refunded",
+    "longPrices": "text-price template"
+  },
+  "verification": "tests/market-calendar.test.js includes exact price, correct template and quota accounting; existing asset-engine tests cover refund and retries",
+  "notExercised": "No real WeChat cloud deployment or real subscription message sent in this validation."
+}

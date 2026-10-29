@@ -1,0 +1,703 @@
+{
+  "date": "2026-10-28",
+  "scope": "Bounded public HTTPS research only. No production code changes, no account access, no authentication bypass, normal TLS verification enabled.",
+  "conclusion": {
+    "strictRawIndependentHistoryFallbackVerified": false,
+    "reason": "Nasdaq official history and Yahoo quote OHLC both retroactively adjust TSLA for splits. Yahoo split-event reversal matches most sampled US prices but does not establish a general strict-unadjusted contract, and history request ending before later splits would omit the later events needed to reconstruct it. Cash-dividend behavior is only observed for recent sampled US windows. No synthetic reconstruction is approved.",
+    "quoteFallback": "Yahoo chart meta.regularMarketPrice + regularMarketTime with exact symbol/currency/exchange/instrument validation passed all five US non-sample assets. Nasdaq /info is independently accessible but primaryData currently means pre-market; regular close is secondaryData, currency null, so avoid naïve primaryData fallback.",
+    "nasdaqAvailability": "All five recent 2026-10-20..27 requests work with ISO query dates; stocks MSFT TSLA KO, etf QQQ VOO. HTTP 200 is not sufficient: check status.rCode, data.symbol, rows nonempty. API can return HTTP200+logical400 for slash dates or empty rows for historical narrow date windows.",
+    "eastmoney": "105.MSFT raw daily request independently failed Remote end closed connection without response; no new EM mapping approved."
+  },
+  "strictRawCounterexample": {
+    "symbol": "TSLA",
+    "date": "2022-08-24",
+    "tencentRawOHLC": [
+      "892.690",
+      "891.290",
+      "910.940",
+      "889.500"
+    ],
+    "nasdaqOHLC": [
+      "297.5633",
+      "297.0966",
+      "303.6466",
+      "296.50"
+    ],
+    "yahooClose": 297.0966796875,
+    "splitDate": "2022-08-25",
+    "splitRatio": "3:1",
+    "tencentSplitDayMetadata": {
+      "FHcontent": "",
+      "hgcgContent": "每1股拆分成3股",
+      "cqr": "2022-08-25"
+    },
+    "nasdaqCloseTimes3": 891.2898,
+    "officialSource": "https://ir.tesla.com/press-release/tesla-announces-three-one-stock-split"
+  },
+  "yahooReverseSplitsRequirements": [
+    "Request all split events through present, even if desired chart end is earlier, because historical bars are retroactively adjusted.",
+    "Apply product of numerator/denominator of all split events strictly after each trading date to OHLC.",
+    "Do not use adjclose: it includes further dividend adjustments.",
+    "Observed reconstruction discrepancies include independent price revisions/anomalous Tencent highs; do not silently repair.",
+    "No general Yahoo historical raw-price guarantee established; do not deploy reconstruction as strict raw fallback."
+  ],
+  "providerComparisons": [
+    {
+      "symbol": "MSFT",
+      "currency": "USD",
+      "exchange": "NasdaqGS",
+      "instrumentType": "EQUITY",
+      "regularMarketPrice": 531.33,
+      "regularMarketTime": 1793131201,
+      "regularMarketUTC": "2026-10-27T20:00:01+00:00",
+      "comparedRows": 60,
+      "maxReverseSplitOHLCResidual": 2.929687502728484e-05,
+      "maxReverseSplitCloseResidual": 2.929687502728484e-05,
+      "rowsWithAnyOHLCResidualAbove3Cents": 0,
+      "residualExamples": [],
+      "dividendEventsInComparisonWindow": [
+        {
+          "amount": 0.91,
+          "date": 1787232600
+        }
+      ]
+    },
+    {
+      "symbol": "TSLA",
+      "currency": "USD",
+      "exchange": "NasdaqGS",
+      "instrumentType": "EQUITY",
+      "regularMarketPrice": 407.46,
+      "regularMarketTime": 1793131200,
+      "regularMarketUTC": "2026-10-27T20:00:00+00:00",
+      "comparedRows": 1500,
+      "maxReverseSplitOHLCResidual": 205.49000305175787,
+      "maxReverseSplitCloseResidual": 0.2900103759765216,
+      "rowsWithAnyOHLCResidualAbove3Cents": 14,
+      "residualExamples": [
+        {
+          "date": "2021-03-01",
+          "tencentOHLC": [
+            "690.110",
+            "718.430",
+            "872.000",
+            "685.050"
+          ],
+          "yahooOHLC": {
+            "open": 230.0366668701172,
+            "close": 239.47666931152344,
+            "high": 239.6666717529297,
+            "low": 228.35000610351562
+          },
+          "reverseSplitFactor": 3.0,
+          "signedOHLCResidual": {
+            "open": -6.103515488575795e-07,
+            "close": -7.934570362522209e-06,
+            "high": 152.99998474121094,
+            "low": -1.8310546920474735e-05
+          }
+        },
+        {
+          "date": "2021-03-04",
+          "tencentOHLC": [
+            "655.800",
+            "621.440",
+            "873.940",
+            "600.000"
+          ],
+          "yahooOHLC": {
+            "open": 218.60000610351562,
+            "close": 207.14666748046875,
+            "high": 222.81666564941406,
+            "low": 200.0
+          },
+          "reverseSplitFactor": 3.0,
+          "signedOHLCResidual": {
+            "open": -1.8310546920474735e-05,
+            "close": -2.441406195430318e-06,
+            "high": 205.49000305175787,
+            "low": 0.0
+          }
+        },
+        {
+          "date": "2021-04-01",
+          "tencentOHLC": [
+            "688.370",
+            "661.750",
+            "692.420",
+            "659.500"
+          ],
+          "yahooOHLC": {
+            "open": 229.4566650390625,
+            "close": 220.5833282470703,
+            "high": 230.80667114257812,
+            "low": 219.80667114257812
+          },
+          "reverseSplitFactor": 3.0,
+          "signedOHLCResidual": {
+            "open": 4.8828125045474735e-06,
+            "close": 1.52587890625e-05,
+            "high": -1.3427734415927262e-05,
+            "low": 0.079986572265625
+          }
+        }
+      ],
+      "dividendEventsInComparisonWindow": []
+    },
+    {
+      "symbol": "QQQ",
+      "currency": "USD",
+      "exchange": "NasdaqGM",
+      "instrumentType": "ETF",
+      "regularMarketPrice": 721.25,
+      "regularMarketTime": 1793131200,
+      "regularMarketUTC": "2026-10-27T20:00:00+00:00",
+      "comparedRows": 60,
+      "maxReverseSplitOHLCResidual": 2.929687502728484e-05,
+      "maxReverseSplitCloseResidual": 2.929687502728484e-05,
+      "rowsWithAnyOHLCResidualAbove3Cents": 0,
+      "residualExamples": [],
+      "dividendEventsInComparisonWindow": [
+        {
+          "amount": 0.751,
+          "date": 1789997400
+        }
+      ]
+    },
+    {
+      "symbol": "KO",
+      "currency": "USD",
+      "exchange": "NYSE",
+      "instrumentType": "EQUITY",
+      "regularMarketPrice": 91.18,
+      "regularMarketTime": 1793131202,
+      "regularMarketUTC": "2026-10-27T20:00:02+00:00",
+      "comparedRows": 60,
+      "maxReverseSplitOHLCResidual": 3.662109378410605e-06,
+      "maxReverseSplitCloseResidual": 3.662109378410605e-06,
+      "rowsWithAnyOHLCResidualAbove3Cents": 0,
+      "residualExamples": [],
+      "dividendEventsInComparisonWindow": [
+        {
+          "amount": 0.53,
+          "date": 1789479000
+        }
+      ]
+    },
+    {
+      "symbol": "VOO",
+      "currency": "USD",
+      "exchange": "NYSEArca",
+      "instrumentType": "ETF",
+      "regularMarketPrice": 707.52,
+      "regularMarketTime": 1793131200,
+      "regularMarketUTC": "2026-10-27T20:00:00+00:00",
+      "comparedRows": 60,
+      "maxReverseSplitOHLCResidual": 2.929687502728484e-05,
+      "maxReverseSplitCloseResidual": 2.929687502728484e-05,
+      "rowsWithAnyOHLCResidualAbove3Cents": 0,
+      "residualExamples": [],
+      "dividendEventsInComparisonWindow": [
+        {
+          "amount": 1.823,
+          "date": 1790602200
+        }
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "symbol": "MSFT",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/MSFT/historical?assetclass=stocks&fromdate=10%2F20%2F2026&todate=10%2F27%2F2026&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 1.77,
+      "logicalResponsePreview": "{'data': None, 'message': None, 'status': {'rCode': 400, 'bCodeMessage': [{'code': 1011, 'errorMessage': 'Bad or No parameter fromdate : 10/20/2026'}], 'developerMessage': None}}"
+    },
+    {
+      "symbol": "TSLA",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/TSLA/historical?assetclass=stocks&fromdate=10%2F20%2F2026&todate=10%2F27%2F2026&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 1.77,
+      "logicalResponsePreview": "{'data': None, 'message': None, 'status': {'rCode': 400, 'bCodeMessage': [{'code': 1011, 'errorMessage': 'Bad or No parameter fromdate : 10/20/2026'}], 'developerMessage': None}}"
+    },
+    {
+      "symbol": "QQQ",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/QQQ/historical?assetclass=etf&fromdate=10%2F20%2F2026&todate=10%2F27%2F2026&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 1.77,
+      "logicalResponsePreview": "{'data': None, 'message': None, 'status': {'rCode': 400, 'bCodeMessage': [{'code': 1011, 'errorMessage': 'Bad or No parameter fromdate : 10/20/2026'}], 'developerMessage': None}}"
+    },
+    {
+      "symbol": "KO",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/KO/historical?assetclass=stocks&fromdate=10%2F20%2F2026&todate=10%2F27%2F2026&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 1.77,
+      "logicalResponsePreview": "{'data': None, 'message': None, 'status': {'rCode': 400, 'bCodeMessage': [{'code': 1011, 'errorMessage': 'Bad or No parameter fromdate : 10/20/2026'}], 'developerMessage': None}}"
+    },
+    {
+      "symbol": "VOO",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/VOO/historical?assetclass=etf&fromdate=10%2F20%2F2026&todate=10%2F27%2F2026&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 1.77,
+      "logicalResponsePreview": "{'data': None, 'message': None, 'status': {'rCode': 400, 'bCodeMessage': [{'code': 1011, 'errorMessage': 'Bad or No parameter fromdate : 10/20/2026'}], 'developerMessage': None}}"
+    },
+    {
+      "symbol": "MSFT",
+      "provider": "yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/MSFT?period1=1577836800&period2=1793232000&interval=1d&events=div%2Csplits",
+      "httpStatus": 200,
+      "elapsedSec": 5.04,
+      "info": {
+        "meta": {
+          "symbol": "MSFT",
+          "currency": "USD",
+          "exchangeName": "NMS",
+          "fullExchangeName": "NasdaqGS",
+          "regularMarketPrice": 531.33,
+          "regularMarketTime": 1793131201,
+          "instrumentType": "EQUITY"
+        },
+        "rows": 1714,
+        "splits": {},
+        "sample": [
+          [
+            "2020-01-02",
+            160.6199951171875
+          ],
+          [
+            "2026-10-27",
+            531.3300170898438
+          ]
+        ]
+      },
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-yahoo-responses.json",
+        "key": "us-backup-yahoo-msft"
+      }
+    },
+    {
+      "symbol": "MSFT",
+      "provider": "tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usMSFT.OQ,day,,,1500,",
+      "elapsedSec": 0.25,
+      "error": "HTTP Error 501: Not Implemented"
+    },
+    {
+      "symbol": "TSLA",
+      "provider": "yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/TSLA?period1=1577836800&period2=1793232000&interval=1d&events=div%2Csplits",
+      "httpStatus": 200,
+      "elapsedSec": 5.29,
+      "info": {
+        "meta": {
+          "symbol": "TSLA",
+          "currency": "USD",
+          "exchangeName": "NMS",
+          "fullExchangeName": "NasdaqGS",
+          "regularMarketPrice": 407.46,
+          "regularMarketTime": 1793131200,
+          "instrumentType": "EQUITY"
+        },
+        "rows": 1714,
+        "splits": {
+          "1598880600": {
+            "date": 1598880600,
+            "numerator": 5.0,
+            "denominator": 1.0,
+            "splitRatio": "5:1"
+          },
+          "1661434200": {
+            "date": 1661434200,
+            "numerator": 3.0,
+            "denominator": 1.0,
+            "splitRatio": "3:1"
+          }
+        },
+        "sample": [
+          [
+            "2020-01-02",
+            28.68400001525879
+          ],
+          [
+            "2026-10-27",
+            407.4599914550781
+          ]
+        ]
+      },
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-yahoo-responses.json",
+        "key": "us-backup-yahoo-tsla"
+      }
+    },
+    {
+      "symbol": "TSLA",
+      "provider": "tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usTSLA.OQ,day,,,1500,",
+      "elapsedSec": 0.26,
+      "error": "HTTP Error 501: Not Implemented"
+    },
+    {
+      "symbol": "QQQ",
+      "provider": "yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/QQQ?period1=1577836800&period2=1793232000&interval=1d&events=div%2Csplits",
+      "httpStatus": 200,
+      "elapsedSec": 5.15,
+      "info": {
+        "meta": {
+          "symbol": "QQQ",
+          "currency": "USD",
+          "exchangeName": "NGM",
+          "fullExchangeName": "NasdaqGM",
+          "regularMarketPrice": 721.25,
+          "regularMarketTime": 1793131200,
+          "instrumentType": "ETF"
+        },
+        "rows": 1714,
+        "splits": {},
+        "sample": [
+          [
+            "2020-01-02",
+            216.16000366210938
+          ],
+          [
+            "2026-10-27",
+            721.25
+          ]
+        ]
+      },
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-yahoo-responses.json",
+        "key": "us-backup-yahoo-qqq"
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "provider": "tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usQQQ.OQ,day,,,1500,",
+      "elapsedSec": 0.23,
+      "error": "HTTP Error 501: Not Implemented"
+    },
+    {
+      "symbol": "KO",
+      "provider": "yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/KO?period1=1577836800&period2=1793232000&interval=1d&events=div%2Csplits",
+      "httpStatus": 200,
+      "elapsedSec": 5.3,
+      "info": {
+        "meta": {
+          "symbol": "KO",
+          "currency": "USD",
+          "exchangeName": "NYQ",
+          "fullExchangeName": "NYSE",
+          "regularMarketPrice": 91.18,
+          "regularMarketTime": 1793131202,
+          "instrumentType": "EQUITY"
+        },
+        "rows": 1714,
+        "splits": {},
+        "sample": [
+          [
+            "2020-01-02",
+            54.9900016784668
+          ],
+          [
+            "2026-10-27",
+            91.18000030517578
+          ]
+        ]
+      },
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-yahoo-responses.json",
+        "key": "us-backup-yahoo-ko"
+      }
+    },
+    {
+      "symbol": "KO",
+      "provider": "tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usKO.N,day,,,1500,",
+      "elapsedSec": 0.25,
+      "error": "HTTP Error 501: Not Implemented"
+    },
+    {
+      "symbol": "VOO",
+      "provider": "yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/VOO?period1=1577836800&period2=1793232000&interval=1d&events=div%2Csplits",
+      "httpStatus": 200,
+      "elapsedSec": 5.15,
+      "info": {
+        "meta": {
+          "symbol": "VOO",
+          "currency": "USD",
+          "exchangeName": "PCX",
+          "fullExchangeName": "NYSEArca",
+          "regularMarketPrice": 707.52,
+          "regularMarketTime": 1793131200,
+          "instrumentType": "ETF"
+        },
+        "rows": 1714,
+        "splits": {},
+        "sample": [
+          [
+            "2020-01-02",
+            298.4200134277344
+          ],
+          [
+            "2026-10-27",
+            707.52001953125
+          ]
+        ]
+      },
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-yahoo-responses.json",
+        "key": "us-backup-yahoo-voo"
+      }
+    },
+    {
+      "symbol": "VOO",
+      "provider": "tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=usVOO.AM,day,,,1500,",
+      "elapsedSec": 0.25,
+      "error": "HTTP Error 501: Not Implemented"
+    },
+    {
+      "symbol": "MSFT",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/MSFT/historical?assetclass=stocks&fromdate=2026-10-20&todate=2026-10-27&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 11.8,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-msft"
+      }
+    },
+    {
+      "symbol": "TSLA",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/TSLA/historical?assetclass=stocks&fromdate=2026-10-20&todate=2026-10-27&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 5.78,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-tsla"
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/QQQ/historical?assetclass=etf&fromdate=2026-10-20&todate=2026-10-27&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 5.76,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-qqq"
+      }
+    },
+    {
+      "symbol": "KO",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/KO/historical?assetclass=stocks&fromdate=2026-10-20&todate=2026-10-27&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 6.5,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-ko"
+      }
+    },
+    {
+      "symbol": "VOO",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/VOO/historical?assetclass=etf&fromdate=2026-10-20&todate=2026-10-27&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 6.21,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-voo"
+      }
+    },
+    {
+      "symbol": "TSLA-split",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/TSLA/historical?assetclass=stocks&fromdate=2022-08-23&todate=2022-08-26&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 6.74,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-tsla-split"
+      }
+    },
+    {
+      "symbol": "MSFT-dividend",
+      "provider": "Nasdaq",
+      "url": "https://api.nasdaq.com/api/quote/MSFT/historical?assetclass=stocks&fromdate=2021-10-27&todate=2021-10-29&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 6.1,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-msft-dividend"
+      }
+    },
+    {
+      "probe": "nflx-split",
+      "url": "https://api.nasdaq.com/api/quote/NFLX/historical?assetclass=stocks&fromdate=2025-11-13&todate=2025-11-18&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 6.05,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-nflx-split"
+      }
+    },
+    {
+      "probe": "tsla-full",
+      "url": "https://api.nasdaq.com/api/quote/TSLA/historical?assetclass=stocks&fromdate=2020-01-01&todate=2026-10-27&limit=2000",
+      "httpStatus": 200,
+      "elapsedSec": 7.16,
+      "bodySummary": {
+        "symbol": "TSLA",
+        "totalRecords": 1714,
+        "rowSamples": [
+          {
+            "date": "10/27/2026",
+            "close": "$407.46",
+            "volume": "45,333,230",
+            "open": "$397.76",
+            "high": "$408.45",
+            "low": "$395.25"
+          },
+          {
+            "date": "10/26/2026",
+            "close": "$391.62",
+            "volume": "53,090,210",
+            "open": "$383.825",
+            "high": "$397.27",
+            "low": "$383.73"
+          }
+        ]
+      },
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-tsla-full"
+      }
+    },
+    {
+      "probe": "msft-dividend-recent",
+      "url": "https://api.nasdaq.com/api/quote/MSFT/historical?assetclass=stocks&fromdate=2026-08-18&todate=2026-08-21&limit=10",
+      "httpStatus": 200,
+      "elapsedSec": 6.05,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-msft-dividend-recent"
+      }
+    },
+    {
+      "probe": "msft-info",
+      "url": "https://api.nasdaq.com/api/quote/MSFT/info?assetclass=stocks",
+      "httpStatus": 200,
+      "elapsedSec": 5.84,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-msft-info"
+      }
+    },
+    {
+      "probe": "voo-info",
+      "url": "https://api.nasdaq.com/api/quote/VOO/info?assetclass=etf",
+      "httpStatus": 200,
+      "elapsedSec": 5.84,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+        "key": "us-backup-nasdaq-voo-info"
+      }
+    },
+    {
+      "probe": "nflx-yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/NFLX?period1=1762992000&period2=1763596800&interval=1d&events=div%2Csplits",
+      "httpStatus": 200,
+      "elapsedSec": 4.51,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-yahoo-responses.json",
+        "key": "us-backup-nasdaq-nflx-yahoo"
+      }
+    },
+    {
+      "symbol": "MSFT",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get?param=usMSFT.OQ,day,,,60,",
+      "httpStatus": 200,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-tencent-responses.json",
+        "key": "us-backup-tencent-msft"
+      }
+    },
+    {
+      "symbol": "TSLA",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get?param=usTSLA.OQ,day,,,60,",
+      "httpStatus": 200,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-tencent-responses.json",
+        "key": "us-backup-tencent-tsla"
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get?param=usQQQ.OQ,day,,,60,",
+      "httpStatus": 200,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-tencent-responses.json",
+        "key": "us-backup-tencent-qqq"
+      }
+    },
+    {
+      "symbol": "KO",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get?param=usKO.N,day,,,60,",
+      "httpStatus": 200,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-tencent-responses.json",
+        "key": "us-backup-tencent-ko"
+      }
+    },
+    {
+      "symbol": "VOO",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get?param=usVOO.AM,day,,,60,",
+      "httpStatus": 200,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-tencent-responses.json",
+        "key": "us-backup-tencent-voo"
+      }
+    },
+    {
+      "probe": "tencent-tsla-full",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/fqkline/get?param=usTSLA.OQ,day,,,1500,",
+      "httpStatus": 200,
+      "responseLocation": {
+        "file": "tests/fixtures/markets/us-backup-tencent-responses.json",
+        "key": "us-backup-tencent-tsla-full"
+      }
+    },
+    {
+      "probe": "eastmoney-msft",
+      "url": "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=105.MSFT&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56&klt=101&fqt=0&beg=20200101&end=20500101&lmt=10",
+      "error": "Remote end closed connection without response"
+    }
+  ],
+  "fixtures": [
+    {
+      "file": "tests/fixtures/markets/us-backup-nasdaq-responses.json",
+      "responses": 12,
+      "bytes": 205067
+    },
+    {
+      "file": "tests/fixtures/markets/us-backup-yahoo-responses.json",
+      "responses": 6,
+      "bytes": 937361
+    },
+    {
+      "file": "tests/fixtures/markets/us-backup-tencent-responses.json",
+      "responses": 6,
+      "bytes": 134753
+    }
+  ]
+}

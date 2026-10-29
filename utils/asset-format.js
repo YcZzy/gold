@@ -9,8 +9,14 @@ const TYPES = [
 function number(v, p = 2) {
   return v == null || !Number.isFinite(Number(v)) ? "--" : Number(v).toFixed(p);
 }
-function signed(v) {
-  return v == null ? "--" : (v > 0 ? "+" : "") + number(v);
+function signed(v, p = 2) {
+  return v == null ? "--" : (v > 0 ? "+" : "") + number(v, p);
+}
+function identity(asset = {}) {
+  return {
+    marketText: ({SH:'沪市',SZ:'深市',BJ:'北交所',HK:'港股',US:'美股',SGE:'上金所',GLOBAL:'国际'})[asset.market] || asset.market || '',
+    kindText: ({stock:'股票',etf:'ETF',lof:'LOF',gold:'黄金'})[asset.kind] || '',
+  };
 }
 function time(ts, now = Date.now()) {
   if (!ts || !Number.isFinite(Number(ts))) return "行情时间待确认";
@@ -40,6 +46,7 @@ function sourceName(source) {
   if (/^eastmoney/.test(source)) return "东方财富";
   if (/^sina/.test(source)) return "新浪财经";
   if (/^sge/.test(source)) return "上海黄金交易所";
+  if (/^yahoo/.test(source)) return "Yahoo Finance";
   return source;
 }
 function task(task) {
@@ -93,7 +100,7 @@ function compact(value, unit) {
   return number(n) + " " + unit;
 }
 function volumeText(q, asset) {
-  if (q.volumeUnit) return compact(q.volume, q.volumeUnit);
+  if (Object.prototype.hasOwnProperty.call(q, 'volumeUnit')) return q.volumeUnit ? compact(q.volume, q.volumeUnit) : '--';
   // Provider stock adapters expose Tencent/Eastmoney lots and Sina shares.
   if (asset.kind !== "stock") return "--";
   if (/^sina/.test(q.source || "")) return compact(q.volume == null ? null : Number(q.volume) / 100, "手");
@@ -109,10 +116,15 @@ function quote(q = {}, asset = {}) {
     (Number(q.sourceTime) > 0 && Date.now() - Number(q.sourceTime) > 15 * 60000);
   return {
     ...q,
+    ...identity(asset),
     volumeText: volumeText(q, asset),
-    amountText: compact(q.amount, asset.currency === "USD" ? "美元" : "元"),
+    amountText: compact(q.amount, ({USD:'美元',HKD:'港元',CNY:'元'})[asset.currency] || asset.currency || '元'),
     priceText: number(q.price, asset.precision == null ? 2 : asset.precision),
-    changeText: signed(q.change),
+    changeText: signed(q.change, asset.precision == null ? 2 : asset.precision),
+    openText: number(q.open, asset.precision == null ? 2 : asset.precision),
+    highText: number(q.high, asset.precision == null ? 2 : asset.precision),
+    lowText: number(q.low, asset.precision == null ? 2 : asset.precision),
+    prevCloseText: number(q.prevClose, asset.precision == null ? 2 : asset.precision),
     pctText: q.changePct == null ? "--" : signed(q.changePct) + "%",
     cls: q.change > 0 ? "up" : q.change < 0 ? "down" : "flat",
     sourceText: sourceName(q.source),
@@ -122,10 +134,14 @@ function quote(q = {}, asset = {}) {
         ? "暂不可用"
         : q.price == null
           ? "待获取"
-          : q.cached
+          : q.cached || q.stale
             ? "缓存行情 · 刷新失败"
             : !q.sourceTime
               ? "行情时间待确认"
+              : q.marketState === 'closed'
+                ? '已休市 · 最近行情'
+              : q.marketState === 'break'
+                ? '午间休市 · 最近行情'
               : delayed
                 ? "延迟行情"
                 : "行情更新",
@@ -157,4 +173,5 @@ module.exports = {
   task,
   quote,
   summary,
+  identity,
 };

@@ -1,0 +1,68 @@
+{
+  "checkedAt": "2026-10-29T02:30:44.893Z",
+  "environment": "public-readonly-no-cloud-sdk",
+  "checks": [
+    {
+      "name": "南方原油LOF",
+      "ok": true,
+      "source": "tencent",
+      "kind": "lof",
+      "precision": 3
+    },
+    {
+      "name": "quote:sh501018",
+      "ok": true,
+      "source": "tencent",
+      "price": 2.34,
+      "sourceTime": 1793241046000
+    },
+    {
+      "name": "chart:sh501018:intraday",
+      "ok": true,
+      "source": "tencent",
+      "count": 62,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 10:31"
+    },
+    {
+      "name": "chart:sh501018:1mo",
+      "ok": true,
+      "source": "tencent",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29"
+    },
+    {
+      "name": "白酒基金LOF",
+      "ok": true,
+      "source": "tencent",
+      "kind": "lof",
+      "precision": 3
+    },
+    {
+      "name": "quote:sz161725",
+      "ok": true,
+      "source": "tencent",
+      "price": 0.531,
+      "sourceTime": 1793241048000
+    },
+    {
+      "name": "chart:sz161725:intraday",
+      "ok": true,
+      "source": "tencent",
+      "count": 62,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 10:31"
+    },
+    {
+      "name": "chart:sz161725:1mo",
+      "ok": true,
+      "source": "tencent",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29"
+    }
+  ],
+  "passed": 8,
+  "failed": 0
+}

@@ -1,11 +1,12 @@
+<page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
 <view class="page search-page theme-{{theme}}">
   <view class="hero-title">添加自选</view
-  ><view class="hero-sub">搜索中文名称、代码或拼音首字母</view>
+  ><view class="hero-sub">搜索沪深、北交所、港美股及 ETF</view>
   <view class="search-box"
     ><view class="search-symbol" aria-hidden="true"></view><input
       class="search-input"
       value="{{keyword}}"
-      placeholder="例如：茅台、600519"
+      placeholder="例如：茅台、00700、AAPL、510300"
       placeholder-class="search-placeholder"
       focus
       confirm-type="search"
@@ -13,7 +14,7 @@
       bindconfirm="onConfirm"
       bindcompositionstart="onCompositionStart"
       bindcompositionend="onCompositionEnd"
-      aria-label="搜索股票或黄金"
+      aria-label="搜索股票、ETF 或黄金"
     /><button class="search-submit" bindtap="onConfirm">搜索</button></view
   >
   <view wx:if="{{!keyword && history.length}}" class="history-section"
@@ -49,7 +50,7 @@
       ><view class="asset-name"
         ><view class="name">{{item.name}}</view
         ><view class="code"
-          >{{item.code}} · {{item.market}} · {{item.unit}}</view
+          >{{item.code}} · {{item.marketText}} · {{item.kindText}} · {{item.unit}}</view
         ></view
       ><button
         class="result-add {{item.added ? 'is-added' : ''}}"

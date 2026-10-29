@@ -1,0 +1,29 @@
+@import "../../styles/glass.wxss";
+
+:host { display: block; }
+.glass-surface {
+  position: relative;
+  border-radius: 999rpx;
+  box-shadow: 0 12rpx 40rpx var(--glass-shadow), 0 2rpx 6rpx var(--glass-shadow);
+}
+.glass-material,
+.glass-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.glass-material {
+  background: var(--glass-tint);
+}
+.glass-material-blur {
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+.glass-rim {
+  box-sizing: border-box;
+  border: 1rpx solid var(--glass-edge);
+  background: linear-gradient(155deg, var(--glass-sheen), transparent 48%);
+  box-shadow: inset 0 2rpx 1rpx var(--glass-edge), inset 0 -2rpx 2rpx var(--glass-shade);
+}
+.glass-content { position: relative; }

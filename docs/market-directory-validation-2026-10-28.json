@@ -1,0 +1,501 @@
+{
+  "validationDate": "2026-10-28",
+  "retrievedAt": "2026-10-28T08:13:33.288203+00:00",
+  "scope": "Read-only live endpoint and directory validation. No production code changes. No commits. HTTPS certificate verification enabled.",
+  "checks": {
+    "bj_pages_match_totalPages": true,
+    "bj_count_matches_totalElements": true,
+    "bj_unique_codes": true,
+    "bj_all_current_920_codes": true,
+    "bj_all_names_present": true,
+    "bj_source_date": [
+      "20261028"
+    ],
+    "bj_no_residual_835185": true,
+    "bj_contains_bettery_920185": true,
+    "hk_source_date": "28/10/2026",
+    "hk_allowed_count": 3209,
+    "hk_unique_codes": true
+  },
+  "bse": {
+    "status": "passed-complete-directory",
+    "sourcePage": "https://www.bse.cn/nq/listedcompany.html",
+    "endpoint": "https://www.bse.cn/nqxxController/nqxxCnzq.do",
+    "requestParameters": {
+      "page": "0..17",
+      "typejb": "T",
+      "xxfcbj[]": "2",
+      "xxzqdm": "",
+      "sortfield": "xxzqdm",
+      "sorttype": "asc"
+    },
+    "httpMethod": [
+      "GET",
+      "POST"
+    ],
+    "cookieHandshake": "Use a standard cookie jar. First GET sourcePage and follow same-origin redirects while retaining Set-Cookie (observed C3VK); then GET endpoint with encoded query or POST form. Without cookie storage, server redirects to the same URL and urllib reports a redirect loop; initial POST may return 307. Do not disable TLS verification or invent challenge tokens.",
+    "responseEnvelope": "null([{\"content\": [...], \"number\":0,\"numberOfElements\":20,\"totalElements\":353,\"totalPages\":18,...}])",
+    "parsing": "Validate allowed JSONP wrapper and parse JSON; do not eval. Request page 0, read totalPages, request every page 0..17. Require stable totalElements/totalPages; matching page number, nonempty string xxzqdm/xxzqjc, expected xxfcbj=2 and xxzqjb=T, six-digit 920 symbol, complete unique count. Persist xxjsrq and xxgxsj as source data date/time plus retrievedAt. Keep previous known-good catalog if any page fails.",
+    "fields": {
+      "symbol": "xxzqdm",
+      "name": "xxzqjc",
+      "englishName": "xxywjc",
+      "isin": "xxisin",
+      "sourceDate": "xxjsrq",
+      "sourceTime": "xxgxsj",
+      "type": "xxzqjb",
+      "marketFlag": "xxfcbj"
+    },
+    "actualTotal": 353,
+    "actualPages": 18,
+    "sourceDate": "20261028",
+    "betteryCurrentCode": "920185",
+    "oldCodeRule": "835185 still has a positive residual Tencent quote with a different price. Never infer official membership or alias identity from quote availability. Official current directory excludes it. Use authoritative mapping only for migration, never merge simultaneously received quotes."
+  },
+  "hk": {
+    "status": "passed-official-directory-and-quote-crosscheck",
+    "source": {
+      "sourceUrl": "https://www.hkex.com.hk/eng/services/trading/securities/securitieslists/ListOfSecurities.xlsx",
+      "sourcePage": "https://www.hkex.com.hk/Services/Trading/Securities/Securities-Lists?sc_lang=en",
+      "sourceUpdatedAt": "28/10/2026",
+      "retrievedAt": "2026-10-28T08:11:57.153760+00:00"
+    },
+    "rawWorkbookFixture": "tests/fixtures/markets/hk-official-securities-2026-10-28.xlsx",
+    "normalizedAllowedFixture": "tests/fixtures/markets/hk-directory-stocks-etfs-2026-10-28.json",
+    "allowedCategories": [
+      {
+        "Category": "Equity",
+        "Sub-Category": [
+          "Equity Securities (Main Board)",
+          "Equity Securities (GEM)"
+        ],
+        "kind": "stock"
+      },
+      {
+        "Category": "Exchange Traded Products",
+        "Sub-Category": [
+          "Exchange Traded Funds"
+        ],
+        "kind": "etf"
+      }
+    ],
+    "currencyMapping": {
+      "official Trading Currency RMB": "CNY",
+      "official HKD": "HKD",
+      "official USD": "USD",
+      "Tencent field75": "CNY/HKD/USD directly"
+    },
+    "identity": "Keep all five code digits and each counter as a separate security identity. 00700 and 80700 share ISIN but use HKD and CNY; 02840,82840,09840 share ISIN but use HKD,CNY,USD. Do not collapse by name, base ticker or ISIN.",
+    "criticalCounterexample": "07200 is official Leveraged and Inverse; Tencent field63 is GP-FUND just like ordinary ETF. GP-FUND alone is insufficient to admit an ETF. 00405 is GP-FUND-REITS and official REIT. 10901 is QZ-PUT and 49502 QZ-BEAR. These are excluded.",
+    "sourceDelay": "Observed standard hk00700 sourceTime 15:54:13 at retrieval 16:09:16 Asia/Hong_Kong; r_hk00700 16:08:30. Default hk channel must be labeled delayed regardless of a 15min freshness threshold. r_hk is the verified quote route, with source timestamp still checked; historical route remains a separate validation."
+  },
+  "tencent": {
+    "requests": [
+      {
+        "file": "quotes-tencent.txt",
+        "url": "https://qt.gtimg.cn/q=sh600519,sz000001,bj920185,bj835185,sh510300,sz159915,hk00700,hk02800,hk80700,hk02840,hk82840,hk09840,r_hk00700,r_hk02800,r_hk80700,r_hk02840,r_hk82840,r_hk09840,usAAPL,usAAPL.OQ,usSPY,usSPY.AM,usBRK.B,usBRK.B.N",
+        "retrievedAt": "2026-10-28T08:09:16.771487+00:00",
+        "httpStatus": 200,
+        "bytes": 9200,
+        "bodyPreview": "v_sh600519=\"1~贵州茅台~600519~1330.75~1355.90~1354.98~38805~17108~21696~1330.75~9~1330.72~3~1330.71~12~1330.70~1~1330.59~1~1330.77~5~1330.96~1~1330.99~1~1331.00~1~1"
+      },
+      {
+        "file": "search-tencent.json.txt",
+        "url": "https://smartbox.gtimg.cn/s3/?q=BRK.B&t=all",
+        "retrievedAt": "2026-10-28T08:09:16.771437+00:00",
+        "httpStatus": 200,
+        "bytes": 54,
+        "bodyPreview": "v_hint=\"us~brk.b.n~\\u4f2f\\u514b\\u5e0c\\u5c14b~bkxeb~GP\""
+      },
+      {
+        "file": "search-tencent-aapl.txt",
+        "url": "https://smartbox.gtimg.cn/s3/?q=AAPL&t=all",
+        "retrievedAt": "2026-10-28T08:09:16.771390+00:00",
+        "httpStatus": 200,
+        "bytes": 38,
+        "bodyPreview": "v_hint=\"us~aapl.oq~\\u82f9\\u679c~pg~GP\""
+      },
+      {
+        "file": "search-tencent-spy.txt",
+        "url": "https://smartbox.gtimg.cn/s3/?q=SPY&t=all",
+        "retrievedAt": "2026-10-28T08:09:16.771303+00:00",
+        "httpStatus": 200,
+        "bytes": 598,
+        "bodyPreview": "v_hint=\"us~spy.am~\\u6807\\u666e500\\u6307\\u6570etfspdr~bp500zsetfspdr~GP^sh~000807~\\u98df\\u54c1\\u996e\\u6599~spyl~ZS^sh~515170~\\u98df\\u54c1\\u996e\\u6599ETF\\u534e\\u5"
+      },
+      {
+        "file": "search-tencent-hk.txt",
+        "url": "https://smartbox.gtimg.cn/s3/?q=02840&t=all",
+        "retrievedAt": "2026-10-28T08:09:16.771468+00:00",
+        "httpStatus": 200,
+        "bytes": 1055,
+        "bodyPreview": "v_hint=\"hk~02840~spdr\\u91d1~spdrj~GP^jj~028405~\\u5bcc\\u56fd\\u4e2d\\u8bc1\\u91d1\\u878d\\u79d1\\u6280\\u4e3b\\u9898ETF\\u53d1\\u8d77\\u5f0f\\u8054\\u63a5C~fgzzjrkjztetffqslj"
+      },
+      {
+        "file": "yahoo-search-brk.json",
+        "url": "https://query1.finance.yahoo.com/v1/finance/search?q=BRK.B&quotesCount=8&newsCount=0",
+        "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1007)>"
+      }
+    ],
+    "quoteSamples": [
+      {
+        "requestedQuoteKey": "sh600519",
+        "fieldCount": 88,
+        "responseCode": "600519",
+        "name": "贵州茅台",
+        "price": "1330.75",
+        "sourceTimeRaw": "20261028160908",
+        "classificationFieldIndex": 61,
+        "classification": "GP-A",
+        "currencyFieldIndex": null,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "sz000001",
+        "fieldCount": 88,
+        "responseCode": "000001",
+        "name": "平安银行",
+        "price": "11.31",
+        "sourceTimeRaw": "20261028160900",
+        "classificationFieldIndex": 61,
+        "classification": "GP-A",
+        "currencyFieldIndex": null,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "bj920185",
+        "fieldCount": 87,
+        "responseCode": "920185",
+        "name": "贝特瑞",
+        "price": "18.43",
+        "sourceTimeRaw": "20261028153211",
+        "classificationFieldIndex": 61,
+        "classification": "GP",
+        "currencyFieldIndex": null,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "bj835185",
+        "fieldCount": 87,
+        "responseCode": "835185",
+        "name": "贝特瑞",
+        "price": "45.91",
+        "sourceTimeRaw": "20261028090000",
+        "classificationFieldIndex": 61,
+        "classification": "GP",
+        "currencyFieldIndex": null,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "sh510300",
+        "fieldCount": 88,
+        "responseCode": "510300",
+        "name": "沪深300ETF华泰柏瑞",
+        "price": "4.152",
+        "sourceTimeRaw": "20261028160851",
+        "classificationFieldIndex": 61,
+        "classification": "ETF",
+        "currencyFieldIndex": null,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "sz159915",
+        "fieldCount": 88,
+        "responseCode": "159915",
+        "name": "创业板ETF易方达",
+        "price": "2.649",
+        "sourceTimeRaw": "20261028160830",
+        "classificationFieldIndex": 61,
+        "classification": "ETF",
+        "currencyFieldIndex": null,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "hk00700",
+        "fieldCount": 78,
+        "responseCode": "00700",
+        "name": "腾讯控股",
+        "price": "386.800",
+        "sourceTimeRaw": "2026/10/28 15:54:13",
+        "classificationFieldIndex": 63,
+        "classification": "GP",
+        "currencyFieldIndex": 75,
+        "currency": "HKD"
+      },
+      {
+        "requestedQuoteKey": "hk02800",
+        "fieldCount": 78,
+        "responseCode": "02800",
+        "name": "盈富基金",
+        "price": "23.780",
+        "sourceTimeRaw": "2026/10/28 15:54:14",
+        "classificationFieldIndex": 63,
+        "classification": "GP-FUND",
+        "currencyFieldIndex": 75,
+        "currency": "HKD"
+      },
+      {
+        "requestedQuoteKey": "hk80700",
+        "fieldCount": 78,
+        "responseCode": "80700",
+        "name": "腾讯控股-R",
+        "price": "329.000",
+        "sourceTimeRaw": "2026/10/28 15:53:52",
+        "classificationFieldIndex": 63,
+        "classification": "GP",
+        "currencyFieldIndex": 75,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "hk02840",
+        "fieldCount": 78,
+        "responseCode": "02840",
+        "name": "SPDR金",
+        "price": "2905.000",
+        "sourceTimeRaw": "2026/10/28 15:54:09",
+        "classificationFieldIndex": 63,
+        "classification": "GP-FUND",
+        "currencyFieldIndex": 75,
+        "currency": "HKD"
+      },
+      {
+        "requestedQuoteKey": "hk82840",
+        "fieldCount": 78,
+        "responseCode": "82840",
+        "name": "SPDR金-R",
+        "price": "2464.000",
+        "sourceTimeRaw": "2026/10/28 15:54:14",
+        "classificationFieldIndex": 63,
+        "classification": "GP-FUND",
+        "currencyFieldIndex": 75,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "hk09840",
+        "fieldCount": 78,
+        "responseCode": "09840",
+        "name": "SPDR金-U",
+        "price": "370.100",
+        "sourceTimeRaw": "2026/10/28 15:28:07",
+        "classificationFieldIndex": 63,
+        "classification": "GP-FUND",
+        "currencyFieldIndex": 75,
+        "currency": "USD"
+      },
+      {
+        "requestedQuoteKey": "r_hk00700",
+        "fieldCount": 78,
+        "responseCode": "00700",
+        "name": "腾讯控股",
+        "price": "387.600",
+        "sourceTimeRaw": "2026/10/28 16:08:30",
+        "classificationFieldIndex": 63,
+        "classification": "GP",
+        "currencyFieldIndex": 75,
+        "currency": "HKD"
+      },
+      {
+        "requestedQuoteKey": "r_hk02800",
+        "fieldCount": 78,
+        "responseCode": "02800",
+        "name": "盈富基金",
+        "price": "23.780",
+        "sourceTimeRaw": "2026/10/28 16:08:27",
+        "classificationFieldIndex": 63,
+        "classification": "GP-FUND",
+        "currencyFieldIndex": 75,
+        "currency": "HKD"
+      },
+      {
+        "requestedQuoteKey": "r_hk80700",
+        "fieldCount": 78,
+        "responseCode": "80700",
+        "name": "腾讯控股-R",
+        "price": "329.000",
+        "sourceTimeRaw": "2026/10/28 16:08:33",
+        "classificationFieldIndex": 63,
+        "classification": "GP",
+        "currencyFieldIndex": 75,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "r_hk02840",
+        "fieldCount": 78,
+        "responseCode": "02840",
+        "name": "SPDR金",
+        "price": "2906.000",
+        "sourceTimeRaw": "2026/10/28 16:08:30",
+        "classificationFieldIndex": 63,
+        "classification": "GP-FUND",
+        "currencyFieldIndex": 75,
+        "currency": "HKD"
+      },
+      {
+        "requestedQuoteKey": "r_hk82840",
+        "fieldCount": 78,
+        "responseCode": "82840",
+        "name": "SPDR金-R",
+        "price": "2468.000",
+        "sourceTimeRaw": "2026/10/28 16:08:33",
+        "classificationFieldIndex": 63,
+        "classification": "GP-FUND",
+        "currencyFieldIndex": 75,
+        "currency": "CNY"
+      },
+      {
+        "requestedQuoteKey": "r_hk09840",
+        "fieldCount": 78,
+        "responseCode": "09840",
+        "name": "SPDR金-U",
+        "price": "370.300",
+        "sourceTimeRaw": "2026/10/28 16:08:30",
+        "classificationFieldIndex": 63,
+        "classification": "GP-FUND",
+        "currencyFieldIndex": 75,
+        "currency": "USD"
+      },
+      {
+        "requestedQuoteKey": "usAAPL",
+        "fieldCount": 73,
+        "responseCode": "AAPL.OQ",
+        "name": "苹果",
+        "price": "347.10",
+        "sourceTimeRaw": "2026-10-27 16:00:01",
+        "classificationFieldIndex": 56,
+        "classification": "GP",
+        "currencyFieldIndex": 35,
+        "currency": "USD"
+      },
+      {
+        "requestedQuoteKey": "usSPY",
+        "fieldCount": 73,
+        "responseCode": "SPY.AM",
+        "name": "标普500指数ETF-SPDR",
+        "price": "769.66",
+        "sourceTimeRaw": "2026-10-27 16:00:01",
+        "classificationFieldIndex": 56,
+        "classification": "GP-ETF",
+        "currencyFieldIndex": 35,
+        "currency": "USD"
+      },
+      {
+        "requestedQuoteKey": "usBRK.B",
+        "fieldCount": 73,
+        "responseCode": "BRK.B.N",
+        "name": "伯克希尔B",
+        "price": "542.99",
+        "sourceTimeRaw": "2026-10-27 16:06:36",
+        "classificationFieldIndex": 56,
+        "classification": "GP",
+        "currencyFieldIndex": 35,
+        "currency": "USD"
+      }
+    ],
+    "fieldRules": {
+      "identity": "Require exact requested result variable and field2 agreement with validated metadata. Every number finite; price>0. Missing result, v_pv_none_match, short fields or mismatched identity is failure even if HTTP200.",
+      "CN": "field61 GP-A=>ordinary SH/SZ stock; ETF=>ETF candidate; official listing must confirm allowed product. Currency CNY.",
+      "BJ": "Current official directory membership is mandatory; field61 GP and response code must match the exact current BJ symbol. Currency CNY.",
+      "HK": "field63 GP or GP-FUND are candidates only; crosscheck official Category/Sub-Category and field75 currency, preserving counter code. Reject QZ*, GP-FUND-REITS and official categories outside allowlist.",
+      "US": "field56 GP or GP-ETF; field35 USD; field2 includes exact exchange suffix. Search type GP alone cannot distinguish ETF: SPY search is GP but quote is GP-ETF. Match exact full provider identity and verified exchange."
+    },
+    "search": "smartbox results split by ^ and ~, decode literal Unicode escapes safely; market and type must pass allowlist. jj entries, ZS indices and QZ derivatives are excluded. Exact numeric/code queries must prioritize exact market+code; name matches never authorize a different code. BJ name/code search returns N; use official 353-entry catalog for code, name and pinyin search.",
+    "USIdentity": {
+      "AAPL": {
+        "searchCode": "aapl.oq",
+        "quoteRequest": "usAAPL",
+        "responseField2": "AAPL.OQ"
+      },
+      "SPY": {
+        "searchCode": "spy.am",
+        "quoteRequest": "usSPY",
+        "responseField2": "SPY.AM"
+      },
+      "BRK.B": {
+        "searchCode": "brk.b.n",
+        "quoteRequest": "usBRK.B",
+        "responseField2": "BRK.B.N"
+      },
+      "negativeExactRequests": [
+        "usAAPL.OQ => v_pv_none_match=\"1\"",
+        "usSPY.AM => v_pv_none_match=\"1\"",
+        "usBRK.B.N => v_pv_none_match=\"1\""
+      ],
+      "safeMapping": "Only remove a terminal exchange suffix from validated full provider identity using an allowlist. Preserve BRK.B class dot. Never split on first dot. Preserve providerFullCode and expected response field2; use uppercase normalized exact comparison. N=NYSE, OQ=Nasdaq, AM=NYSE Arca/AMEX are observed provider suffixes, not an exhaustive general mapping. Reject PS OTC (TCEHY.PS verified). Use trusted exchange metadata for other suffixes.",
+      "OTCExample": "Tencent search TCEHY => tcehy.ps (GP) and quote usTCEHY => TCEHY.PS (GP); GP does not imply supported exchange."
+    },
+    "timeRules": "HK field30 uses Asia/Hong_Kong; CN compact field30 uses Asia/Shanghai. US field30 is a provider timestamp and may be after regular close (BRK.B 16:06:36); it is not sufficient evidence that price is a regular-session close. Fetch times cannot stand in for price times. Distinguish market closed/freshness from known provider delay."
+  },
+  "remainingGaps": [
+    "This subtask Yahoo query1 search request hit SSL UNEXPECTED_EOF with TLS verification enabled. No Yahoo classification/currency/time claim is marked passed from that failed response; other task may independently validate Yahoo.",
+    "US exchange suffix cases beyond observed OQ,N,AM and OTC PS need separate validation or reject by default.",
+    "Official catalog refresh availability requires standard cookie persistence; failures must retain known-good catalog and disclose stale metadata.",
+    "No historical/daily-close contract is validated by this report; Tencent field30 after regular close cannot prove the price is the official regular close."
+  ],
+  "artifacts": [
+    {
+      "path": "tests/fixtures/markets/bj-directory-2026-10-28.json",
+      "bytes": 96086,
+      "sha256": "416d25a084cf3bd8460853d2bc6eb5743e207c60575d5039923c691bb7e8ad3a"
+    },
+    {
+      "path": "tests/fixtures/markets/bj-directory-raw-pages-2026-10-28.json",
+      "bytes": 452423,
+      "sha256": "ef718d0bfa78aa5ef8ad54536b40dff76ca2a083774a76f6bbf9f358dd87eccb"
+    },
+    {
+      "path": "tests/fixtures/markets/hk-directory-stocks-etfs-2026-10-28.json",
+      "bytes": 802324,
+      "sha256": "cef977a4d6ec0e1e3ccb7b3a23a960a76e1d5fddb894a6ea1dae90cb212175dc"
+    },
+    {
+      "path": "tests/fixtures/markets/hk-official-metadata-samples-2026-10-28.json",
+      "bytes": 8156,
+      "sha256": "b74831bceb9e6b52c34884cfe2a595e889276d95707af2af154e6309bd5813a4"
+    },
+    {
+      "path": "tests/fixtures/markets/hk-official-securities-2026-10-28.xlsx",
+      "bytes": 1345734,
+      "sha256": "92e9027196f1967b50d949c112c3e5fafff16091b13783c625bbf2f74c29ef07"
+    },
+    {
+      "path": "tests/fixtures/markets/quote-us-identity-samples-2026-10-28.json",
+      "bytes": 2607,
+      "sha256": "65e8cf7ec92f3c3005fcbe9349e9668f1631f543e5ab98ed8969a22cf2825985"
+    },
+    {
+      "path": "tests/fixtures/markets/quotes-tencent-hk-excluded.txt",
+      "bytes": 1657,
+      "sha256": "da826c847e909183f498d58029612c846d6e4ba1391cafd095a5819c1b653ac8"
+    },
+    {
+      "path": "tests/fixtures/markets/quotes-tencent.txt",
+      "bytes": 9266,
+      "sha256": "d5000412955b467053a28daaf2edea0b3f507387ada1d36858b6aaedf3f9be01"
+    },
+    {
+      "path": "tests/fixtures/markets/search-tencent-aapl.txt",
+      "bytes": 38,
+      "sha256": "a973960e37fcf810cd48c84abed95b971b947d3ea529a3f84897791c5114c8c8"
+    },
+    {
+      "path": "tests/fixtures/markets/search-tencent-hk.txt",
+      "bytes": 1055,
+      "sha256": "9c7b4f5d3cfc50160de132c0ade09da5627e20062f8027c6043a6ba9691d9393"
+    },
+    {
+      "path": "tests/fixtures/markets/search-tencent-samples-2026-10-28.json",
+      "bytes": 2590,
+      "sha256": "9323bb2d347586ab9448fa48fc8fe4483033bd2aeea81f5935953c74c92aaf2c"
+    },
+    {
+      "path": "tests/fixtures/markets/search-tencent-spy.txt",
+      "bytes": 598,
+      "sha256": "57253ca4247cc261ecfd2b4495b84c4b18b7fbb8dca782f87eb8bab2546afbfd"
+    },
+    {
+      "path": "tests/fixtures/markets/search-tencent.json.txt",
+      "bytes": 54,
+      "sha256": "984e58891ee6802c86b5f20d60b559844210c7c64cc77adb3d378ff4f96c6300"
+    }
+  ]
+}

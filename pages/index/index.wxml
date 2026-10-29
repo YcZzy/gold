@@ -1,10 +1,11 @@
-<view class="page home-page theme-{{theme}}">
+<page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
+<view class="page home-page tab-page theme-{{theme}}">
   <view class="home-header">
     <view class="home-heading">
       <view class="hero-title">我的自选</view>
-      <view class="hero-sub">查看价格与涨跌，按需设置提醒</view>
+      <view class="hero-sub">关注行情变化，按需设置提醒</view>
     </view>
-    <button class="home-add" bindtap="openSearch" aria-label="搜索并添加自选">
+    <button class="home-add glass-control" hover-class="glass-control-pressed" bindtap="openSearch" aria-label="搜索并添加自选">
       <view class="icon-plus" aria-hidden="true"></view><text>添加</text>
     </button>
   </view>
@@ -17,9 +18,10 @@
     <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
     <view wx:if="{{loading && !rows.length}}" class="empty" role="status">正在加载自选…</view>
     <view wx:elif="{{!rows.length}}" class="empty">
+      <view class="empty-illustration" aria-hidden="true"><view class="empty-line"></view><view class="empty-line short"></view></view>
       <view class="empty-title">添加你的第一个自选</view>
-      <view class="muted">把关注的股票或黄金加入列表，随时查看行情。</view>
-      <button class="home-empty-add" bindtap="openSearch">搜索并添加</button>
+      <view class="muted">把关注的股票、ETF 或黄金加入列表，随时查看行情。</view>
+      <button class="home-empty-add" hover-class="home-pressed" bindtap="openSearch">搜索并添加</button>
     </view>
     <view wx:if="{{manage && rows.length}}" class="manage-hint">拖动左侧手柄排序，松手自动保存</view>
     <view class="list {{manage ? 'managing' : ''}}">
@@ -35,30 +37,35 @@
           </view>
           <view class="asset-name">
             <view class="name">{{item.name}}</view>
-            <view class="code">{{item.code}} · {{item.market}}</view>
+            <view class="code">{{item.code}} · {{item.marketText}} · {{item.kindText}}</view>
           </view>
           <button class="home-remove" data-id="{{item.id}}" catchtap="remove"
             disabled="{{busy || draggingId}}" aria-label="删除{{item.name}}及全部提醒"><image class="remove-icon" src="/assets/icons/delete.svg" mode="aspectFit" aria-hidden="true" /><text>移除</text></button>
         </view>
-        <view
+        <button
           wx:else
           class="quote-row"
+          hover-class="home-row-pressed"
           bindtap="openDetail"
           data-id="{{item.id}}"
-          role="button"
           aria-label="查看{{item.name}}行情"
         >
           <view class="asset-name"
             ><view class="name">{{item.name}}</view
-            ><view class="code">{{item.code}} · {{item.market}}</view><view wx:if="{{item.activeCount}}" class="reminder-tag">已开启 {{item.activeCount}} 条提醒</view></view
+            ><view class="code">{{item.code}} · {{item.marketText}} · {{item.kindText}}</view><view wx:if="{{item.activeCount}}" class="reminder-tag">{{item.activeCount}} 条提醒已开启</view></view
           >
           <view class="price-col"
             ><view class="quote-value">{{item.priceText || '--'}}</view
             ><view class="quote-status">{{item.statusText || '待获取'}}</view></view
           ><view class="change-col"
-            ><text class="change-pill {{item.changePct > 0 ? 'up' : item.changePct < 0 ? 'down' : 'flat'}}">{{item.pctText || '--'}}</text></view
+            ><text class="change-pill {{item.changePct > 0 ? 'up' : item.changePct < 0 ? 'down' : 'flat'}}">{{item.pctText || '--'}}</text><view class="change-amount {{item.cls}}" aria-label="涨跌额 {{item.changeText}}">{{item.changeText || '--'}}</view></view
           >
-        </view>
+          <view wx:if="{{item.note || item.tags.length}}" class="watch-annotation">
+            <text wx:if="{{item.note}}" class="watch-note">{{item.note}}</text>
+            <view wx:if="{{item.tags.length}}" class="watch-tags"><text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="watch-tag">{{tag}}</text></view>
+          </view>
+          <view class="quote-time">报价 {{item.timeText}}</view>
+        </button>
 
       </view>
     </view>
@@ -66,6 +73,6 @@
   <view class="home-footer">
     <view class="update-note"><view class="update-dot" aria-hidden="true"></view><text>每分钟自动刷新 · 行情可能延迟</text></view>
     <view class="home-disclaimer">点击标的查看行情来源、报价时间与提醒设置。</view>
-    <view class="home-disclaimer">公开行情仅供参考，不构成投资建议。</view>
+    <view class="home-disclaimer disclaimer">公开行情仅供参考，不构成投资建议。</view>
   </view>
 </view>

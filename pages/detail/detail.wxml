@@ -1,24 +1,25 @@
+<page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
 <view class="page detail-page theme-{{theme}}">
   <view wx:if="{{asset}}" class="hero"
     ><view class="asset-heading"
       ><view class="hero-title">{{asset.name}}</view
       ><view class="hero-sub"
-        >{{asset.code}} · {{asset.market}} · {{asset.unit}}</view
+        >{{asset.code}} · {{asset.marketText}} · {{asset.kindText}} · {{asset.unit}}</view
       ></view
     ><button
       class="follow-button {{following ? 'is-following' : ''}}"
       bindtap="toggleFollow"
-      aria-label="{{busy ? '正在更新自选' : following ? '移除' + asset.name + '自选' : '将' + asset.name + '加入自选'}}"
+      aria-label="{{busy ? '正在更新自选' : !followingReady ? '正在确认自选状态' : following ? '移除' + asset.name + '自选' : '将' + asset.name + '加入自选'}}"
       aria-pressed="{{following}}"
-      loading="{{busy}}"
+      loading="{{busy || !followingReady}}"
       disabled="{{busy}}"
     >
-      <view wx:if="{{!busy}}" class="follow-symbol {{following ? 'follow-check' : 'follow-plus'}}" aria-hidden="true"></view><text>{{busy ? '处理中' : following ? '已自选' : '自选'}}</text>
+      <view wx:if="{{!busy && followingReady}}" class="follow-symbol {{following ? 'follow-check' : 'follow-plus'}}" aria-hidden="true"></view><text>{{busy ? '处理中' : !followingReady ? '确认中' : following ? '已自选' : '自选'}}</text>
     </button></view
   >
   <view wx:else class="hero-title">正在识别标的…</view>
   <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
-  <button wx:if="{{asset}}" class="notice-bar reminder-entry" bindtap="openAlert">
+  <button wx:if="{{asset}}" class="notice-bar reminder-entry" bindtap="openAlert" disabled="{{busy}}">
     <image class="notice-img" src="{{reminderIcon}}" mode="aspectFit" aria-hidden="true" />
     <text class="reminder-title">设置提醒</text>
     <text class="notice-text">设置后可自动预警推送，无需打开小程序</text>
@@ -34,21 +35,21 @@
       ><text>{{quote.changeText}}</text
       ><text wx:if="{{quote.changePct != null}}" class="chg-pill {{quote.cls}}">{{quote.pctText}}</text></view
     ><view class="card-source"
-      >{{quote.sourceText}} · {{quote.timeText}} · {{quote.statusText}}</view
+      >{{quote.sourceText}} · {{quote.timeText}} · {{quote.statusText}}<text wx:if="{{asset.market === 'US' && quote.sessionDate}}"> · 交易日 {{quote.sessionDate}}</text></view
     >
     <view class="stats"
       ><view wx:if="{{quote.open != null}}"
         ><text class="micro">今开</text
-        ><view>{{quote.open}}</view></view
+        ><view>{{quote.openText}}</view></view
       ><view wx:if="{{quote.high != null}}"
         ><text class="micro">最高</text
-        ><view>{{quote.high}}</view></view
+        ><view>{{quote.highText}}</view></view
       ><view wx:if="{{quote.low != null}}"
         ><text class="micro">最低</text
-        ><view>{{quote.low}}</view></view
+        ><view>{{quote.lowText}}</view></view
       ><view wx:if="{{quote.prevClose != null}}"
         ><text class="micro">昨收</text
-        ><view>{{quote.prevClose}}</view></view
+        ><view>{{quote.prevCloseText}}</view></view
       ><view wx:if="{{quote.volume != null && quote.volumeText !== '--'}}"
         ><text class="micro">成交量</text
         ><view>{{quote.volumeText}}</view></view
@@ -76,6 +77,23 @@
         {{item.label}}
       </button></view
     >
+    <view wx:if="{{asset.market === 'US'}}" class="foot">图表按纽约交易日期与时间显示，自动处理夏令时。</view>
+    <view wx:if="{{hasChart && chartRangeText}}" class="foot">实际区间：{{chartRangeText}}</view>
+    <button class="chart-settings-button" bindtap="toggleIndicatorEditor" aria-expanded="{{indicatorEditing}}" aria-controls="indicator-editor">{{indicatorEditing ? '收起指标设置' : '指标设置'}}<text class="settings-summary">{{indicatorSettings.subIndicator === 'macd' ? 'MACD' : '成交量'}} · {{maLegend}}</text></button>
+    <view wx:if="{{indicatorEditing}}" id="indicator-editor" class="indicator-editor">
+      <view class="feature-setting-row"><label for="ma-enabled">显示价格均线</label><switch id="ma-enabled" checked="{{maEnabledDraft}}" bindchange="onMaToggle" aria-label="显示价格均线" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" /></view>
+      <label class="feature-label" for="ma-periods">均线周期</label>
+      <input id="ma-periods" class="feature-input" value="{{maDraft}}" bindinput="onMaInput" placeholder="例如 5,20,120" maxlength="30" aria-label="均线周期，用逗号分隔" aria-describedby="ma-help indicator-error" />
+      <view id="ma-help" class="feature-help">最多 3 条，周期为 1–250，逗号分隔。均线和副图设置仅用于历史 K 线。</view>
+      <view class="feature-label">K 线副图</view>
+      <view class="feature-actions">
+        <button class="feature-option {{subIndicatorDraft === 'volume' ? 'is-selected' : ''}}" data-value="volume" bindtap="selectSubIndicator" aria-pressed="{{subIndicatorDraft === 'volume'}}">成交量</button>
+        <button class="feature-option {{subIndicatorDraft === 'macd' ? 'is-selected' : ''}}" data-value="macd" bindtap="selectSubIndicator" aria-pressed="{{subIndicatorDraft === 'macd'}}">MACD</button>
+      </view>
+      <view wx:if="{{indicatorError}}" id="indicator-error" class="feature-error" role="alert">{{indicatorError}}</view>
+      <button class="feature-save" bindtap="saveIndicators">应用并保存</button>
+    </view>
+    <view wx:if="{{indicatorNotice}}" class="feature-help" role="status">{{indicatorNotice}}</view>
     <view wx:if="{{chartLoading}}" class="foot" role="status">正在更新图表…</view>
     <view wx:if="{{chartError}}" class="chart-error" role="alert">
       <text>{{chartError}}</text>
@@ -89,12 +107,43 @@
         bindtouchstart="onTouch"
         bindtouchmove="onTouch" /></view
     ><view wx:if="{{hasChart}}" class="legend"
-      ><text wx:if="{{period === 'intraday'}}">价格 / 均价 / 昨收</text
-      ><text wx:else>MA5 / MA10</text><text class="lg-up">涨</text
+      ><text wx:if="{{chartPeriod === 'intraday'}}">价格 / 均价 / 昨收</text
+      ><text wx:else>{{maLegend}}</text><text class="lg-up">涨</text
       ><text class="lg-down">跌</text><text class="lg-tip">点按查看</text></view
     ><view wx:if="{{selectedInfo}}" class="ohlc">{{selectedInfo}}</view
+    ><view wx:if="{{chartPeriod !== 'intraday' && indicatorSettings.subIndicator === 'macd' && macdSummary}}" class="ohlc">{{macdSummary}}</view
+    ><view wx:if="{{indicatorHint}}" class="feature-help">{{indicatorHint}}</view
+    ><view wx:if="{{chartPeriod !== 'intraday' && hasChart}}" class="feature-help">指标基于当前已加载的 K 线计算，切换历史区间可能改变起始段数值。</view
     ><view wx:if="{{hasChart}}" class="foot">{{chartSource}} · {{chartHint}}</view></view
   >
+  <view wx:if="{{priceTargets.length}}" class="feature-card">
+    <view class="feature-heading"><text>目标提醒</text><button class="feature-link" bindtap="openAlert" disabled="{{busy}}">管理</button></view>
+    <view wx:for="{{priceTargets}}" wx:key="id" class="target-summary">
+      <view class="target-heading"><text>{{item.label}}</text><text>{{item.priceText}} {{asset.unit}}</text></view>
+      <view class="feature-help">距现价 {{item.distanceText}} · 差额 {{item.differenceText}}<text wx:if="{{item.inRange === false}}"> · 超出图表区间</text></view>
+    </view>
+    <view class="feature-help">仅展示已开启的到价规则；距离按当前显示报价计算，缓存行情下仅供参考。</view>
+  </view>
+  <view wx:if="{{following}}" class="feature-card">
+    <view class="feature-heading"><text>关注笔记</text><button wx:if="{{!noteEditing}}" class="feature-link" bindtap="startNoteEdit" disabled="{{busy}}">{{annotation.note || annotation.tags.length ? '编辑' : '添加备注'}}</button></view>
+    <block wx:if="{{noteEditing}}">
+      <label for="watch-note" class="feature-label">关注原因</label>
+      <textarea id="watch-note" class="feature-textarea" value="{{noteDraft}}" bindinput="onNoteInput" disabled="{{busy}}" maxlength="-1" placeholder="记录关注原因、观察条件或计划" aria-label="关注备注" aria-describedby="note-help note-error" />
+      <view id="note-help" class="feature-help">{{noteCount}} / 120 字；点击保存后同步到云端。</view>
+      <label for="watch-tags" class="feature-label">标签</label>
+      <input id="watch-tags" class="feature-input" value="{{tagsDraft}}" bindinput="onTagsInput" disabled="{{busy}}" maxlength="-1" placeholder="例如 宽基,长期观察" aria-label="备注标签，用逗号分隔" aria-describedby="tags-help note-error" />
+      <view id="tags-help" class="feature-help">最多 3 个，每个最多 8 字，逗号分隔。清空备注和标签后保存可移除笔记。</view>
+      <view wx:if="{{noteError}}" id="note-error" class="feature-error" role="alert">{{noteError}}</view>
+      <button wx:if="{{noteConflict}}" class="feature-link" bindtap="reloadAnnotation" disabled="{{busy}}">载入最新备注（替换草稿）</button>
+      <view class="feature-actions"><button class="feature-save" bindtap="saveNote" disabled="{{busy}}" loading="{{busy}}">保存备注</button><button class="feature-cancel" bindtap="cancelNoteEdit" disabled="{{busy}}">取消</button></view>
+    </block>
+    <block wx:else>
+      <view wx:if="{{annotation.note}}" class="saved-note">{{annotation.note}}</view>
+      <view wx:elif="{{!annotation.tags.length}}" class="feature-help">记下关注原因，下次查看时更有依据。</view>
+      <view wx:if="{{annotation.tags.length}}" class="saved-tags"><text wx:for="{{annotation.tags}}" wx:for-item="tag" wx:key="*this" class="saved-tag">{{tag}}</text></view>
+      <view wx:if="{{noteStatus}}" class="feature-help" role="status">{{noteStatus}}</view>
+    </block>
+  </view>
   <view class="foot"
     >公开行情仅供参考，不构成投资建议。后台约每 1
     分钟监测，提醒可能存在延迟。</view

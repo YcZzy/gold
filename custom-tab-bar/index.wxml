@@ -1,0 +1,28 @@
+<view class="dock theme-{{theme}}">
+  <glass-surface theme="{{theme}}">
+    <view class="dock-items {{indicatorMotion ? 'dock-motion' : ''}} {{indicatorDuration === 320 ? 'dock-motion-long' : ''}}" role="tablist" aria-label="主导航">
+      <view class="dock-indicator-track" aria-hidden="true">
+        <view wx:if="{{indicatorMotion}}" class="dock-indicator-position dock-indicator-moving dock-slide-{{indicatorFrom}}-{{selected}}" style="transform: translateX({{indicatorIndex * 100}}%);">
+          <view class="dock-indicator"></view>
+        </view>
+        <view wx:else class="dock-indicator-position" style="transform: translateX({{indicatorIndex * 100}}%);">
+          <view class="dock-indicator"></view>
+        </view>
+      </view>
+      <button wx:for="{{tabs}}" wx:key="pagePath"
+        class="dock-tab {{selected === index ? 'dock-tab-selected' : ''}} {{indicatorMotion && selected === index ? 'dock-tab-arriving' : ''}} {{indicatorMotion && indicatorFrom === index ? 'dock-tab-leaving' : ''}}"
+        data-index="{{index}}" bindtap="switchTab"
+        hover-class="dock-tab-pressed" hover-stay-time="100"
+        role="tab" aria-selected="{{selected === index}}"
+        aria-label="{{item.text}}{{selected === index ? '，当前页面' : ''}}">
+        <view class="dock-icon" aria-hidden="true">
+          <image class="dock-icon-image dock-icon-normal" mode="aspectFit"
+            src="/assets/icons/tabbar/{{item.icon}}-{{theme}}-normal.png" />
+          <image class="dock-icon-image dock-icon-selected" mode="aspectFit"
+            src="/assets/icons/tabbar/{{item.icon}}-{{theme}}-selected.png" />
+        </view>
+        <text class="dock-label">{{item.text}}</text>
+      </button>
+    </view>
+  </glass-surface>
+</view>

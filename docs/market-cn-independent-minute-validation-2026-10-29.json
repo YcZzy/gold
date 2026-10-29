@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-29",
+  "checks": [
+    {
+      "assetId": "sz300750",
+      "url": "https://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=sz300750&scale=1&ma=no&datalen=1500",
+      "count": 1500,
+      "first": {
+        "day": "2026-10-20 14:14:00",
+        "open": "254.850",
+        "high": "255.350",
+        "low": "254.840",
+        "close": "255.300",
+        "volume": "417752",
+        "amount": "106514538.7998"
+      },
+      "last": {
+        "day": "2026-10-29 09:57:00",
+        "open": "227.140",
+        "high": "227.310",
+        "low": "226.890",
+        "close": "227.100",
+        "volume": "105400",
+        "amount": "23941130.9844"
+      },
+      "ok": true
+    },
+    {
+      "assetId": "sh600519",
+      "url": "https://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=sh600519&scale=1&ma=no&datalen=1500",
+      "count": 1500,
+      "first": {
+        "day": "2026-10-20 14:14:00",
+        "open": "1320.280",
+        "high": "1320.280",
+        "low": "1319.850",
+        "close": "1319.870",
+        "volume": "5100",
+        "amount": "6731777.0000"
+      },
+      "last": {
+        "day": "2026-10-29 09:57:00",
+        "open": "1345.240",
+        "high": "1346.800",
+        "low": "1344.470",
+        "close": "1344.810",
+        "volume": "28820",
+        "amount": "38787061.8326"
+      },
+      "ok": true
+    },
+    {
+      "assetId": "sz159915",
+      "url": "https://quotes.sina.cn/cn/api/json_v2.php/CN_MarketDataService.getKLineData?symbol=sz159915&scale=1&ma=no&datalen=1500",
+      "count": 1500,
+      "first": {
+        "day": "2026-10-20 14:14:00",
+        "open": "2.726",
+        "high": "2.727",
+        "low": "2.724",
+        "close": "2.726",
+        "volume": "7344500",
+        "amount": "20013955.4322"
+      },
+      "last": {
+        "day": "2026-10-29 09:57:00",
+        "open": "2.569",
+        "high": "2.571",
+        "low": "2.567",
+        "close": "2.568",
+        "volume": "34651400",
+        "amount": "89029675.7083"
+      },
+      "ok": true
+    }
+  ]
+}

@@ -12,6 +12,8 @@
  *   chart.clearTouch();
  */
 
+const features = require('./chart-features');
+
 // 默认配色（纸感浅色主题）；黑金等主题通过 createKlineChart({ colors }) / chart.setColors() 覆盖
 const DEFAULT_COLORS = {
   up: "#d0453b", // 涨：红
@@ -31,17 +33,6 @@ const DEFAULT_COLORS = {
   baseline: "rgba(44,44,42,0.35)"
 };
 
-function movingAverage(candles, n) {
-  const out = [];
-  let sum = 0;
-  for (let i = 0; i < candles.length; i++) {
-    sum += candles[i].c;
-    if (i >= n) sum -= candles[i - n].c;
-    out.push(i >= n - 1 ? sum / n : null);
-  }
-  return out;
-}
-
 function niceStep(range, tickCount) {
   const raw = range / tickCount;
   const pow = Math.pow(10, Math.floor(Math.log10(raw || 1)));
@@ -60,6 +51,8 @@ function createKlineChart(opts) {
   const width = opts.width;
   const height = opts.height;
   let palette = Object.assign({}, DEFAULT_COLORS, opts.colors || {});
+  let precision = Number.isInteger(opts.precision) ? opts.precision : null;
+  function priceText(value) { return value.toFixed(precision == null ? (value >= 1000 ? 0 : 1) : precision); }
 
   const padLeft = 8;
   const padRight = 56;
@@ -68,13 +61,13 @@ function createKlineChart(opts) {
   const gap = 8;
   const plotW = width - padLeft - padRight;
   const totalH = height - padTop - padBottom;
-  const volH = Math.round(totalH * 0.16);
-  const priceH = totalH - volH - gap;
+  let volH = Math.round(totalH * 0.16);
+  let priceH = totalH - volH - gap;
 
   let mode = "candle"; // 'candle' | 'intraday'
   let bars = []; // 统一的渲染数据（candle 或 intraday 形态）
-  let ma5 = [];
-  let ma10 = [];
+  let indicators = features.parseSettings(features.DEFAULT_SETTINGS);
+  let targetLines = [];
   let minP = 0;
   let maxP = 0;
   let maxV = 1;
@@ -82,6 +75,8 @@ function createKlineChart(opts) {
   let focusIndex = -1;
   let prevClose = null;
   let hasVolume = true;
+  let hasMacd = false;
+  let naturalRange = null;
 
   function xAt(i) {
     return padLeft + step * (i + 0.5);
@@ -92,6 +87,10 @@ function createKlineChart(opts) {
   }
 
   function computeRange() {
+    naturalRange = features.chartRange(bars, mode, prevClose);
+    hasMacd = mode === 'candle' && indicators.subIndicator === 'macd';
+    volH = Math.round(totalH * (hasMacd ? 0.26 : 0.16));
+    priceH = totalH - volH - gap;
     minP = Infinity;
     maxP = -Infinity;
     maxV = 1;
@@ -113,7 +112,7 @@ function createKlineChart(opts) {
   }
 
   function priceAreaHeight() {
-    return hasVolume ? priceH : totalH;
+    return hasVolume || hasMacd ? priceH : totalH;
   }
 
   function yAtP(p) {
@@ -140,7 +139,7 @@ function createKlineChart(opts) {
       ctx.moveTo(padLeft, y);
       ctx.lineTo(padLeft + plotW, y);
       ctx.stroke();
-      ctx.fillText(p.toFixed(p >= 1000 ? 0 : 1), padLeft + plotW + 6, y);
+      ctx.fillText(priceText(p), padLeft + plotW + 6, y);
     }
     ctx.setLineDash([]);
 
@@ -154,12 +153,12 @@ function createKlineChart(opts) {
       let label;
       if (mode === "intraday") label = t.slice(t.indexOf(" ") + 1); // HH:MM
       else label = t.length > 7 ? t.slice(2) : t;
-      ctx.fillText(label, x, padTop + priceAreaHeight() + gap + (hasVolume ? volH : 0) + 4);
+      ctx.fillText(label, x, padTop + priceAreaHeight() + gap + (hasVolume || hasMacd ? volH : 0) + 4);
     }
   }
 
   function drawVolume() {
-    if (!hasVolume) return;
+    if (!hasVolume || hasMacd) return;
     const baseY = padTop + priceH + gap + volH;
     const w = Math.max(1, step * 0.55);
     for (let i = 0; i < bars.length; i++) {
@@ -173,7 +172,7 @@ function createKlineChart(opts) {
 
   function drawLastLine(lastPrice, color) {
     const y = yAtP(lastPrice);
-    const text = lastPrice.toFixed(lastPrice >= 1000 ? 0 : 1);
+    const text = priceText(lastPrice);
     ctx.strokeStyle = color;
     ctx.setLineDash([4, 3]);
     ctx.lineWidth = 1;
@@ -203,12 +202,12 @@ function createKlineChart(opts) {
     ctx.setLineDash([3, 3]);
     ctx.beginPath();
     ctx.moveTo(x, padTop);
-    ctx.lineTo(x, padTop + priceAreaHeight() + gap + (hasVolume ? volH : 0));
+    ctx.lineTo(x, padTop + priceAreaHeight() + gap + (hasVolume || hasMacd ? volH : 0));
     ctx.moveTo(padLeft, y);
     ctx.lineTo(padLeft + plotW, y);
     ctx.stroke();
     ctx.setLineDash([]);
-    drawPriceTag(price.toFixed(price >= 1000 ? 0 : 1), y, palette.cross);
+    drawPriceTag(priceText(price), y, palette.cross);
   }
 
   // ---------- K 线模式 ----------
@@ -220,16 +219,16 @@ function createKlineChart(opts) {
     ctx.clearRect(0, 0, width, height);
     if (!bars.length) return;
 
-    ma5 = movingAverage(bars, 5);
-    ma10 = movingAverage(bars, 10);
     computeRange();
     step = plotW / bars.length;
 
     drawGrid();
     drawVolume();
+    if (hasMacd) drawMacd();
     drawCandles();
-    drawMA(ma5, palette.ma5);
-    drawMA(ma10, palette.ma10);
+    if (indicators.maEnabled) indicators.maPeriods.forEach((period, i) =>
+      drawMA(features.movingAverage(bars, period), [palette.ma5, palette.ma10, palette.last][i]));
+    drawTargets();
     drawLastLine(bars[bars.length - 1].c, palette.last);
     if (focusIndex >= 0 && focusIndex < bars.length) drawCross(focusIndex, bars[focusIndex].c);
   }
@@ -274,6 +273,73 @@ function createKlineChart(opts) {
     ctx.stroke();
   }
 
+  function drawTargets() {
+    if (!naturalRange) return;
+    const usedLabels = [];
+    for (const target of targetLines) {
+      if (target.value < naturalRange.min || target.value > naturalRange.max) continue;
+      const y = yAtP(target.value);
+      const color = target.type === 'priceAbove' ? palette.ma5 : palette.ma10;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padLeft, y);
+      ctx.lineTo(padLeft + plotW, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Keep text inside the plot and separate close upper/lower target labels.
+      let labelY = Math.max(padTop + 8, Math.min(padTop + priceAreaHeight() - 8, y - 8));
+      if (usedLabels.some(previous => Math.abs(previous - labelY) < 16))
+        labelY = labelY + 18 <= padTop + priceAreaHeight() - 8 ? labelY + 18 : labelY - 18;
+      usedLabels.push(labelY);
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = color;
+      ctx.fillText((target.type === 'priceAbove' ? '涨到 ' : '跌到 ') + priceText(target.value), padLeft + 4, labelY);
+    }
+  }
+
+  function drawMacd() {
+    const rows = features.macd(bars);
+    const top = padTop + priceH + gap;
+    const innerTop = top + 13;
+    const innerHeight = Math.max(8, volH - 15);
+    const values = rows.flatMap(row => [row.dif, row.dea, row.histogram]);
+    const extent = Math.max(0.000001, ...values.map(Math.abs));
+    const yOf = value => innerTop + innerHeight / 2 - value / extent * innerHeight / 2;
+    const zero = yOf(0);
+    ctx.strokeStyle = palette.grid;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(padLeft, zero);
+    ctx.lineTo(padLeft + plotW, zero);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    rows.forEach((row, i) => {
+      ctx.fillStyle = row.histogram >= 0 ? palette.volUp : palette.volDown;
+      const y = yOf(row.histogram);
+      ctx.fillRect(xAt(i) - Math.max(1, step * 0.55) / 2, Math.min(y, zero), Math.max(1, step * 0.55), Math.max(0.5, Math.abs(y - zero)));
+    });
+    for (const [key, color] of [['dif', palette.ma5], ['dea', palette.ma10]]) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      rows.forEach((row, i) => {
+        if (i === 0) ctx.moveTo(xAt(i), yOf(row[key]));
+        else ctx.lineTo(xAt(i), yOf(row[key]));
+      });
+      ctx.stroke();
+    }
+    ctx.fillStyle = palette.axisText;
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('MACD(12,26,9)', padLeft, top);
+    ctx.fillText('0', padLeft + plotW + 6, zero);
+  }
+
   // ---------- 分时模式 ----------
 
   function renderIntraday(points, close, focus) {
@@ -291,6 +357,7 @@ function createKlineChart(opts) {
     drawVolume();
     if (prevClose != null) drawBaseline();
     drawPriceArea();
+    drawTargets();
     if (focusIndex >= 0 && focusIndex < bars.length) drawCross(focusIndex, bars[focusIndex].price);
     else drawLastLine(bars[bars.length - 1].price, lineColor());
   }
@@ -313,7 +380,7 @@ function createKlineChart(opts) {
     ctx.lineTo(padLeft + plotW, y);
     ctx.stroke();
     ctx.setLineDash([]);
-    drawPriceTag(prevClose.toFixed(prevClose >= 1000 ? 0 : 1), y, palette.baseline);
+    drawPriceTag(priceText(prevClose), y, palette.baseline);
   }
 
   function drawPriceArea() {
@@ -397,7 +464,14 @@ function createKlineChart(opts) {
     renderIntraday,
     touchAt,
     clearTouch,
-    setColors
+    setColors,
+    setIndicators(value) { indicators = features.parseSettings(value); },
+    setTargets(value) {
+      targetLines = (Array.isArray(value) ? value : []).filter(t =>
+        ['priceAbove', 'priceBelow'].includes(t.type) && Number.isFinite(t.value) && t.value > 0)
+        .map(t => ({ type: t.type, value: t.value }));
+    },
+    setPrecision(value) { precision = Number.isInteger(value) && value >= 0 && value <= 6 ? value : null; }
   };
 }
 

@@ -2,12 +2,13 @@ const statusClient = require("../../utils/status-client");
 const market = require("../../utils/market-client");
 const portfolio = require("../../utils/portfolio-client");
 const theme = require("../../utils/theme");
+const cache = require("../../utils/read-cache");
 const fmt = require("../../utils/asset-format");
 const { templates } = require("../../utils/app-config");
 const TPL_IDS = [templates.dailyBrief, templates.volatility];
 Page({
   data: {
-    theme: "paper",
+    theme: theme.getTheme(),
     hasStatus: false,
     hasPortfolio: false,
     groups: [],
@@ -20,14 +21,60 @@ Page({
     loading: true,
     authBusy: false,
   },
+  onLoad() {
+    this.setData({ theme: theme.getTheme() });
+    theme.applyChrome(this.data.theme);
+  },
   onShow() {
     this._alive = true;
     this.setData({ theme: theme.getTheme() });
     theme.applyChrome(this.data.theme);
+    if (!this.data.hasPortfolio && portfolio.getCached) {
+      const saved = portfolio.getCached();
+      if (saved) {
+        const removed = [...new Set((saved.rules || []).map(r => r.assetId))]
+          .filter(id => !saved.items.some(a => a.id === id))
+          .map(id => cache.forPlatform(wx).read("asset:" + id) ||
+            { id, name: id, code: id, market: "", unit: "" });
+        this.applyPortfolio(saved, removed);
+      }
+    }
+    if (!this.data.hasStatus) {
+      const saved = cache.forPlatform(wx).read("status");
+      if (saved && saved.ok) this.applyStatus(saved);
+    }
     return this.reload();
   },
   onUnload() {
     this._alive = false;
+  },
+  applyPortfolio(s, removed = []) {
+    this.setData({
+      hasPortfolio: true,
+      groups: [...s.items, ...removed]
+        .map(a => ({
+          ...a,
+          ...fmt.identity(a),
+          rules: (s.rules || []).filter(r => r.assetId === a.id)
+            .map(r => ({ ...r, summary: fmt.summary(r, a) })),
+        }))
+        .filter(a => a.rules.length),
+      activeCount: (s.rules || []).filter(r => r.enabled).length,
+      limits: s.limits,
+      errorText: "",
+      loading: false,
+    });
+  },
+  applyStatus(r) {
+    this.setData({
+      hasStatus: true,
+      recent: (r.recentTasks || []).slice(0, 5).map(fmt.task),
+      quota: {
+        brief: Number((r.remaining || {})[templates.dailyBrief] || 0),
+        vol: Number((r.remaining || {})[templates.volatility] || 0),
+      },
+      remaining: TPL_IDS.reduce((n, id) => n + Number((r.remaining || {})[id] || 0), 0),
+    });
   },
   async reload() {
     try {
@@ -46,21 +93,7 @@ Page({
         }),
       );
       if (!this._alive) return;
-      this.setData({
-        hasPortfolio: true,
-        groups: [...s.items, ...removed]
-          .map((a) => ({
-            ...a,
-            rules: (s.rules || [])
-              .filter((r) => r.assetId === a.id)
-              .map((r) => ({ ...r, summary: fmt.summary(r, a) })),
-          }))
-          .filter((a) => a.rules.length),
-        activeCount: (s.rules || []).filter((r) => r.enabled).length,
-        limits: s.limits,
-        errorText: "",
-        loading: false,
-      });
+      this.applyPortfolio(s, removed);
     } catch (e) {
       if (this._alive) this.setData({ loading: false });
     }
@@ -70,19 +103,7 @@ Page({
     try {
       const r = await statusClient.getStatus(wx);
       if (!r || !r.ok) throw Error("授权状态获取失败");
-      if (this._alive)
-        this.setData({
-          hasStatus: true,
-          recent: (r.recentTasks || []).slice(0, 5).map(fmt.task),
-          quota: {
-            brief: Number((r.remaining || {})[templates.dailyBrief] || 0),
-            vol: Number((r.remaining || {})[templates.volatility] || 0),
-          },
-          remaining: TPL_IDS.reduce(
-            (n, id) => n + Number((r.remaining || {})[id] || 0),
-            0,
-          ),
-        });
+      if (this._alive) this.applyStatus(r);
     } catch (e) {
       // Keep the previous quota and recent reminders.
     }

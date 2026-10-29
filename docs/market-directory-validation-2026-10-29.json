@@ -1,0 +1,59 @@
+{
+  "validationDate": "2026-10-29",
+  "retrievedAt": "2026-10-29T01:44:00.536174+00:00",
+  "counts": {
+    "BJ": 354,
+    "HK": 3208
+  },
+  "sources": {
+    "BJ": {
+      "sourceUrl": "https://www.bse.cn/nq/listedcompany.html",
+      "endpoint": "https://www.bse.cn/nqxxController/nqxxCnzq.do",
+      "requestParameters": {
+        "page": "0..17",
+        "typejb": "T",
+        "xxfcbj[]": "2",
+        "xxzqdm": "",
+        "sortfield": "xxzqdm",
+        "sorttype": "asc"
+      },
+      "pageCount": 18,
+      "totalElements": 354,
+      "complete": true,
+      "sourceDates": [
+        "20261029"
+      ]
+    },
+    "HK": {
+      "sourceUrl": "https://www.hkex.com.hk/eng/services/trading/securities/securitieslists/ListOfSecurities.xlsx",
+      "ordinaryStockAndEtfCount": 3208
+    }
+  },
+  "sha256": "f6c3ba156d1d11910e5211cfcb05b4b94369c3ab97954f57c65cb226588abe89",
+  "added": [
+    {
+      "market": "BJ",
+      "symbol": "920306",
+      "name": "N天元",
+      "englishName": "",
+      "isin": "",
+      "sourceDate": "20261029",
+      "sourceTime": "83000",
+      "kind": "stock",
+      "currency": "CNY"
+    }
+  ],
+  "removed": [
+    {
+      "market": "HK",
+      "symbol": "08567",
+      "name": "GF HEALTH-OLD",
+      "kind": "stock",
+      "currency": "HKD",
+      "isin": "KYG4052M1454",
+      "category": "Equity",
+      "subcategory": "Equity Securities (GEM)"
+    }
+  ],
+  "complete": true
+}

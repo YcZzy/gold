@@ -501,3 +501,37 @@ test("legacy target task read failures abort migration without marker or portfol
   assert.equal(f.data().preferences.caller.multiAssetVersion, undefined);
   assert.equal(f.data().preferences.caller.theme, "blackgold");
 });
+
+test('client exposes last confirmed portfolio synchronously without inventing a default', async () => {
+  const { createClient } = require('../utils/portfolio-client');
+  let stored;
+  const result = { ok: true, items: [{ id: 'sh600519' }], rules: [], revision: 2 };
+  const client = createClient({
+    getStorageSync: () => stored,
+    setStorageSync: (key, value) => { if (key === 'portfolio-cache-v1') stored = value; },
+    cloud: { callFunction: async () => ({ result }) },
+  });
+  assert.equal(client.getCached(), null);
+  await client.add('sh600519');
+  assert.deepEqual(client.getCached(), result);
+  client.getCached().items.length = 0;
+  assert.equal(client.getCached().items.length, 1);
+  assert.deepEqual(createClient({ getStorageSync: () => stored }).getCached(), result);
+});
+
+test('late portfolio list cannot overwrite cache after a newer mutation', async () => {
+  const { createClient } = require('../utils/portfolio-client');
+  let finish;
+  const fresh = { ok: true, items: [{ id: 'sh600519' }], rules: [], revision: 3 };
+  const client = createClient({
+    setStorageSync() {},
+    cloud: { callFunction: ({ data }) => data.action === 'list'
+      ? new Promise(r => { finish = r; }) : Promise.resolve({ result: fresh }) },
+  });
+  const listing = client.list();
+  await client.add('sh600519');
+  finish({ result: { ...fresh, items: [], revision: 2 } });
+  await listing;
+  assert.equal(client.getCached().revision, 3);
+  assert.equal(client.getCached().items.length, 1);
+});

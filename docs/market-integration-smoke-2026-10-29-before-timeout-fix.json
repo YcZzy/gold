@@ -1,0 +1,936 @@
+{
+  "checkedAt": "2026-10-29T01:30:45.879Z",
+  "environment": "local-node-public-readonly",
+  "tests": [
+    {
+      "label": "search:sh600519",
+      "ok": false,
+      "elapsedMs": 3083,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:sh600519",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "search:sz000001",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:sz000001",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "search:sh510300",
+      "ok": false,
+      "elapsedMs": 0,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:sh510300",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "search:sz159915",
+      "ok": false,
+      "elapsedMs": 0,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:sz159915",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "search:bj920185",
+      "ok": true,
+      "elapsedMs": 13,
+      "source": "catalog",
+      "name": "贝特瑞",
+      "kind": "stock",
+      "currency": "CNY"
+    },
+    {
+      "label": "resolve:bj920185",
+      "ok": true,
+      "elapsedMs": 0,
+      "name": "贝特瑞",
+      "precision": 2,
+      "timezone": "Asia/Shanghai"
+    },
+    {
+      "label": "search:hk00700",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:hk00700",
+      "ok": true,
+      "elapsedMs": 0,
+      "name": "TENCENT",
+      "precision": 3,
+      "timezone": "Asia/Hong_Kong"
+    },
+    {
+      "label": "search:hk02800",
+      "ok": true,
+      "elapsedMs": 0,
+      "source": "catalog",
+      "name": "TRACKER FUND",
+      "kind": "etf",
+      "currency": "HKD"
+    },
+    {
+      "label": "resolve:hk02800",
+      "ok": true,
+      "elapsedMs": 0,
+      "name": "TRACKER FUND",
+      "precision": 3,
+      "timezone": "Asia/Hong_Kong"
+    },
+    {
+      "label": "search:hk82840",
+      "ok": true,
+      "elapsedMs": 1,
+      "source": "catalog",
+      "name": "SPDR GOLD TRT-R",
+      "kind": "etf",
+      "currency": "CNY"
+    },
+    {
+      "label": "resolve:hk82840",
+      "ok": true,
+      "elapsedMs": 0,
+      "name": "SPDR GOLD TRT-R",
+      "precision": 3,
+      "timezone": "Asia/Hong_Kong"
+    },
+    {
+      "label": "search:hk09840",
+      "ok": true,
+      "elapsedMs": 0,
+      "source": "catalog",
+      "name": "SPDR GOLD TRT-U",
+      "kind": "etf",
+      "currency": "USD"
+    },
+    {
+      "label": "resolve:hk09840",
+      "ok": true,
+      "elapsedMs": 1,
+      "name": "SPDR GOLD TRT-U",
+      "precision": 3,
+      "timezone": "Asia/Hong_Kong"
+    },
+    {
+      "label": "search:usAAPL",
+      "ok": false,
+      "elapsedMs": 0,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:usAAPL",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "search:usSPY",
+      "ok": false,
+      "elapsedMs": 0,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:usSPY",
+      "ok": false,
+      "elapsedMs": 0,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "search:usBRK.B",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:usBRK.B",
+      "ok": false,
+      "elapsedMs": 0,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "search:usMSFT",
+      "ok": false,
+      "elapsedMs": 1,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "resolve:usMSFT",
+      "ok": false,
+      "elapsedMs": 0,
+      "error": "搜索服务暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "mixed-batch-quotes",
+      "ok": false,
+      "elapsedMs": 3824,
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   {\n+     assetId: 'usMSFT',\n+     hint: '搜索服务暂不可用，请稍后重试'\n+   }\n+ ]\n- []\n"
+    },
+    {
+      "label": "chart:sh600519:intraday",
+      "ok": true,
+      "elapsedMs": 181,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 2,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:31"
+    },
+    {
+      "label": "chart:sh600519:1mo",
+      "ok": true,
+      "elapsedMs": 226,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sh600519:3mo",
+      "ok": true,
+      "elapsedMs": 212,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 61,
+      "first": "2026-07-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sh600519:1y",
+      "ok": true,
+      "elapsedMs": 189,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 243,
+      "first": "2025-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sh600519:5y",
+      "ok": true,
+      "elapsedMs": 235,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 1212,
+      "first": "2021-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sz000001:intraday",
+      "ok": true,
+      "elapsedMs": 118,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 2,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:31"
+    },
+    {
+      "label": "chart:sz000001:1mo",
+      "ok": true,
+      "elapsedMs": 266,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sz000001:3mo",
+      "ok": true,
+      "elapsedMs": 177,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 61,
+      "first": "2026-07-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sz000001:1y",
+      "ok": true,
+      "elapsedMs": 179,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 243,
+      "first": "2025-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sz000001:5y",
+      "ok": true,
+      "elapsedMs": 248,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 1212,
+      "first": "2021-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sh510300:intraday",
+      "ok": true,
+      "elapsedMs": 156,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 2,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:31"
+    },
+    {
+      "label": "chart:sh510300:1mo",
+      "ok": true,
+      "elapsedMs": 295,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sh510300:3mo",
+      "ok": true,
+      "elapsedMs": 209,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 61,
+      "first": "2026-07-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sh510300:1y",
+      "ok": true,
+      "elapsedMs": 163,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 243,
+      "first": "2025-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sh510300:5y",
+      "ok": true,
+      "elapsedMs": 227,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 1212,
+      "first": "2021-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sz159915:intraday",
+      "ok": true,
+      "elapsedMs": 93,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 2,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:31"
+    },
+    {
+      "label": "chart:sz159915:1mo",
+      "ok": true,
+      "elapsedMs": 176,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 18,
+      "first": "2026-09-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sz159915:3mo",
+      "ok": true,
+      "elapsedMs": 214,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 61,
+      "first": "2026-07-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sz159915:1y",
+      "ok": true,
+      "elapsedMs": 242,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 243,
+      "first": "2025-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:sz159915:5y",
+      "ok": true,
+      "elapsedMs": 280,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 1212,
+      "first": "2021-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:bj920185:intraday",
+      "ok": true,
+      "elapsedMs": 103,
+      "source": "tencent",
+      "timezone": "Asia/Shanghai",
+      "count": 2,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:31"
+    },
+    {
+      "label": "chart:bj920185:1mo",
+      "ok": true,
+      "elapsedMs": 696,
+      "source": "sina",
+      "timezone": "Asia/Shanghai",
+      "count": 17,
+      "first": "2026-09-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:bj920185:3mo",
+      "ok": true,
+      "elapsedMs": 262,
+      "source": "sina",
+      "timezone": "Asia/Shanghai",
+      "count": 60,
+      "first": "2026-07-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:bj920185:1y",
+      "ok": true,
+      "elapsedMs": 275,
+      "source": "sina",
+      "timezone": "Asia/Shanghai",
+      "count": 242,
+      "first": "2025-10-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:bj920185:5y",
+      "ok": true,
+      "elapsedMs": 385,
+      "source": "sina",
+      "timezone": "Asia/Shanghai",
+      "count": 1211,
+      "first": "2021-10-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:hk00700:intraday",
+      "ok": true,
+      "elapsedMs": 102,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 2,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:31"
+    },
+    {
+      "label": "chart:hk00700:1mo",
+      "ok": true,
+      "elapsedMs": 276,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 21,
+      "first": "2026-09-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:hk00700:3mo",
+      "ok": true,
+      "elapsedMs": 293,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 65,
+      "first": "2026-07-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:hk00700:1y",
+      "ok": true,
+      "elapsedMs": 241,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 246,
+      "first": "2025-10-30",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:hk00700:5y",
+      "ok": true,
+      "elapsedMs": 278,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 1232,
+      "first": "2021-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:hk02800:intraday",
+      "ok": true,
+      "elapsedMs": 187,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 2,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:31"
+    },
+    {
+      "label": "chart:hk02800:1mo",
+      "ok": true,
+      "elapsedMs": 184,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 21,
+      "first": "2026-09-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:hk02800:3mo",
+      "ok": true,
+      "elapsedMs": 222,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 65,
+      "first": "2026-07-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:hk02800:1y",
+      "ok": true,
+      "elapsedMs": 229,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 246,
+      "first": "2025-10-30",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:hk02800:5y",
+      "ok": true,
+      "elapsedMs": 270,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 1232,
+      "first": "2021-10-29",
+      "last": "2026-10-29"
+    },
+    {
+      "label": "chart:hk82840:intraday",
+      "ok": true,
+      "elapsedMs": 140,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 3,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:32"
+    },
+    {
+      "label": "chart:hk82840:1mo",
+      "ok": true,
+      "elapsedMs": 135,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 20,
+      "first": "2026-09-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:hk82840:3mo",
+      "ok": true,
+      "elapsedMs": 135,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 64,
+      "first": "2026-07-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:hk82840:1y",
+      "ok": true,
+      "elapsedMs": 165,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 245,
+      "first": "2025-10-30",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:hk82840:5y",
+      "ok": true,
+      "elapsedMs": 145,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 492,
+      "first": "2024-10-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:hk09840:intraday",
+      "ok": true,
+      "elapsedMs": 105,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 3,
+      "first": "2026-10-29 09:30",
+      "last": "2026-10-29 09:32"
+    },
+    {
+      "label": "chart:hk09840:1mo",
+      "ok": true,
+      "elapsedMs": 143,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 20,
+      "first": "2026-09-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:hk09840:3mo",
+      "ok": true,
+      "elapsedMs": 129,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 64,
+      "first": "2026-07-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:hk09840:1y",
+      "ok": true,
+      "elapsedMs": 155,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 245,
+      "first": "2025-10-30",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:hk09840:5y",
+      "ok": true,
+      "elapsedMs": 149,
+      "source": "tencent",
+      "timezone": "Asia/Hong_Kong",
+      "count": 492,
+      "first": "2024-10-29",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usAAPL:intraday",
+      "ok": true,
+      "elapsedMs": 115,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 391,
+      "first": "2026-10-28 09:30",
+      "last": "2026-10-28 16:00"
+    },
+    {
+      "label": "chart:usAAPL:1mo",
+      "ok": true,
+      "elapsedMs": 224,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 23,
+      "first": "2026-09-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usAAPL:3mo",
+      "ok": true,
+      "elapsedMs": 225,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 66,
+      "first": "2026-07-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usAAPL:1y",
+      "ok": true,
+      "elapsedMs": 286,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 252,
+      "first": "2025-10-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usAAPL:5y",
+      "ok": true,
+      "elapsedMs": 326,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 1255,
+      "first": "2021-10-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usSPY:intraday",
+      "ok": true,
+      "elapsedMs": 110,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 391,
+      "first": "2026-10-28 09:30",
+      "last": "2026-10-28 16:00"
+    },
+    {
+      "label": "chart:usSPY:1mo",
+      "ok": true,
+      "elapsedMs": 322,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 23,
+      "first": "2026-09-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usSPY:3mo",
+      "ok": true,
+      "elapsedMs": 281,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 66,
+      "first": "2026-07-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usSPY:1y",
+      "ok": true,
+      "elapsedMs": 211,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 252,
+      "first": "2025-10-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usSPY:5y",
+      "ok": true,
+      "elapsedMs": 249,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 1255,
+      "first": "2021-10-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usBRK.B:intraday",
+      "ok": true,
+      "elapsedMs": 175,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 391,
+      "first": "2026-10-28 09:30",
+      "last": "2026-10-28 16:00"
+    },
+    {
+      "label": "chart:usBRK.B:1mo",
+      "ok": true,
+      "elapsedMs": 265,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 23,
+      "first": "2026-09-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usBRK.B:3mo",
+      "ok": true,
+      "elapsedMs": 203,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 66,
+      "first": "2026-07-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usBRK.B:1y",
+      "ok": true,
+      "elapsedMs": 237,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 252,
+      "first": "2025-10-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usBRK.B:5y",
+      "ok": true,
+      "elapsedMs": 267,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 1255,
+      "first": "2021-10-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usMSFT:intraday",
+      "ok": true,
+      "elapsedMs": 674,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 391,
+      "first": "2026-10-28 09:30",
+      "last": "2026-10-28 16:00"
+    },
+    {
+      "label": "chart:usMSFT:1mo",
+      "ok": true,
+      "elapsedMs": 213,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 23,
+      "first": "2026-09-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usMSFT:3mo",
+      "ok": true,
+      "elapsedMs": 197,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 66,
+      "first": "2026-07-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usMSFT:1y",
+      "ok": true,
+      "elapsedMs": 236,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 252,
+      "first": "2025-10-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "chart:usMSFT:5y",
+      "ok": true,
+      "elapsedMs": 283,
+      "source": "tencent",
+      "timezone": "America/New_York",
+      "count": 1255,
+      "first": "2021-10-28",
+      "last": "2026-10-28"
+    },
+    {
+      "label": "independent-quote-fallback:sh510300",
+      "ok": true,
+      "elapsedMs": 275,
+      "source": "sina",
+      "sourceTime": "2026-10-29T01:31:04.000Z"
+    },
+    {
+      "label": "independent-quote-fallback:bj920185",
+      "ok": true,
+      "elapsedMs": 292,
+      "source": "sina",
+      "sourceTime": "2026-10-29T01:31:04.000Z"
+    },
+    {
+      "label": "independent-quote-fallback:hk02800",
+      "ok": true,
+      "elapsedMs": 193,
+      "source": "sina",
+      "sourceTime": "2026-10-29T01:31:06.000Z"
+    },
+    {
+      "label": "independent-quote-fallback:usMSFT",
+      "ok": false,
+      "elapsedMs": 3225,
+      "error": "行情暂不可用，请稍后重试\n\nfalse !== true\n"
+    },
+    {
+      "label": "chart-transport-fallback:hk02800:intraday",
+      "ok": true,
+      "elapsedMs": 242,
+      "source": "tencent",
+      "count": 3,
+      "independentDataFeed": false
+    },
+    {
+      "label": "chart-transport-fallback:hk02800:5y",
+      "ok": true,
+      "elapsedMs": 230,
+      "source": "tencent",
+      "count": 1232,
+      "independentDataFeed": false
+    },
+    {
+      "label": "chart-transport-fallback:usSPY:intraday",
+      "ok": true,
+      "elapsedMs": 204,
+      "source": "tencent",
+      "count": 391,
+      "independentDataFeed": false
+    },
+    {
+      "label": "chart-transport-fallback:usSPY:5y",
+      "ok": true,
+      "elapsedMs": 267,
+      "source": "tencent",
+      "count": 1255,
+      "independentDataFeed": false
+    },
+    {
+      "label": "chart-transport-fallback:usBRK.B:intraday",
+      "ok": true,
+      "elapsedMs": 118,
+      "source": "tencent",
+      "count": 391,
+      "independentDataFeed": false
+    },
+    {
+      "label": "chart-transport-fallback:usBRK.B:5y",
+      "ok": true,
+      "elapsedMs": 256,
+      "source": "tencent",
+      "count": 1255,
+      "independentDataFeed": false
+    },
+    {
+      "label": "reject:hk13005",
+      "ok": true,
+      "elapsedMs": 0,
+      "rejected": true
+    },
+    {
+      "label": "reject:usAAPL&x=1",
+      "ok": true,
+      "elapsedMs": 0,
+      "rejected": true
+    },
+    {
+      "label": "reject:bj835185",
+      "ok": true,
+      "elapsedMs": 0,
+      "rejected": true
+    }
+  ],
+  "passed": 86,
+  "failed": 19,
+  "validationDate": "2026-10-29"
+}

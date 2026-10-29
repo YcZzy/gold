@@ -50,6 +50,13 @@
   font-size: 20rpx;
 }
 .mine-page .theme-toggle-icon { display: block; width: 32rpx; height: 32rpx; }
+.mine-page .theme-toggle.glass-control {
+  border-color: var(--glass-edge);
+  border-radius: 30rpx;
+  background-color: var(--glass-tint);
+  background-image: linear-gradient(145deg, var(--glass-sheen), transparent 65%);
+  color: var(--glass-text);
+}
 .mine-page .mine-card {
   margin-top: 24rpx;
   padding: 30rpx;
@@ -231,4 +238,3 @@
 .mine-page .page-footer { padding: 0 8rpx; margin-top: 28rpx; font-size: 21rpx; line-height: 1.85; color: var(--text-mid); }
 .mine-page .disclaimer { margin-top: 12rpx; }
 .mine-page .error-bar { margin-bottom: 24rpx; padding: 22rpx 24rpx; border-radius: 16rpx; background: var(--error-bg); color: var(--error-text); font-size: 24rpx; line-height: 1.7; }
-.mine-page .loading-note { margin-bottom: 24rpx; font-size: 24rpx; color: var(--text-mid); }

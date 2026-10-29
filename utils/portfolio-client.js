@@ -28,6 +28,14 @@ const DEFAULT_ITEMS = [
 ];
 function createClient(platform) {
   let lastGood = null;
+  function getCached() {
+    let saved = lastGood;
+    try {
+      saved = saved || (platform && platform.getStorageSync(CACHE_KEY));
+    } catch (ignore) {}
+    return saved && Array.isArray(saved.items)
+      ? JSON.parse(JSON.stringify({ ...saved, annotations: saved.annotations || {} })) : null;
+  }
   async function call(action, payload) {
     try {
       if (!platform || !platform.cloud || !platform.cloud.callFunction)
@@ -45,6 +53,11 @@ function createClient(platform) {
         error.business = !!(result && result.ok === false);
         throw error;
       }
+      // A list started before a mutation may finish after it.
+      if (lastGood && Number.isFinite(lastGood.revision) &&
+          Number.isFinite(result.revision) && result.revision < lastGood.revision)
+        return lastGood;
+      result.annotations = result.annotations || {};
       lastGood = result;
       const cache = require("./read-cache").forPlatform(platform);
       for (const asset of result.items || []) cache.write("asset:" + asset.id, asset);
@@ -78,6 +91,7 @@ function createClient(platform) {
               };
         return Object.assign({}, fallback, {
           ok: true,
+          annotations: fallback.annotations || {},
           offline: true,
           hint: "当前离线，显示上次保存的自选；联网后可修改",
         });
@@ -88,11 +102,14 @@ function createClient(platform) {
     }
   }
   return {
+    getCached,
     list: () => call("list"),
     add: (assetId) => call("add", { assetId }),
     remove: (assetId) => call("remove", { assetId }),
     reorder: (assetIds, revision) => call("reorder", { assetIds, revision }),
     saveRule: (rule) => call("saveRule", rule),
+    saveAnnotation: (assetId, note, tags, revision) =>
+      call("saveAnnotation", { assetId, note, tags, revision }),
     deleteRule: (ruleId) => call("deleteRule", { ruleId }),
   };
 }
