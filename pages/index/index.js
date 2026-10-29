@@ -15,6 +15,9 @@ Page({
     view: {groupId:'',market:'all',kind:'all',minPrice:'',maxPrice:'',minPct:'',maxPct:'',query:''},
     display: display.get(),
     filterOpen: false,
+    filterCount: 0,
+    filterError: '',
+    groupName: '全部自选',
     markets: ['全部市场','沪市','深市','北交所','港股','美股','上金所','国际黄金'],
     marketIndex:0,
     kinds:['全部类型','股票','ETF','LOF','黄金'],
@@ -146,9 +149,16 @@ Page({
     const group=this.data.groups.find(g=>g.id===view.groupId);
     const by=group?.sortBy || view.sortBy || 'manual',direction=group?.sortDirection || view.sortDirection || 'asc';
     const sortIndex=Math.max(0,SORTS.findIndex(([b,d])=>b===by && d===direction));
-    this.setData({view,sortIndex,marketIndex:Math.max(0,['all','SH','SZ','BJ','HK','US','SGE','GLOBAL'].indexOf(view.market)),
+    const numericKeys=['minPrice','maxPrice','minPct','maxPct'];
+    const hasNumber=key=>view[key]!=='' && view[key]!=null && Number.isFinite(Number(view[key]));
+    const query=String(view.query || '').trim();
+    const filterCount=Number(view.market!=='all')+Number(view.kind!=='all')+Number(!!query)+numericKeys.filter(hasNumber).length;
+    let filterError='';
+    if(hasNumber('minPrice') && hasNumber('maxPrice') && Number(view.minPrice)>Number(view.maxPrice)) filterError='最低价格不能高于最高价格';
+    else if(hasNumber('minPct') && hasNumber('maxPct') && Number(view.minPct)>Number(view.maxPct)) filterError='最低涨跌幅不能高于最高涨跌幅';
+    this.setData({view,sortIndex,filterCount,filterError,groupName:group ? group.name : '全部自选',marketIndex:Math.max(0,['all','SH','SZ','BJ','HK','US','SGE','GLOBAL'].indexOf(view.market)),
       kindIndex:Math.max(0,['all','stock','etf','lof','gold'].indexOf(view.kind)),
-      visibleRows:this.data.manage ? this.data.rows : watchView.select(this.data.rows,this.data.groups,{...view,sortBy:by,sortDirection:direction})});
+      visibleRows:this.data.manage ? this.data.rows : watchView.select(this.data.rows,this.data.groups,{...view,query,sortBy:by,sortDirection:direction})});
   },
   saveView(view) {this.setData({view});this.updateView();try{wx.setStorageSync('watchlist-view-v1',view);}catch(_){}},
   chooseGroup(e) {if(this.data.busy)return;this.saveView({...this.data.view,groupId:e.currentTarget.dataset.id,sortBy:'',sortDirection:''});},
@@ -158,7 +168,8 @@ Page({
   setCondition(e){
     const key=e.currentTarget.dataset.key,value=e.detail.value;
     if(!['minPrice','maxPrice','minPct','maxPct','query'].includes(key))return;
-    if(key!=='query' && value!=='' && !Number.isFinite(Number(value)))return this.setData({errorText:'筛选条件请输入有效数字'});
+    // A leading minus or decimal point is a valid intermediate typing state.
+    if(key!=='query' && !/^-?\d*\.?\d*$/.test(value))return this.setData({errorText:'筛选条件请输入有效数字'});
     this.setData({errorText:''});this.saveView({...this.data.view,[key]:value});
   },
   resetConditions(){this.setData({errorText:''});this.saveView({...this.data.view,market:'all',kind:'all',minPrice:'',maxPrice:'',minPct:'',maxPct:'',query:''});},

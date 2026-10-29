@@ -15,3 +15,47 @@ test('hidden watchlist ignores late sort responses and re-reads server state whe
  const pending=page.changeSort({detail:{value:1}});page.onHide();finish({...s,revision:2});await pending;
  assert.equal(page.data.revision,1);
 });
+
+test('active filter count includes zero bounds and resets without leaving the selected group',()=>{
+ const {page,stored}=pageHarness('pages/index/index.js');
+ page.onLoad();
+ page.applyState({items:[],groups:[{id:'g',name:'长期观察',assetIds:[]}],rules:[],limits:{watchlist:5},revision:1});
+ page.chooseGroup({currentTarget:{dataset:{id:'g'}}});
+ page.setMarket({detail:{value:1}});
+ page.setCondition({currentTarget:{dataset:{key:'minPct'}},detail:{value:'0'}});
+ page.setCondition({currentTarget:{dataset:{key:'query'}},detail:{value:'  '}});
+ assert.equal(page.data.filterCount,2);
+ assert.equal(page.data.groupName,'长期观察');
+ page.resetConditions();
+ assert.equal(page.data.filterCount,0);
+ assert.equal(page.data.view.groupId,'g');
+ assert.equal(stored.get('watchlist-view-v1').minPct,'');
+});
+
+test('negative filter values can be typed naturally and invalid ranges show an inline explanation',()=>{
+ const {page}=pageHarness('pages/index/index.js');page.onLoad();
+ page.applyState({items:[],groups:[],rules:[],limits:{watchlist:5},revision:1});
+ const enter=(key,value)=>page.setCondition({currentTarget:{dataset:{key}},detail:{value}});
+ enter('minPct','-');
+ assert.equal(page.data.view.minPct,'-');
+ assert.equal(page.data.filterCount,0);
+ assert.equal(page.data.errorText,'');
+ enter('minPct','-2.5');enter('maxPct','-5');
+ assert.match(page.data.filterError,/最低涨跌幅不能高于最高涨跌幅/);
+ enter('maxPct','0');assert.equal(page.data.filterError,'');
+ enter('minPrice','20');enter('maxPrice','10');
+ assert.match(page.data.filterError,/最低价格不能高于最高价格/);
+ page.resetConditions();assert.equal(page.data.filterError,'');
+});
+
+test('returning from an empty group to all keeps filters and exposes the matching rows',()=>{
+ const {page}=pageHarness('pages/index/index.js');page.onLoad();
+ page.applyState({items:[{id:'a',name:'甲',market:'SH',kind:'stock'}],groups:[{id:'empty',name:'空分组',assetIds:[]}],rules:[],limits:{watchlist:5},revision:1});
+ page.setMarket({detail:{value:1}});
+ page.chooseGroup({currentTarget:{dataset:{id:'empty'}}});
+ assert.equal(page.data.visibleRows.length,0);
+ page.chooseGroup({currentTarget:{dataset:{id:''}}});
+ assert.equal(page.data.groupName,'全部自选');
+ assert.equal(page.data.filterCount,1);
+ assert.equal(page.data.visibleRows.length,1);
+});

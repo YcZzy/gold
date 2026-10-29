@@ -19,3 +19,28 @@ test('late extra responses cannot write into a hidden detail page',async()=>{
  finish({flow:{main:100},source:'eastmoney',sourceTime:Date.now()});await pending;
  assert.equal(page.data.flowRows.length,0);
 });
+
+test('chart tools and methodology disclosure toggle independently without resetting the chart viewport',()=>{
+ const {page}=pageHarness('pages/detail/detail.js');page.onLoad({assetId:asset.id});
+ page.viewport={offset:12,count:30};page.data.period='1y';
+ assert.equal(page.data.chartToolsOpen,false);
+ assert.equal(page.data.chartInfoOpen,false);
+ page.toggleChartTools();assert.equal(page.data.chartToolsOpen,true);
+ page.toggleChartInfo();assert.equal(page.data.chartInfoOpen,true);
+ page.toggleChartTools();assert.equal(page.data.chartToolsOpen,false);
+ assert.equal(page.data.chartInfoOpen,true);
+ assert.deepEqual(page.viewport,{offset:12,count:30});
+ assert.equal(page.data.period,'1y');
+});
+
+test('refresh feedback stays active until all detail sections finish and repeated taps do not duplicate work',async()=>{
+ const {page}=pageHarness('pages/detail/detail.js');page.onLoad({assetId:asset.id});page._visible=true;
+ let finish;let calls=0;
+ page.loadQuote=()=>{calls++;return new Promise(resolve=>finish=resolve);};
+ page.loadChart=async()=>{};page.loadIntl=async()=>{};page.loadExtra=async()=>{};
+ const refresh=page.refreshMarket();
+ assert.equal(page.data.refreshing,true);
+ await page.refreshMarket();assert.equal(calls,1);
+ finish();await refresh;
+ assert.equal(page.data.refreshing,false);
+});

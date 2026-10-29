@@ -13,6 +13,8 @@ Page({
     theme: theme.getTheme(),
     quiet: false,
     chartInteraction: "inspect",
+    chartToolsOpen: false,
+    chartInfoOpen: false,
     bollEnabledDraft: false,
     volumeMaEnabledDraft: false,
     granularityOptions: [{value:"day",label:"日K"},{value:"week",label:"周K"},{value:"month",label:"月K"}],
@@ -283,6 +285,8 @@ Page({
       bollEnabledDraft: settings.bollEnabled, volumeMaEnabledDraft: settings.volumeMaEnabled,
       maEnabledDraft: settings.maEnabled, subIndicatorDraft: settings.subIndicator, indicatorError: "" });
   },
+  toggleChartTools() { this.setData({ chartToolsOpen: !this.data.chartToolsOpen }); },
+  toggleChartInfo() { this.setData({ chartInfoOpen: !this.data.chartInfoOpen }); },
   onMaInput(e) { this.setData({ maDraft: e.detail.value, indicatorError: "" }); },
   onBollToggle(e) { this.setData({ bollEnabledDraft: e.detail.value }); },
   onVolumeMaToggle(e) { this.setData({ volumeMaEnabledDraft: e.detail.value }); },
