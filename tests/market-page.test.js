@@ -56,3 +56,37 @@ test('a partial index response visibly identifies a chosen unavailable index',as
  const {page}=fixture();page.onLoad();await page.onShow();
  assert.equal(page.data.indices.length,5);assert.equal(page.data.indices.find(i=>i.id==='index:sz399001').statusText,'暂不可用');
 });
+
+test('changing section immediately removes incompatible rows and updates presentation while pending',async()=>{
+ let finish;const {page}=fixture({discovery:{sectors:()=>new Promise(r=>{finish=r})}});
+ page.onLoad();await page.onShow();const pending=page.switchSection({currentTarget:{dataset:{value:'industry'}}});
+ assert.equal(page.data.rows.length,0);assert.equal(page.data.isSector,true);assert.equal(page.data.isFlow,false);
+ assert.equal(page.data.listTime,'');assert.match(page.data.listTitle,/行业/);
+ finish({items:[],page:1,fetchedAt:100});await pending;
+});
+test('failed new query never shows the preceding query snapshot',async()=>{
+ const {page}=fixture({discovery:{sectors:async()=>{throw Error('板块不可用')}}});
+ page.onLoad();await page.onShow();await page.switchSection({currentTarget:{dataset:{value:'concept'}}});
+ assert.equal(page.data.rows.length,0);assert.equal(page.data.hasMore,false);assert.equal(page.data.listTime,'');
+ assert.doesNotMatch(page.data.listError,/保留上次列表/);
+});
+test('sector search submits trimmed text and draft typing does not change refresh query; clear restores all sectors',async()=>{
+ const queries=[];const {page}=fixture({discovery:{sectors:async q=>{queries.push(q);return {items:[],page:q.page,fetchedAt:100}}}});
+ page.onLoad();await page.onShow();await page.switchSection({currentTarget:{dataset:{value:'industry'}}});
+ page.onKeywordInput({detail:{value:' 飞机 '}});await page.searchSectors();assert.equal(queries.at(-1).keyword,'飞机');
+ page.onKeywordInput({detail:{value:'银行'}});await page.loadList();assert.equal(queries.at(-1).keyword,'飞机');
+ await page.clearSearch();assert.equal(queries.at(-1).keyword,'');assert.equal(page.data.keyword,'');assert.equal(page.data.page,1);
+});
+test('tenth page stops pagination and rows carry absolute rank numbers',async()=>{
+ const {page,calls}=fixture();page.onLoad();await page.onShow();page.setData({page:10});await page.loadList();
+ assert.equal(page.data.hasMore,false);assert.equal(page.data.rows[0].rank,181);
+ const count=calls.length;await page.nextPage();assert.equal(calls.length,count);
+});
+
+test('reaching the bottom keeps the current page until the next-page action is tapped',async()=>{
+ const {page,calls}=fixture();page.onLoad();await page.onShow();
+ const count=calls.length;
+ if(typeof page.onReachBottom==='function')await page.onReachBottom();
+ assert.equal(calls.length,count);assert.equal(page.data.listPage,1);
+ await page.nextPage();assert.equal(calls.length,count+1);assert.equal(page.data.listPage,2);
+});

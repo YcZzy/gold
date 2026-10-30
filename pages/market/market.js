@@ -13,13 +13,13 @@ Page({
   indices:[],allIndices:[],indexError:'',indexLoading:false,indexNotice:'',indexEditing:false,indexOptions:[],indexDraft:[],indexIds:[],
   rows:[],listLoading:false,listError:'',listTime:'',listTitle:'A 股涨幅榜',scope:'',listPage:1,page:1,hasMore:false,
   sort:'gainers',rankSorts:[{value:'gainers',label:'涨幅'},{value:'losers',label:'跌幅'},{value:'amount',label:'成交额'}],
-  sectorSort:'changeDesc',sectorSortIndex:0,sectorSortLabels:['涨幅优先','跌幅优先','成交额优先','名称'],keyword:'',
+  sectorSort:'changeDesc',sectorSortIndex:0,sectorSortLabels:['涨幅优先','跌幅优先','成交额优先','名称'],keyword:'',searchKeyword:'',
   selectedSector:null,isSector:false,isFlow:false,followingIds:[],followingMap:{},rowBusy:'',rowError:'',rowErrorId:'',
  },
  onLoad(){
   this._alive=true;this._visible=false;this.setData({theme:theme.getTheme(),quiet:display.get().quiet});theme.applyChrome(this.data.theme);
   let ids=DEFAULT_INDICES.slice();try{const saved=wx.getStorageSync(INDEX_KEY);if(Array.isArray(saved))ids=saved.filter(id=>INDEX_OPTIONS.some(i=>i.id===id));}catch(_){}
-  this.setData({indexIds:[...new Set(ids)]});this.updateIndexOptions();
+  this.setData({indexIds:[...new Set(ids)]});this.updateIndexOptions();this.updateIndices();
  },
  async onShow(){
   this._visible=true;this.setData({theme:theme.getTheme(),quiet:display.get().quiet});theme.applyChrome(this.data.theme);
@@ -54,31 +54,37 @@ Page({
  },
  async loadList(){
   if(!this._alive || !this._visible)return;const n=this._listRequest=(this._listRequest||0)+1;
-  const {section,selectedSector,page,sort,keyword,sectorSort}=this.data;
-  this.setData({listLoading:true,listError:'',rowError:'',rowErrorId:''});
+  const {section,selectedSector,page,sort,searchKeyword:keyword,sectorSort}=this.data;
+  const isSector=!selectedSector && ['industry','concept'].includes(section),isFlow=section==='flowRanking';
+  const title=selectedSector?selectedSector.name+' · A 股成员':section==='ranking'?'A 股'+({gainers:'涨幅',losers:'跌幅',amount:'成交额'})[sort]+'榜':isFlow?'资金净流入榜':SECTIONS[section]+' · 新浪口径';
+  const queryKey=JSON.stringify([section,selectedSector?.id,page,sort,keyword,sectorSort]);
+  const changed=queryKey!==this._listQueryKey;this._listQueryKey=queryKey;
+  this.setData({listLoading:true,listError:'',rowError:'',rowErrorId:'',isSector,isFlow,listTitle:title,
+   ...(changed?{rows:[],listTime:'',scope:'',hasMore:false,listPage:page}:{})});
   try{
-   let result,title;
-   if(selectedSector){result=await discovery.members(selectedSector.id,{page,sort});title=selectedSector.name+' · A 股成员';}
-   else if(section==='ranking'){result=await discovery.ranking(sort,page);title='A 股'+({gainers:'涨幅',losers:'跌幅',amount:'成交额'})[sort]+'榜';}
-   else if(section==='flowRanking'){result=await discovery.flowRanking(page);title='资金净流入榜';}
-   else{result=await discovery.sectors({type:section,keyword,sort:sectorSort,page});title=SECTIONS[section]+' · 新浪口径';}
+   let result;
+   if(selectedSector){result=await discovery.members(selectedSector.id,{page,sort});}
+   else if(section==='ranking'){result=await discovery.ranking(sort,page);}
+   else if(section==='flowRanking'){result=await discovery.flowRanking(page);}
+   else{result=await discovery.sectors({type:section,keyword,sort:sectorSort,page});}
    if(!this.active(n,'_listRequest'))return;
-   const isSector=!selectedSector && ['industry','concept'].includes(section),isFlow=section==='flowRanking';
-   const rows=(result.items||[]).map(row=>({...row,key:row.id||row.assetId,priceText:fmt.number(row.price,row.asset?.precision??2),pctText:row.changePct==null?'--':fmt.signed(row.changePct)+'%',
+   const resultPage=result.page||page;
+   const rows=(result.items||[]).map((row,index)=>({...row,key:row.id||row.assetId,rank:(resultPage-1)*20+index+1,priceText:fmt.number(row.price,row.asset?.precision??2),pctText:row.changePct==null?'--':fmt.signed(row.changePct)+'%',
     amountText:amount(row.amount),flowText:amount(row.flow?.main),sourceTimeText:row.sourceTime?fmt.time(row.sourceTime):'',cls:(isFlow?row.flow?.main:row.changePct)>0?'up':(isFlow?row.flow?.main:row.changePct)<0?'down':'flat',
     canAdd:!!row.assetId && (row.price>0 || !!row.flow)}));
-   this.setData({rows,isSector,isFlow,listPage:result.page||page,hasMore:!!result.hasMore,listTitle:title,scope:result.scope||'',
+   this.setData({rows,isSector,isFlow,listPage:resultPage,hasMore:resultPage<10 && !!result.hasMore,listTitle:title,scope:result.scope||'',
     listTime:fmt.sourceName(result.source)+' · '+(result.stale?'缓存快照 · ':'')+(result.sourceTime?'行情来源 '+fmt.time(result.sourceTime)+' · ':'')+'获取时间 '+fmt.time(result.fetchedAt),
     listError:result.stale?'数据源暂不可用，显示缓存快照；可重试':''});
   }catch(error){if(this.active(n,'_listRequest'))this.setData({listError:(error.message||'榜单暂不可用')+(this.data.rows.length?'；保留上次列表':'' )});}
   finally{if(this.active(n,'_listRequest'))this.setData({listLoading:false});}
  },
  switchSection(e){const section=e.currentTarget.dataset.value;if(!Object.prototype.hasOwnProperty.call(SECTIONS,section))return;
-  this.setData({section,selectedSector:null,page:1,keyword:'',sort:'gainers'});return this.loadList();},
+  this.setData({section,selectedSector:null,page:1,keyword:'',searchKeyword:'',sort:'gainers'});return this.loadList();},
  selectSort(e){const sort=e.currentTarget.dataset.value;if(!['gainers','losers','amount'].includes(sort))return;this.setData({sort,page:1});return this.loadList();},
  onSectorSort(e){const i=Number(e.detail.value);const sort=['changeDesc','changeAsc','amountDesc','name'][i];if(!sort)return;this.setData({sectorSort:sort,sectorSortIndex:i,page:1});return this.loadList();},
  onKeywordInput(e){this.setData({keyword:e.detail.value});},
- searchSectors(){this.setData({page:1});return this.loadList();},
+ searchSectors(){const keyword=this.data.keyword.trim();this.setData({page:1,keyword,searchKeyword:keyword});return this.loadList();},
+ clearSearch(){this.setData({keyword:'',searchKeyword:'',page:1});return this.loadList();},
  openSector(e){const {id,name}=e.currentTarget.dataset;if(!this.data.rows.some(r=>r.id===id))return;this.setData({selectedSector:{id,name},page:1,sort:'gainers'});return this.loadList();},
  closeSector(){this.setData({selectedSector:null,page:1});return this.loadList();},
  nextPage(){if(this.data.listLoading || !this.data.hasMore || this.data.listPage>=10)return;this.setData({page:this.data.listPage+1});return this.loadList();},
@@ -93,5 +99,4 @@ Page({
   finally{if(this.active(n,'_addRequest'))this.setData({rowBusy:''});}
  },
  onPullDownRefresh(){return Promise.all([this.loadIndices(),this.loadList(),this.loadFollowing()]).finally(()=>wx.stopPullDownRefresh());},
- onReachBottom(){return this.nextPage();},
 });
