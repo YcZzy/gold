@@ -98,3 +98,17 @@
 日历数据在 `cloudfunctions/sendTask/market-calendar-data.json` 与 `cloudfunctions/marketData/market-calendar-data.json` 中同步维护，保留交易所来源及核验日期；正式公告发布后更新对应年份，并重新部署两个云函数。前置接口、目录、日历及消息格式验证记录见 `docs/market-*-validation-2026-10-28.json`。本地发送模拟与格式校验不代表实际微信送达。
 
 本次多市场本地实施及验收汇总见 [market-delivery-2026-10-29.md](docs/market-delivery-2026-10-29.md)。沪深分时及日 K 另接入经真实数据校验的新浪独立备用，均价及量单位未知时保持为空。
+
+### `portfolio` 调用报 3 秒超时
+
+若报 `-504003` / `FUNCTIONS_TIME_LIMIT_EXCEEDED` 且包含 `timed out after 3 seconds`，在云开发控制台选择对应环境，进入 **云函数 → portfolio → 配置 / 高级设置 → 超时时间**，改为 **30 秒**并保存。该函数返回自选时还会解析证券元数据；默认 3 秒可能不足。`marketData` 同样按上方部署要求配置至少 30 秒。运行上限是云端配置，重新编译小程序不会修改它；若调整后仍超时，应查看函数日志定位数据库或元数据解析耗时。
+
+持仓录入的候选标的只读已有持仓快照与自选缓存，不在打开表单时远程拉取 `portfolio`；无缓存仍可搜索，选择标的仍需服务端核验。此优化不替代其他自选功能所需的云端超时配置。
+
+### `ledger` 返回 `ledger-unavailable`
+
+这表示调用进入了函数，但遇到未作为业务错误处理的异常；仅凭通用提示无法确认原因。`ledger` 会在云端记录 `ledger operation failed`，包含 action、stage、错误码与错误消息，不记录请求中的完整流水。按响应的 requestID 查找同次调用日志，区分 `resolve-assets`（标的核验）、`read-ledger`、`replay-ledger`、`write-ledger`、`valuation`。
+
+首次建账兼容 SDK 的 message / errMsg 两种错误格式。文档不存在视为空账本；集合不存在会明确返回 `ledger-not-initialized`，此时更新部署并运行 `initDb`，保留所有旧数据。更新后需重新部署整个 `ledger` 目录并安装云端依赖；运行超时按部署清单设为60秒。修改本地文件或前端重新编译不会更新云函数。
+
+若无法查询云端日志，更新后的 `ledger` 在未预期异常响应中附带 `diagnostic: {stage, code, version: 1}`，可直接从开发工具 Network 的 Response 复制该对象定位；其中不包含原始异常消息、身份或流水内容。旧版响应不带此字段，需要先重新部署云函数。

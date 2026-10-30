@@ -6,7 +6,12 @@ const token=()=>crypto.randomBytes(16).toString('hex');
 function stable(value){if(Array.isArray(value))return value.map(stable);if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(k=>[k,stable(value[k])]));return value;}
 const hash=value=>crypto.createHash('sha256').update(JSON.stringify(stable(value))).digest('hex');
 function bounded(value){if(Buffer.byteLength(JSON.stringify(value),'utf8')>LIMITS.bytes)engine.fail('ledger-limit','台账或备份超过512KB上限，请先导出备份');}
-async function read(ref){try{return(await ref.get()).data;}catch(e){if(e.code==='DOCUMENT_NOT_FOUND'||e.errCode==='DATABASE_DOCUMENT_NOT_EXIST'||/document.*(?:does not exist|not exist|not found)/i.test(e.message||''))return null;throw e;}}
+function errorMessage(e){return [e&&e.message,e&&e.errMsg].filter(Boolean).join(' ')||String(e);}
+function missingCollection(e){return /collection.*(?:does not exist|not exist|not found)|集合.*不存在/i.test(errorMessage(e));}
+async function read(ref){
+ try{return(await ref.get()).data;}
+ catch(e){if(!missingCollection(e)&&(e.code==='DOCUMENT_NOT_FOUND'||e.errCode==='DATABASE_DOCUMENT_NOT_EXIST'||/document.*(?:does not exist|not exist|not found)/i.test(errorMessage(e))))return null;throw e;}
+}
 function verifyAsset(found,id){
  if(id==='gold-au9999'||id==='gold-xauusd'){
   const local=id==='gold-au9999'?{code:'AU9999',market:'SGE',currency:'CNY',unit:'元/克'}:{code:'XAU',market:'GLOBAL',currency:'USD',unit:'美元/盎司'};
@@ -21,7 +26,7 @@ function validateNotes(notes,assets){
 }
 function capacity(doc){if(doc.entries.length>LIMITS.records||Object.keys(doc.assets).length>LIMITS.assets||Object.keys(doc.receipts).length>LIMITS.operations)engine.fail('ledger-limit','台账上限：30个标的、1000条含修订流水、1000次写操作；请先导出备份');bounded(doc);}
 function backup(doc){return{schemaVersion:1,entries:doc.entries,notes:doc.notes};}
-function createHandler({db,getOpenid,resolve,getQuotes=async()=>[],now=Date.now}){
+function createHandler({db,getOpenid,resolve,getQuotes=async()=>[],now=Date.now,logger=console}){
  async function resolveMany(ids){
   const unique=[...new Set(ids)];if(unique.length>LIMITS.assets)engine.fail('ledger-limit','最多30个持仓标的');
   if(unique.some(id=>!securities.validId(id)))engine.fail('unknown-asset','备份包含无效标的');
@@ -41,23 +46,26 @@ function createHandler({db,getOpenid,resolve,getQuotes=async()=>[],now=Date.now}
   return{ok:true,revision:doc.revision,...result,assets:Object.values(doc.assets),notes:doc.notes,auditCount:doc.entries.length,operationCount:Object.keys(doc.receipts).length,limits:LIMITS,quoteWarning};
  }
  return async(event={})=>{
+  let stage='request';
   const owner=getOpenid();if(!owner)return{ok:false,err:'no-openid',hint:'请先登录再操作台账'};
   try{
    const action=event.action||'list',ref=db.collection('investmentLedgers').doc(owner);
    if(!['list','export','saveEntry','voidEntry','saveNote','previewImport','import'].includes(action))engine.fail('bad-action','不支持的台账操作');
-   if(action==='list'){const doc=(await read(ref))||fresh();if(doc.ownerOpenid&&doc.ownerOpenid!==owner)engine.fail('forbidden','台账归属不匹配');return await view(doc);}
-   if(action==='export'){const doc=(await read(ref))||fresh();if(doc.ownerOpenid&&doc.ownerOpenid!==owner)engine.fail('forbidden','台账归属不匹配');return{ok:true,revision:doc.revision,backup:backup(doc)};}
+   if(action==='list'){stage='read-ledger';const doc=(await read(ref))||fresh();if(doc.ownerOpenid&&doc.ownerOpenid!==owner)engine.fail('forbidden','台账归属不匹配');stage='valuation';return await view(doc);}
+   if(action==='export'){stage='read-ledger';const doc=(await read(ref))||fresh();if(doc.ownerOpenid&&doc.ownerOpenid!==owner)engine.fail('forbidden','台账归属不匹配');return{ok:true,revision:doc.revision,backup:backup(doc)};}
    if(!Number.isInteger(event.revision)||event.revision<0)engine.fail('revision-conflict','请先加载最新台账');
    let prepared=null,resolved={};
-   if(action==='previewImport'||action==='import')prepared=await imported(event.backup);
-   if(action==='saveEntry'&&event.entry&&event.entry.assetId)resolved=await resolveMany([event.entry.assetId]);
+   if(action==='previewImport'||action==='import'){stage='validate-import';prepared=await imported(event.backup);}
+   if(action==='saveEntry'&&event.entry&&event.entry.assetId){stage='resolve-assets';resolved=await resolveMany([event.entry.assetId]);}
    if(action==='previewImport'){
     const doc=(await read(ref))||fresh();if(doc.revision!==event.revision)engine.fail('revision-conflict','台账已更新，请重新生成导入预览');
     return{ok:true,revision:doc.revision,previewHash:hash({revision:doc.revision,backup:backup(prepared)}),preview:await view(prepared),previousCount:engine.effective(doc.entries).length};
    }
    if(typeof event.requestId!=='string'||!/^[a-zA-Z0-9_-]{1,80}$/.test(event.requestId))engine.fail('bad-request','操作请求标识无效');
    const requestHash=hash({action,entry:event.entry||null,entryId:event.entryId||null,assetId:event.assetId||null,note:event.note==null?null:event.note,backup:prepared?backup(prepared):null,previewHash:event.previewHash||null});
+   stage='transaction';
    const saved=await db.runTransaction(async tx=>{
+    stage='read-ledger';
     const target=tx.collection('investmentLedgers').doc(owner),existing=(await read(target))||fresh();
     if(existing.ownerOpenid&&existing.ownerOpenid!==owner)engine.fail('forbidden','台账归属不匹配');
     const receipt=existing.receipts[event.requestId];
@@ -79,11 +87,19 @@ function createHandler({db,getOpenid,resolve,getQuotes=async()=>[],now=Date.now}
      if(!Object.prototype.hasOwnProperty.call(doc.assets,event.assetId))engine.fail('unknown-asset','请先录入该标的持仓流水');
      doc.notes=validateNotes({...doc.notes,[event.assetId]:event.note},doc.assets);
     }
+    stage='replay-ledger';
     engine.replay(doc.entries,doc.assets);doc.revision=existing.revision+1;doc.ownerOpenid=owner;doc.updatedAt=now();doc.createdAt=existing.createdAt||now();
-    doc.receipts[event.requestId]={hash:requestHash,revision:doc.revision};delete doc._id;capacity(doc);await target.set({data:doc});return{doc,duplicate:false};
+    doc.receipts[event.requestId]={hash:requestHash,revision:doc.revision};delete doc._id;capacity(doc);stage='write-ledger';await target.set({data:doc});return{doc,duplicate:false};
    });
+   stage='valuation';
    return{...await view(saved.doc),duplicate:saved.duplicate};
-  }catch(e){return{ok:false,err:e.businessCode||'ledger-unavailable',hint:e.businessCode?e.message:'台账服务暂不可用，请保留草稿后重试'};}
+  }catch(e){
+   if(!e.businessCode){try{logger.error('ledger operation failed',{action:event.action||'list',stage,code:e.errCode||e.code||'',message:errorMessage(e)});}catch(_){} }
+   const rawCode=String(e.errCode||e.code||e.name||'unknown');
+   const diagnostic={stage,code:/^[a-zA-Z0-9_.:-]{1,80}$/.test(rawCode)?rawCode:'unknown',version:1};
+   if(missingCollection(e))return{ok:false,err:'ledger-not-initialized',hint:'台账集合未初始化，请在当前云环境部署并运行 initDb；已有数据无需清空。',diagnostic};
+   return{ok:false,err:e.businessCode||'ledger-unavailable',hint:e.businessCode?e.message:'台账服务暂不可用，请保留草稿后重试',...(!e.businessCode?{diagnostic}:{})};
+  }
  };
 }
 exports.createHandler=createHandler;exports.LIMITS=LIMITS;

@@ -1,111 +1,116 @@
 <page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
 <view class="page holdings-page theme-{{theme}} {{preferences.compact ? 'compact' : ''}}">
-  <view class="heading">
-    <view class="eyebrow">个人手工台账</view>
-    <view class="heading-row"><view class="hero-title">我的持仓</view><button class="text-button" bindtap="reload" disabled="{{busy || loading}}" loading="{{loading}}">刷新</button></view>
-    <view class="muted">股票 · ETF / LOF · 黄金 / 各币种分别记账</view>
+  <view class="heading-row">
+    <view class="page-heading"><button wx:if="{{view !== 'overview'}}" class="text-button ui-btn ui-text back-button" bindtap="{{editing ? 'cancelEntry' : noteEditing ? 'cancelNote' : 'backToHoldings'}}" disabled="{{busy}}" aria-label="返回持仓" hover-class="ui-pressed">‹</button><view class="hero-title">{{viewTitle}}</view></view>
+    <view wx:if="{{view === 'overview'}}" class="heading-actions"><button class="text-button ui-btn ui-text more-button" bindtap="showMore" disabled="{{busy}}" aria-label="更多持仓操作" hover-class="ui-pressed">•••</button><button class="ui-btn ui-primary entry-trigger" bindtap="startEntry" disabled="{{busy || !loaded}}" hover-class="ui-pressed">{{hasEntryDraft ? '继续记账' : '记一笔'}}</button></view>
   </view>
-  <view class="notice" wx:if="{{preferences.hideAmounts}}">金额已隐藏。主动编辑流水或生成备份时会显示原始输入。</view>
-  <view class="error" wx:if="{{errorText}}" role="alert" aria-live="assertive">{{errorText}}</view>
-  <view class="notice" wx:if="{{offline}}">当前无法连接台账服务。{{loaded ? '下方保留本页上次结果；尚未保存的输入仍是草稿。' : '尚未取得台账，请联网后刷新。'}}</view>
-  <view class="notice" wx:if="{{quoteWarning}}">{{quoteWarning}}</view>
-  <view wx:if="{{loading}}" class="empty" role="status">正在读取私人台账…</view>
-  <view class="action-row">
-    <button class="primary" bindtap="openEntry" disabled="{{busy || !loaded}}">记一笔持仓</button>
-    <button class="secondary" bindtap="openEntry" data-type="deposit" disabled="{{busy || !loaded}}">现金入出金</button>
+  <view wx:if="{{errorText}}" class="error" role="alert" aria-live="assertive">{{errorText}}<button wx:if="{{offline}}" class="text-button ui-btn ui-text" bindtap="reload" loading="{{refreshing}}" disabled="{{refreshing}}" hover-class="ui-pressed">重新加载</button></view>
+  <view wx:if="{{successText}}" class="success-message" role="status" aria-live="polite">{{successText}}</view>
+  <view wx:if="{{refreshing && loaded}}" class="refresh-status" role="status">正在更新…</view>
+  <view wx:if="{{loading && !loaded}}" class="panel loading-panel" role="status" aria-label="正在读取持仓"><view class="skeleton skeleton-title"></view><view class="skeleton skeleton-value"></view><view class="skeleton skeleton-line"></view></view>
+
+  <view wx:if="{{view === 'overview' && loaded}}">
+    <view class="overview">
+      <view class="section-row"><text class="metric-label">{{summary.primaryLabel}}</text><picker range="{{currencyOptions}}" value="{{currency === 'USD' ? 2 : currency === 'HKD' ? 1 : 0}}" bindchange="chooseCurrency" aria-label="持仓币种"><view class="currency-control">{{currency}} <text aria-hidden="true">⌄</text></view></picker></view>
+      <view class="hero-value">{{summary.primaryText}}</view>
+      <view class="profit-line"><text class="metric-label">持仓盈亏</text><text class="profit-value {{summary.gainClass}}">{{summary.unrealizedText}}</text><text wx:if="{{preferences.showChange && summary.floatRateText !== '—'}}" class="profit-rate {{summary.gainClass}}">{{summary.floatRateText}}</text></view>
+      <view wx:if="{{!summary.complete}}" class="helper">部分报价缺失，已知市值 {{summary.knownValueText}}。</view>
+      <view wx:elif="{{quoteWarning}}" class="helper">{{quoteWarning}}</view>
+      <view wx:if="{{overviewExpanded}}" class="overview-details" id="overview-details">
+        <view class="metrics"><view><text class="metric-label">持仓市值</text><text>{{summary.valueText}}</text></view><view><text class="metric-label">现金</text><text>{{summary.cashText}}</text></view><view><text class="metric-label">已实现盈亏</text><text>{{summary.realizedText}}</text></view><view><text class="metric-label">累计盈亏</text><text>{{summary.totalText}}</text></view><view><text class="metric-label">证券仓位</text><text>{{summary.allocationText}}</text></view><view wx:if="{{preferences.showChange}}"><text class="metric-label">累计成本收益率</text><text>{{summary.rateText}}</text></view></view>
+        <view wx:for="{{summary.days}}" wx:key="date" class="day-row"><text>{{item.date}}</text><text>{{item.valueText}} {{item.complete ? '' : ' · 不完整'}}</text></view>
+        <view class="detail-actions"><button class="text-button ui-btn ui-text" bindtap="manageCash" disabled="{{busy}}" hover-class="ui-pressed">管理现金</button><button class="text-button ui-btn ui-text" bindtap="toggleOverview" hover-class="ui-pressed">收起</button></view>
+      </view>
+    </view>
+    <view class="section-row list-heading"><text class="section-title">持仓 <text class="count">{{positionCount}}</text></text><button wx:if="{{hasCurrencyPositions}}" class="text-button ui-btn ui-text" bindtap="togglePositionFilters" aria-expanded="{{positionFiltersExpanded}}" aria-controls="position-filters" hover-class="ui-pressed">{{positionFiltersExpanded ? '收起筛选' : (positionQuery || showClosed || sortIndex) ? '筛选 · 已启用' : '筛选'}}</button></view>
+    <view wx:if="{{hasCurrencyPositions && positionFiltersExpanded}}" class="filters" id="position-filters">
+      <view class="search-row"><input value="{{positionQuery}}" bindinput="inputPositionQuery" aria-label="搜索持仓名称或代码" placeholder="名称 / 代码" /><button wx:if="{{positionQuery}}" class="text-button ui-btn ui-text" bindtap="clearPositionQuery" hover-class="ui-pressed">清空</button></view>
+      <view class="section-row"><picker range="{{sortOptions}}" value="{{sortIndex}}" bindchange="changeSort" aria-label="持仓排序"><view class="sort-control">{{sortOptions[sortIndex]}} ⌄</view></picker><label class="switch-row"><text>含已清仓</text><switch checked="{{showClosed}}" bindchange="toggleClosed" color="{{theme === 'blackgold' ? '#d9b45b' : '#776552'}}" aria-label="显示已清仓持仓" /></label></view>
+    </view>
+    <view wx:if="{{positionQuery && !positionFiltersExpanded}}" class="active-filter"><text>搜索：{{positionQuery}}</text><button class="text-button ui-btn ui-text" bindtap="clearPositionQuery" hover-class="ui-pressed">清空</button></view>
+    <view wx:if="{{!rows.length}}" class="empty">
+      <view class="empty-mark" aria-hidden="true">—</view><view class="section-title">{{positionQuery ? '没有匹配的持仓' : hasCurrencyPositions ? '暂无在持持仓' : '还没有持仓'}}</view>
+      <view class="helper">{{positionQuery ? '试试其他名称或代码' : '登记已有数量和成本，开始查看盈亏'}}</view>
+      <button wx:if="{{positionQuery}}" class="ui-btn ui-secondary" bindtap="clearPositionQuery" hover-class="ui-pressed">清空搜索</button><button wx:else class="ui-btn ui-secondary" data-type="openingPosition" bindtap="openEntry" disabled="{{busy}}" hover-class="ui-pressed">添加已有持仓</button>
+    </view>
+    <view wx:else class="positions-table">
+      <view class="table-head"><text>标的</text><text>市值</text><text>持仓盈亏</text></view>
+      <view wx:for="{{rows}}" wx:key="assetId" class="holding">
+        <view class="holding-summary">
+          <view class="holding-grid" aria-hidden="true">
+          <view class="asset-cell"><text class="asset-name">{{item.name}}</text><text class="asset-code">{{item.code}} {{item.closed ? '· 已清仓' : ''}} <text aria-hidden="true">{{item.expanded ? '⌃' : '⌄'}}</text></text></view>
+          <view class="value-cell"><text class="holding-number">{{item.valueText}}</text></view><view class="gain-cell {{item.gainClass}}"><text class="holding-number">{{item.unrealizedText}}</text><text wx:if="{{preferences.showChange}}" class="rate-text">{{item.rateText}}</text></view>
+          </view>
+          <button class="holding-hit-target ui-row" data-id="{{item.assetId}}" bindtap="togglePosition" aria-expanded="{{item.expanded}}" aria-controls="position-{{item.assetId}}" aria-label="{{item.name}}，市值{{item.valueText}}，持仓盈亏{{item.unrealizedText}}，{{preferences.showChange ? item.rateText : ''}}，持仓详情" hover-class="holding-hit-pressed"></button>
+        </view>
+        <view wx:if="{{item.expanded}}" id="position-{{item.assetId}}" class="position-details">
+          <view class="metrics"><view><text class="metric-label">数量</text><text>{{item.quantityText}}</text></view><view><text class="metric-label">平均成本</text><text>{{item.averageCostText}}</text></view><view><text class="metric-label">现价</text><text>{{item.priceText}}</text></view><view><text class="metric-label">剩余成本</text><text>{{item.costText}}</text></view><view><text class="metric-label">已实现盈亏</text><text>{{item.realizedText}}</text></view><view wx:if="{{preferences.showChange}}"><text class="metric-label">累计成本收益率</text><text>{{item.totalRateText}}</text></view></view>
+          <view class="day-row"><text>最近交易日 {{item.sessionDate}}</text><text>{{item.dailyText}}</text></view><view wx:if="{{item.dailyReason}}" class="helper">{{item.dailyReason}}</view>
+          <view wx:if="{{preferences.showTime}}" class="source-line">{{item.source}} · {{item.sourceTimeText}} · {{item.stale ? '报价过期' : item.status === 'fresh' ? '最近更新' : '延迟或缺失'}}</view>
+          <view wx:if="{{preferences.showNotes && item.note}}" class="position-note">{{item.note}}</view>
+          <view class="position-actions"><button class="ui-btn ui-primary" data-id="{{item.assetId}}" data-type="buy" bindtap="openEntry" disabled="{{busy}}" hover-class="ui-pressed">买入</button><button class="ui-btn ui-secondary" data-id="{{item.assetId}}" data-type="sell" bindtap="openEntry" disabled="{{busy || item.closed}}" hover-class="ui-pressed">卖出</button><button class="text-button ui-btn ui-text" data-id="{{item.assetId}}" bindtap="showPositionMore" disabled="{{busy}}" aria-label="{{item.name}}更多操作" hover-class="ui-pressed">更多</button></view>
+        </view>
+      </view>
+    </view>
   </view>
 
-  <view wx:if="{{editing}}" class="panel editor">
-    <view class="section-row"><view class="section-title">{{editId ? '修改历史流水' : '录入流水'}}</view><text class="badge">明确保存后生效</text></view>
-    <view class="notice" wx:if="{{editId}}">修改会重算后续成本、现金和已实现盈亏，原版本保留审计。该笔在同日的原顺序保持不变。</view>
-    <label class="field-label" for="entry-type">流水类型</label>
-    <picker id="entry-type" range="{{types}}" range-key="label" value="{{typeIndex}}" bindchange="changeType" disabled="{{busy}}" aria-label="流水类型"><view class="picker-value">{{types[typeIndex].label}} <text>⌄</text></view></picker>
+  <view wx:if="{{view === 'entry'}}" id="entry-editor" class="panel editor">
+    <view wx:if="{{formTypes.length > 1}}" class="form-tabs"><button wx:for="{{formTypes}}" wx:key="value" class="ui-tab {{draft.type === item.value ? 'ui-selected' : ''}}" data-type="{{item.value}}" bindtap="selectFormType" disabled="{{busy}}" aria-pressed="{{draft.type === item.value}}" hover-class="ui-pressed">{{item.label}}</button></view>
+    <view wx:if="{{editId}}" class="helper">修改后会重算后续记录。</view>
     <view wx:if="{{requiresAsset}}" class="asset-selector">
-      <view class="field-label">选择标的（可独立于自选）</view>
-      <view wx:if="{{selectedAsset}}" class="chosen-asset"><text>{{selectedAsset.name}} · {{selectedAsset.id}}</text><text class="muted">{{selectedAsset.currency}} · {{selectedAsset.unit}}</text></view>
-      <view class="search-row"><input aria-label="搜索股票基金或黄金" value="{{keyword}}" bindinput="inputKeyword" bindconfirm="searchAssets" placeholder="名称或代码，例如 sh510300" disabled="{{busy}}" /><button class="secondary small" bindtap="searchAssets" loading="{{searchBusy}}" disabled="{{busy || searchBusy}}">搜索</button></view>
-      <view wx:if="{{searchResults.length}}" class="choices"><button wx:for="{{searchResults}}" wx:key="id" class="choice" data-id="{{item.id}}" bindtap="selectAsset" disabled="{{busy}}">{{item.name}} <text class="muted">{{item.id}} · {{item.currency}} · {{item.unit}}</text></button></view>
-      <view wx:if="{{watchlist.length && !searchResults.length}}"><view class="helper">从自选选择</view><view class="watch-choices"><button wx:for="{{watchlist}}" wx:key="id" class="chip" data-id="{{item.id}}" bindtap="selectAsset" disabled="{{busy}}">{{item.name}}</button></view></view>
+      <view wx:if="{{selectedAsset && !assetSearchOpen}}" class="selected-asset"><view><text class="asset-name">{{selectedAsset.name}}</text><text class="asset-code">{{selectedAsset.id}} · {{selectedAsset.currency}} · {{selectedAsset.unit}}</text></view><button class="text-button ui-btn ui-text" bindtap="changeAsset" disabled="{{busy}}" hover-class="ui-pressed">更换</button></view>
+      <view wx:else>
+        <view class="search-row"><input value="{{keyword}}" bindinput="inputKeyword" bindconfirm="searchAssets" aria-label="搜索股票基金或黄金" aria-invalid="{{!!formErrors.assetId}}" aria-describedby="error-assetId" placeholder="搜索标的名称 / 代码" disabled="{{busy}}" /><button class="ui-btn ui-secondary" bindtap="searchAssets" loading="{{searchBusy}}" disabled="{{busy || searchBusy || !keyword}}" hover-class="ui-pressed">搜索</button></view>
+        <view wx:if="{{searchDone && !searchBusy && !searchResults.length}}" class="helper" role="status">未找到标的，请换个名称或完整代码。</view>
+        <view wx:if="{{searchResults.length}}" class="choices"><button wx:for="{{searchResults}}" wx:key="id" class="choice ui-row" data-id="{{item.id}}" bindtap="selectAsset" disabled="{{busy}}" hover-class="ui-pressed"><text>{{item.name}}</text><text class="asset-code">{{item.id}} · {{item.currency}}</text></button></view>
+        <view wx:elif="{{quickAssets.length && !keyword}}" class="watch-choices"><button wx:for="{{quickAssets}}" wx:key="id" class="ui-btn ui-choice" data-id="{{item.id}}" bindtap="selectAsset" disabled="{{busy}}" hover-class="ui-pressed">{{item.name}}</button></view>
+      </view>
+      <view wx:if="{{formErrors.assetId}}" id="error-assetId" class="field-error" role="alert">{{formErrors.assetId}}</view>
     </view>
-    <view class="two-fields">
-      <view><label class="field-label" for="entry-date">当地交易日期</label><picker id="entry-date" mode="date" value="{{draft.date}}" bindchange="inputDraft" data-key="date" aria-label="当地交易日期" disabled="{{busy}}"><view class="picker-value">{{draft.date}}</view></picker></view>
-      <view><label class="field-label" for="entry-currency">原始币种</label><picker id="entry-currency" range="{{currencyOptions}}" value="{{draft.currency === 'USD' ? 2 : draft.currency === 'HKD' ? 1 : 0}}" bindchange="changeDraftCurrency" disabled="{{busy || requiresAsset}}" aria-label="原始币种"><view class="picker-value">{{draft.currency}}</view></picker></view>
-    </view>
-    <view class="helper">美股日期按纽约时区；黄金保持报价单位。最多6位小数，不按手数自动换算。先记期初现金或入金，再买入。</view>
     <view wx:if="{{isOpening || isTrade}}" class="two-fields">
-      <view><label class="field-label" for="entry-quantity">{{selectedAsset.unit === '元/克' ? '数量（克）' : selectedAsset.unit === '美元/盎司' ? '数量（金衡盎司）' : '数量（股 / 份）'}}</label><input id="entry-quantity" aria-label="持仓或成交数量" type="digit" value="{{draft.quantity}}" bindinput="inputDraft" data-key="quantity" placeholder="0" disabled="{{busy}}" /></view>
-      <view wx:if="{{isOpening}}"><label class="field-label" for="entry-cost">期初剩余成本总额</label><input id="entry-cost" aria-label="期初剩余成本总额" type="digit" value="{{draft.cost}}" bindinput="inputDraft" data-key="cost" placeholder="填总额，不是每股成本" disabled="{{busy}}" /></view>
-      <view wx:else><label class="field-label" for="entry-price">成交单价</label><input id="entry-price" aria-label="成交单价" type="digit" value="{{draft.price}}" bindinput="inputDraft" data-key="price" placeholder="按标的报价单位" disabled="{{busy}}" /></view>
+      <view><view class="field-heading"><label for="entry-quantity">{{selectedAsset.unit === '元/克' ? '数量（克）' : selectedAsset.unit === '美元/盎司' ? '数量（盎司）' : '数量（股 / 份）'}}</label><button wx:if="{{canFillAll}}" class="text-button ui-btn ui-text" bindtap="fillAllQuantity" disabled="{{busy}}" hover-class="ui-pressed">全部</button></view><input id="entry-quantity" type="digit" value="{{draft.quantity}}" bindinput="inputDraft" data-key="quantity" aria-label="持仓或成交数量" aria-invalid="{{!!formErrors.quantity}}" aria-describedby="error-quantity" placeholder="0" disabled="{{busy}}" /><view wx:if="{{formErrors.quantity}}" id="error-quantity" class="field-error" role="alert">{{formErrors.quantity}}</view></view>
+      <view wx:if="{{isOpening}}"><label class="field-label" for="entry-cost">剩余成本总额</label><input id="entry-cost" type="digit" value="{{draft.cost}}" bindinput="inputDraft" data-key="cost" aria-label="期初剩余成本总额" aria-invalid="{{!!formErrors.cost}}" aria-describedby="error-cost" placeholder="填写总额" disabled="{{busy}}" /><view wx:if="{{formErrors.cost}}" id="error-cost" class="field-error" role="alert">{{formErrors.cost}}</view></view>
+      <view wx:else><label class="field-label" for="entry-price">成交单价</label><input id="entry-price" type="digit" value="{{draft.price}}" bindinput="inputDraft" data-key="price" aria-label="成交单价" aria-invalid="{{!!formErrors.price}}" aria-describedby="error-price" placeholder="实际成交价" disabled="{{busy}}" /><view wx:if="{{formErrors.price}}" id="error-price" class="field-error" role="alert">{{formErrors.price}}</view></view>
     </view>
-    <view wx:if="{{isOpening}}" class="helper">期初持仓不扣现金，不伪造历史买单。仅支持已知成本；期初前业绩未知，起算当日盈亏不补算。</view>
-    <view wx:if="{{isTrade}}" class="two-fields">
-      <view><label class="field-label" for="entry-gross">实际成交金额（选填）</label><input id="entry-gross" aria-label="实际成交金额，空白时数量乘单价" type="digit" value="{{draft.grossAmount}}" bindinput="inputDraft" data-key="grossAmount" placeholder="留空则数量 × 单价" disabled="{{busy}}" /></view>
-      <view><label class="field-label" for="entry-fee">原币费用总额</label><input id="entry-fee" aria-label="原币费用总额" type="digit" value="{{draft.fee}}" bindinput="inputDraft" data-key="fee" placeholder="佣金、税费等，默认0" disabled="{{busy}}" /></view>
+    <view wx:if="{{isOpening}}" class="helper">登记已有持仓，不扣现金。</view>
+    <view wx:if="{{isTrade}}"><label class="field-label" for="entry-fee">交易费用</label><input id="entry-fee" type="digit" value="{{draft.fee}}" bindinput="inputDraft" data-key="fee" aria-label="原币交易费用" aria-invalid="{{!!formErrors.fee}}" aria-describedby="error-fee" placeholder="默认0" disabled="{{busy}}" /><view wx:if="{{formErrors.fee}}" id="error-fee" class="field-error" role="alert">{{formErrors.fee}}</view></view>
+    <view wx:if="{{isCash}}">
+      <view wx:if="{{!requiresAsset}}" class="currency-field"><text>币种</text><picker range="{{currencyOptions}}" value="{{draft.currency === 'USD' ? 2 : draft.currency === 'HKD' ? 1 : 0}}" bindchange="changeDraftCurrency" disabled="{{busy}}" aria-label="现金币种"><view class="currency-control">{{draft.currency}} ⌄</view></picker></view>
+      <label class="field-label" for="entry-amount">{{draft.type === 'income' ? '税后到账金额' : '金额'}}</label><input id="entry-amount" type="digit" value="{{draft.amount}}" bindinput="inputDraft" data-key="amount" aria-label="原币现金金额" aria-invalid="{{!!formErrors.amount}}" aria-describedby="error-amount" placeholder="0" disabled="{{busy}}" /><view wx:if="{{formErrors.amount}}" id="error-amount" class="field-error" role="alert">{{formErrors.amount}}</view>
+    </view>
+    <view wx:if="{{isSplit}}" class="two-fields"><view><label class="field-label" for="split-old">原数量单位</label><input id="split-old" type="digit" value="{{draft.denominator}}" bindinput="inputDraft" data-key="denominator" aria-label="拆合股原数量单位" aria-invalid="{{!!formErrors.denominator}}" aria-describedby="error-denominator" disabled="{{busy}}" /><view wx:if="{{formErrors.denominator}}" id="error-denominator" class="field-error" role="alert">{{formErrors.denominator}}</view></view><view><label class="field-label" for="split-new">变成数量单位</label><input id="split-new" type="digit" value="{{draft.numerator}}" bindinput="inputDraft" data-key="numerator" aria-label="拆合股新数量单位" aria-invalid="{{!!formErrors.numerator}}" aria-describedby="error-numerator" disabled="{{busy}}" /><view wx:if="{{formErrors.numerator}}" id="error-numerator" class="field-error" role="alert">{{formErrors.numerator}}</view></view></view>
+    <button class="disclosure ui-row" bindtap="toggleAdvanced" aria-expanded="{{advancedExpanded}}" aria-controls="entry-advanced" hover-class="ui-pressed">日期、备注与更多选项 <text aria-hidden="true">{{advancedExpanded ? '−' : '+'}}</text></button>
+    <view wx:if="{{advancedExpanded}}" id="entry-advanced" class="advanced-fields">
+      <label class="field-label" for="entry-date">交易日期</label><picker id="entry-date" mode="date" value="{{draft.date}}" bindchange="inputDraft" data-key="date" aria-label="当地交易日期" aria-invalid="{{!!formErrors.date}}" aria-describedby="error-date" disabled="{{busy}}"><view class="picker-value">{{draft.date}} ⌄</view></picker><view wx:if="{{formErrors.date}}" id="error-date" class="field-error" role="alert">{{formErrors.date}}</view>
+      <view wx:if="{{isTrade}}"><label class="field-label" for="entry-gross">实际成交金额（选填）</label><input id="entry-gross" type="digit" value="{{draft.grossAmount}}" bindinput="inputDraft" data-key="grossAmount" aria-label="实际成交金额，留空数量乘单价" aria-invalid="{{!!formErrors.grossAmount}}" aria-describedby="error-grossAmount" placeholder="留空按数量 × 单价" disabled="{{busy}}" /><view wx:if="{{formErrors.grossAmount}}" id="error-grossAmount" class="field-error" role="alert">{{formErrors.grossAmount}}</view></view>
+      <label class="field-label" for="entry-note">备注（选填）</label><textarea id="entry-note" value="{{draft.note}}" bindinput="inputDraft" data-key="note" maxlength="200" aria-label="流水备注，最多200字" disabled="{{busy}}" />
+      <view class="helper">按实际数量填写，不按手数换算。美股用当地交易日期，黄金用报价单位；最多6位小数。</view>
     </view>
     <view wx:if="{{grossWarning && isTrade}}" class="notice" role="status">{{grossWarning}}</view>
-    <view wx:if="{{isCash}}"><label class="field-label" for="entry-amount">{{draft.type === 'income' ? '实际收到的税后原币金额' : '原币金额'}}</label><input id="entry-amount" aria-label="原币现金金额" type="digit" value="{{draft.amount}}" bindinput="inputDraft" data-key="amount" placeholder="0" disabled="{{busy}}" /></view>
-    <view wx:if="{{isSplit}}" class="two-fields"><view><label class="field-label" for="split-old">原数量单位</label><input id="split-old" aria-label="拆合股原数量单位" type="digit" value="{{draft.denominator}}" bindinput="inputDraft" data-key="denominator" disabled="{{busy}}" /></view><view><label class="field-label" for="split-new">变成数量单位</label><input id="split-new" aria-label="拆合股新数量单位" type="digit" value="{{draft.numerator}}" bindinput="inputDraft" data-key="numerator" disabled="{{busy}}" /></view></view>
-    <label class="field-label" for="entry-note">流水备注（最多200字）</label><textarea id="entry-note" aria-label="流水备注" maxlength="200" value="{{draft.note}}" bindinput="inputDraft" data-key="note" disabled="{{busy}}" />
-    <view class="notice" wx:if="{{preferences.hideAmounts}}">此编辑区显示真实输入，方便核对；取消不会保存。</view>
-    <button wx:if="{{conflict}}" class="secondary" bindtap="refreshDraftRevision" disabled="{{busy}}">加载最新台账并保留草稿</button>
-    <view class="action-row"><button class="secondary" bindtap="cancelEntry" disabled="{{busy}}">取消</button><button class="primary" bindtap="saveEntry" disabled="{{busy || searchBusy || conflict}}" loading="{{busy}}">保存并重算</button></view>
+    <view wx:if="{{entryPreview && !isOpening && !isSplit}}" class="entry-preview" role="status" aria-live="polite"><text>{{entryPreview.cashLabel}}</text><text>{{entryPreview.cashText}} {{draft.currency}}</text></view>
+    <view wx:if="{{preferences.hideAmounts}}" class="helper">编辑区显示真实金额，保存后才生效。</view>
+    <button wx:if="{{conflict}}" class="ui-btn ui-secondary conflict-action" bindtap="refreshDraftRevision" disabled="{{busy || refreshing}}" hover-class="ui-pressed">刷新台账，保留草稿</button>
+    <button class="ui-btn ui-primary save-entry" bindtap="saveEntry" loading="{{busy}}" disabled="{{busy || searchBusy || conflict}}" hover-class="ui-pressed">保存</button>
   </view>
 
-  <view wx:if="{{noteEditing}}" class="panel editor">
-    <view class="section-title">持仓独立备注</view><view class="helper">与自选笔记分开保存，移除自选不会删除这条备注。</view>
-    <textarea aria-label="持仓独立备注，最多200字" maxlength="200" value="{{noteDraft}}" bindinput="inputNote" disabled="{{busy}}" />
-    <button wx:if="{{noteConflict}}" class="secondary" bindtap="refreshNoteRevision" disabled="{{busy}}">载入最新台账并保留备注草稿</button>
-    <view class="action-row"><button class="secondary" bindtap="cancelNote" disabled="{{busy}}">取消</button><button class="primary" bindtap="saveNote" disabled="{{busy}}" loading="{{busy}}">保存备注</button></view>
+  <view wx:if="{{view === 'note'}}" class="panel editor" id="note-editor"><textarea value="{{noteDraft}}" bindinput="inputNote" maxlength="200" aria-label="持仓备注，最多200字" disabled="{{busy}}" /><button wx:if="{{noteConflict}}" class="ui-btn ui-secondary conflict-action" bindtap="refreshNoteRevision" disabled="{{busy || refreshing}}" hover-class="ui-pressed">刷新台账，保留备注</button><button class="ui-btn ui-primary save-entry" bindtap="saveNote" loading="{{busy}}" disabled="{{busy || noteConflict}}" hover-class="ui-pressed">保存备注</button></view>
+
+  <view wx:if="{{view === 'history'}}" class="panel history">
+    <view class="section-row"><picker range="{{currencyOptions}}" value="{{currency === 'USD' ? 2 : currency === 'HKD' ? 1 : 0}}" bindchange="chooseCurrency" aria-label="流水币种"><view class="currency-control">{{currency}} ⌄</view></picker><button class="text-button ui-btn ui-text" bindtap="toggleHistoryFilters" aria-expanded="{{historyFiltersExpanded}}" aria-controls="history-filters" hover-class="ui-pressed">筛选</button></view>
+    <view wx:if="{{historyFiltersExpanded}}" id="history-filters" class="filters"><input value="{{historyQuery}}" bindinput="inputHistoryQuery" aria-label="按标的名称或代码筛选流水" placeholder="名称 / 代码" /><picker range="{{historyTypes}}" range-key="label" value="{{historyTypeIndex}}" bindchange="changeHistoryType" aria-label="流水类型筛选"><view class="picker-value">{{historyTypes[historyTypeIndex].label}} ⌄</view></picker><button wx:if="{{historyQuery || historyTypeIndex}}" class="text-button ui-btn ui-text" bindtap="clearHistoryFilters" hover-class="ui-pressed">重置筛选</button></view>
+    <view wx:if="{{!historyFiltersExpanded && (historyQuery || historyTypeIndex)}}" class="active-filter"><text>筛选已启用</text><button class="text-button ui-btn ui-text" bindtap="clearHistoryFilters" hover-class="ui-pressed">清空</button></view>
+    <view wx:if="{{!historyRows.length}}" class="empty muted">{{historyCount ? '没有匹配的记录' : '暂无交易记录'}}</view>
+    <view wx:for="{{historyRows}}" wx:key="logicalId" class="history-entry"><view class="section-row"><view><text>{{item.name}}</text><text class="asset-code">{{item.typeText}} · {{item.date}}</text></view><text class="entry-amount">{{item.amountText}}</text></view><view wx:if="{{preferences.showNotes && item.note}}" class="position-note">{{item.note}}</view><view class="detail-actions"><button class="text-button ui-btn ui-text" data-id="{{item.logicalId}}" bindtap="editEntry" disabled="{{busy}}" hover-class="ui-pressed">修改</button><button class="text-button ui-btn ui-danger" data-id="{{item.logicalId}}" bindtap="voidEntry" disabled="{{busy}}" hover-class="ui-pressed">撤销</button></view></view>
   </view>
-
-  <view class="currency-row"><button wx:for="{{currencyOptions}}" wx:key="*this" class="currency-chip {{currency === item ? 'selected' : ''}}" data-currency="{{item}}" bindtap="chooseCurrency" aria-pressed="{{currency === item}}">{{item}}</button></view>
-  <view class="tabs"><button class="tab {{tab === 'positions' ? 'active' : ''}}" data-tab="positions" bindtap="setTab" aria-pressed="{{tab === 'positions'}}">持仓概览</button><button class="tab {{tab === 'entries' ? 'active' : ''}}" data-tab="entries" bindtap="setTab" aria-pressed="{{tab === 'entries'}}">交易流水</button><button class="tab {{tab === 'backup' ? 'active' : ''}}" data-tab="backup" bindtap="setTab" aria-pressed="{{tab === 'backup'}}">备份恢复</button></view>
-
-  <view wx:if="{{tab === 'positions' && loaded}}">
-    <view class="overview panel">
-      <view class="eyebrow">{{currency}} / 原币台账</view><view class="muted">{{summary.cashTracked ? '总资产（证券 + 已记现金）' : '总资产 · 现金尚未完整记录'}}</view><view class="hero-value">{{summary.equityText}}</view>
-      <view class="metrics"><view><view class="metric-label">证券市值</view><view class="metric-value">{{summary.valueText}}</view></view><view><view class="metric-label">已记现金</view><view class="metric-value">{{summary.cashText}}</view></view><view><view class="metric-label">证券仓位</view><view class="metric-value">{{summary.allocationText}}</view></view><view><view class="metric-label">浮动盈亏</view><view class="metric-value">{{summary.unrealizedText}}</view><view class="helper" wx:if="{{preferences.showChange}}">{{summary.floatRateText}}</view></view><view><view class="metric-label">已实现盈亏</view><view class="metric-value">{{summary.realizedText}}</view></view><view><view class="metric-label">含已记收入的累计盈亏</view><view class="metric-value">{{summary.totalText}}</view><view class="helper" wx:if="{{preferences.showChange}}">累计成本收益率 {{summary.rateText}}</view></view></view>
-      <view wx:if="{{!summary.complete}}" class="notice">估值不完整（{{summary.coverage}}项），已知市值 {{summary.knownValueText}}；缺价未按0补齐。</view>
-      <view wx:if="{{!summary.cashTracked}}" class="notice">现金未完整记录，不显示总资产和真实仓位。使用“期初现金”录入起始余额；请核对全部入出金。</view>
-      <view class="day-list"><view class="metric-label">最近交易日盈亏估算（证券及同日独立现金流）</view><view wx:for="{{summary.days}}" wx:key="date" class="day-row"><text>{{item.date}}</text><text>{{item.valueText}} {{currency}}{{item.complete ? '' : ' · 口径不完整'}}</text></view><view wx:if="{{!summary.days.length}}" class="helper">暂无可验证的交易日基线；交易日未知的标的不参与上方分组</view></view>
-    </view>
-    <view class="section-row"><view class="section-title">持仓明细</view><picker range="{{sortOptions}}" value="{{sortIndex}}" bindchange="changeSort" aria-label="持仓排序"><view class="sort-control">{{sortOptions[sortIndex]}} ⌄</view></picker></view>
-    <label class="switch-row"><text>显示已清仓标的</text><switch checked="{{showClosed}}" bindchange="toggleClosed" color="{{theme === 'blackgold' ? '#d9b45b' : '#776552'}}" aria-label="显示已清仓标的" /></label>
-    <view wx:if="{{!rows.length}}" class="panel empty"><view class="section-title">{{showClosed ? '这个币种还没有持仓记录' : '这个币种暂无未清仓持仓'}}</view><view class="muted">已有持仓可录期初数量和成本；新交易先记现金。</view><button class="primary" bindtap="openEntry" disabled="{{busy}}">录入第一笔</button></view>
-    <view wx:for="{{rows}}" wx:key="assetId" class="holding panel">
-      <view class="section-row"><button class="asset-title text-button" data-id="{{item.assetId}}" bindtap="openDetail">{{item.name}}</button><text class="badge" wx:if="{{item.closed}}">已清仓</text></view>
-      <view class="muted">{{item.code}} · {{item.market}} · {{item.currency}} · {{item.unit}}</view>
-      <view class="position-top"><view><view class="metric-label">原币市值</view><view class="position-value">{{item.valueText}}</view></view><view class="right"><view class="metric-label">浮动盈亏</view><view class="position-value {{item.gainClass}}">{{item.unrealizedText}}</view><text wx:if="{{preferences.showChange}}" class="{{item.gainClass}}">{{item.rateText}}</text></view></view>
-      <view class="metrics small-metrics"><view><view class="metric-label">数量</view><view>{{item.quantityText}}</view></view><view><view class="metric-label">移动平均成本</view><view>{{item.averageCostText}}</view></view><view><view class="metric-label">剩余成本总额</view><view>{{item.costText}}</view></view><view><view class="metric-label">现价</view><view>{{item.priceText}}</view></view><view><view class="metric-label">已实现盈亏 / 收益率</view><view>{{item.realizedText}}</view><view class="helper">{{item.realizedRateText}}</view></view><view><view class="metric-label">累计成本收益率</view><view>{{item.totalRateText}}</view></view></view>
-      <view class="day-row"><text class="metric-label">{{item.sessionDate}} 最近交易日</text><text>{{item.dailyText}}</text></view><view class="helper">{{item.dailyReason}}</view>
-      <view wx:if="{{preferences.showTime}}" class="source-line">{{item.source}} · {{item.sourceTimeText}} · {{item.stale ? '缓存过期' : item.status === 'fresh' ? '最近更新' : '延迟或缺失'}}</view>
-      <view wx:if="{{preferences.showNotes && item.note}}" class="position-note">{{item.note}}</view>
-      <view class="row-actions"><button class="text-button" data-id="{{item.assetId}}" data-type="buy" bindtap="openEntry" disabled="{{busy}}">买入</button><button class="text-button" data-id="{{item.assetId}}" data-type="sell" bindtap="openEntry" disabled="{{busy || item.closed}}">卖出</button><button class="text-button" data-id="{{item.assetId}}" bindtap="openNote" disabled="{{busy}}">备注</button><button class="text-button" data-id="{{item.assetId}}" bindtap="follow" disabled="{{busy}}">加入自选</button></view>
-    </view>
-  </view>
-
-  <view wx:if="{{tab === 'entries' && loaded}}" class="panel history">
-    <view class="section-row"><view class="section-title">{{currency}} 交易流水</view><text class="muted">{{historyRows.length}}笔有效记录</text></view><view class="helper">按当地日期、同日录入顺序重算。撤销和修改保留旧版本，当前审计记录 {{auditCount}} / 1000。</view>
-    <view wx:if="{{!historyRows.length}}" class="empty muted">还没有该币种流水。选择“记一笔持仓”开始。</view>
-    <view wx:for="{{historyRows}}" wx:key="logicalId" class="history-entry">
-      <view class="section-row"><view>{{item.typeText}} · {{item.name}}</view><view class="entry-amount">{{item.amountText}}</view></view><view class="muted">{{item.date}} · 同日顺序 {{item.sequence}} · 修订 {{item.version}}</view><view class="helper">{{item.quantityText ? '数量 ' + item.quantityText + ' · ' : ''}}费用 {{item.feeText}} {{currency}}</view><view wx:if="{{preferences.showNotes && item.note}}" class="position-note">{{item.note}}</view>
-      <view class="row-actions"><button class="text-button" data-id="{{item.logicalId}}" bindtap="editEntry" disabled="{{busy}}">修改</button><button class="text-button danger" data-id="{{item.logicalId}}" bindtap="voidEntry" disabled="{{busy}}">撤销并重算</button></view>
-    </view>
-  </view>
-
-  <view wx:if="{{tab === 'backup'}}" class="panel backup">
+  <view wx:if="{{view === 'backup'}}" class="panel backup">
     <view class="section-title">备份与恢复</view><view class="helper">JSON包含真实金额、全部流水修订和持仓备注；请保存在可信位置。备份不含身份、会员、自选和提醒。仅接受本工具格式。</view>
-    <view class="action-row"><button class="secondary" bindtap="generateBackup" disabled="{{busy || !loaded}}" loading="{{busy}}">生成完整备份</button><button class="secondary" bindtap="chooseBackup" disabled="{{busy}}">选择JSON文件</button></view>
+    <view class="action-row"><button class="secondary ui-btn ui-secondary" bindtap="generateBackup" disabled="{{busy || !loaded}}" loading="{{busy}}" hover-class="ui-pressed">生成完整备份</button><button class="secondary ui-btn ui-secondary" bindtap="chooseBackup" disabled="{{busy}}" hover-class="ui-pressed">选择JSON文件</button></view>
     <label class="field-label" for="backup-json">JSON备份内容 / 粘贴恢复</label><textarea id="backup-json" class="backup-input" aria-label="JSON台账备份内容，包含真实金额" value="{{backupText}}" bindinput="inputBackup" maxlength="-1" disabled="{{busy}}" placeholder="先生成备份，或粘贴已保存的JSON" />
-    <view class="action-row"><button class="secondary" bindtap="copyBackup" disabled="{{busy || !backupText}}">复制JSON</button><button class="secondary" bindtap="saveBackupFile" disabled="{{busy || !exportReady}}">生成文件 / 分享</button></view>
-    <button class="primary" bindtap="previewImport" disabled="{{busy || !loaded || !backupText}}" loading="{{busy}}">校验并预览恢复</button>
-    <view wx:if="{{importPreview}}" class="import-preview"><view class="section-title">恢复预览 · 尚未写入</view><view class="helper">当前有效流水 {{importPreview.previousCount}} 笔 → {{importPreview.entryCount}} 笔；{{importPreview.assetCount}} 个标的，{{importPreview.auditCount}} 条审计记录。全部标的已由服务端重新验证。</view><view wx:for="{{importPreview.currencies}}" wx:key="currency" class="preview-currency"><text>{{item.currency}}</text><text>现金 {{item.cashText}}</text><text>市值 {{item.valueText}}{{item.complete ? '' : '（缺价）'}}</text></view><view class="notice">恢复会替换当前台账。请先生成并保存当前备份；若台账期间更新，必须重新预览。</view><button class="primary" bindtap="confirmImport" disabled="{{busy}}" loading="{{busy}}">确认原子恢复这份备份</button></view>
+    <view class="action-row"><button class="secondary ui-btn ui-secondary" bindtap="copyBackup" disabled="{{busy || !backupText}}" hover-class="ui-pressed">复制JSON</button><button class="secondary ui-btn ui-secondary" bindtap="saveBackupFile" disabled="{{busy || !exportReady}}" hover-class="ui-pressed">生成文件 / 分享</button></view>
+    <button class="primary ui-btn ui-primary" bindtap="previewImport" disabled="{{busy || !loaded || !backupText}}" loading="{{busy}}" hover-class="ui-pressed">校验并预览恢复</button>
+    <view wx:if="{{importPreview}}" class="import-preview"><view class="section-title">恢复预览 · 尚未写入</view><view class="helper">当前有效流水 {{importPreview.previousCount}} 笔 → {{importPreview.entryCount}} 笔；{{importPreview.assetCount}} 个标的，{{importPreview.auditCount}} 条审计记录。全部标的已由服务端重新验证。</view><view wx:for="{{importPreview.currencies}}" wx:key="currency" class="preview-currency"><text>{{item.currency}}</text><text>现金 {{item.cashText}}</text><text>市值 {{item.valueText}}{{item.complete ? '' : '（缺价）'}}</text></view><view class="notice">恢复会替换当前台账。请先生成并保存当前备份；若台账期间更新，必须重新预览。</view><button class="primary ui-btn ui-primary" bindtap="confirmImport" disabled="{{busy}}" loading="{{busy}}" hover-class="ui-pressed">确认原子恢复这份备份</button></view>
   </view>
-  <view class="explanations">
-    <button class="explanations-toggle" bindtap="toggleExplanations" aria-expanded="{{explanationsExpanded}}" aria-label="展开或收起计算口径与使用上限">计算口径与使用上限 <text aria-hidden="true">{{explanationsExpanded ? '−' : '+'}}</text></button>
-    <view wx:if="{{explanationsExpanded}}">
-  <view class="footnote">移动加权平均成本，买入费用计成本、卖出费用扣收入；分红单记现金收入。浮动收益率分母为剩余成本，已实现收益率分母为卖出转出成本（无成本时不可算）。累计收益率按累计投入成本计算（重复投入重复计入分母），不代表年化或券商税务盈亏。独立现金收入/费用按用户录入日期归组，入出金不是收益；无对应证券交易日基线时该组不完整。不同币种不合计，各市场日期不混成统一“今日”。黄金交易日证据不足时不算当日盈亏。</view>
-  <view class="footnote">个人工具上限：30个标的、1000条含修订流水、1000次写操作、512KB台账。期初之前业绩未知；公司行为需手工登记。云端保存失败不会自动当作成功。</view>
-    </view>
-  </view>
+  <view wx:if="{{view === 'help'}}" class="panel explanations"><button class="disclosure ui-row" bindtap="toggleExplanations" aria-expanded="{{explanationsExpanded}}" aria-controls="calculation-details" hover-class="ui-pressed">计算口径与使用上限 <text aria-hidden="true">{{explanationsExpanded ? '−' : '+'}}</text></button><view wx:if="{{explanationsExpanded}}" id="calculation-details">
+<view class="footnote">移动加权平均成本，买入费用计成本、卖出费用扣收入；分红单记现金收入。浮动收益率分母为剩余成本，已实现收益率分母为卖出转出成本（无成本时不可算）。累计收益率按累计投入成本计算（重复投入重复计入分母），不代表年化或券商税务盈亏。独立现金收入/费用按用户录入日期归组，入出金不是收益；无对应证券交易日基线时该组不完整。不同币种不合计，各市场日期不混成统一“今日”。黄金交易日证据不足时不算当日盈亏。</view>
+<view class="footnote">个人工具上限：30个标的、1000条含修订流水、1000次写操作、512KB台账。期初之前业绩未知；公司行为需手工登记。云端保存失败不会自动当作成功。</view>  </view></view>
 </view>
