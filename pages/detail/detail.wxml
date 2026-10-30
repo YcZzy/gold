@@ -7,9 +7,9 @@
         >{{asset.code}} · {{asset.marketText}} · {{asset.kindText}} · {{asset.unit}}</view
       ></view
     ><button
-      class="follow-button {{following ? 'is-following' : ''}}"
+      class="follow-button {{following ? 'is-following' : ''}} ui-btn ui-secondary {{following ? 'ui-complete' : ''}}"
       bindtap="toggleFollow"
-      hover-class="detail-pressed"
+      hover-class="ui-pressed"
       aria-label="{{busy ? '正在更新自选' : !followingReady ? '正在确认自选状态' : following ? '移除' + asset.name + '自选' : '将' + asset.name + '加入自选'}}"
       aria-pressed="{{following}}"
       loading="{{busy || !followingReady}}"
@@ -23,7 +23,7 @@
   <view wx:if="{{quote.price != null}}" class="card card-main"
     ><view class="quote-heading"><view class="quote-label">最新价 <text wx:if="{{asset.unit}}" class="quote-unit">/ {{asset.unit}}</text></view><text class="quote-state">{{quote.statusText}}</text></view><view class="price-row"
       ><view class="card-price {{quote.cls}}">{{quote.priceText}}</view
-      ><button class="refresh-button" bindtap="refreshMarket" disabled="{{refreshing}}" hover-class="detail-pressed" aria-label="刷新行情和图表" aria-busy="{{refreshing}}">
+      ><button class="refresh-button ui-btn ui-text" bindtap="refreshMarket" disabled="{{refreshing}}" hover-class="ui-pressed" aria-label="刷新行情和图表" aria-busy="{{refreshing}}">
         <image class="svg-action-icon" src="/assets/icons/refresh.svg" mode="aspectFit" aria-hidden="true" /><text>{{refreshing ? '更新中' : '刷新'}}</text>
       </button></view
     ><view class="card-chg {{quote.cls}}"
@@ -57,7 +57,7 @@
   <view wx:elif="{{asset}}" class="card quote-placeholder" role="status" aria-busy="{{refreshing}}">
     <view class="quote-label">最新价 <text class="quote-unit">/ {{asset.unit}}</text></view>
     <view class="placeholder-price">--</view><view class="feature-help">{{refreshing ? '正在获取行情…' : '行情暂未取得，可重新获取'}}</view>
-    <button class="feature-cancel" bindtap="refreshMarket" disabled="{{refreshing}}" hover-class="detail-pressed">{{refreshing ? '更新中…' : '重新获取行情'}}</button>
+    <button class="feature-cancel ui-btn ui-secondary" bindtap="refreshMarket" disabled="{{refreshing}}" hover-class="ui-pressed">{{refreshing ? '更新中…' : '重新获取行情'}}</button>
   </view>
   <view wx:if="{{intl}}" class="intl-row"
     ><text class="intl-label">国际参考</text
@@ -65,7 +65,7 @@
     ><text>折算 {{intl.cnyText}} 元/克</text
     ><text>{{intl.source}} · 汇率 {{intl.rateText}}</text></view
   >
-  <button wx:if="{{asset}}" class="notice-bar reminder-entry" hover-class="detail-pressed" bindtap="openAlert" disabled="{{busy}}">
+  <button wx:if="{{asset}}" class="notice-bar reminder-entry ui-row" hover-class="ui-pressed" bindtap="openAlert" disabled="{{busy}}">
     <view class="reminder-icon-wrap"><image class="notice-img" src="{{reminderIcon}}" mode="aspectFit" aria-hidden="true" /></view>
     <view class="reminder-copy"><view class="reminder-title">设置行情提醒</view><view class="notice-text">关注的价格变化，让提醒替你盯盘</view></view>
     <view class="detail-chevron" aria-hidden="true"></view>
@@ -75,24 +75,24 @@
       ><button
         wx:for="{{periods}}"
         wx:key="value"
-        class="tab {{period === item.value ? 'tab-on' : ''}}"
+        class="tab {{period === item.value ? 'tab-on' : ''}} ui-tab {{period === item.value ? 'ui-selected' : ''}}"
         data-period="{{item.value}}"
         bindtap="switchPeriod"
         aria-pressed="{{period === item.value}}"
-        hover-class="detail-pressed"
+        hover-class="ui-pressed"
       >
         {{item.label}}
       </button></view
     >
     <view wx:if="{{chartPeriod !== 'intraday'}}" class="granularity-control" role="group" aria-label="K线粒度">
-      <text class="micro">粒度</text><button wx:for="{{granularityOptions}}" wx:key="value" class="feature-option {{indicatorSettings.granularity === item.value ? 'is-selected' : ''}}" data-value="{{item.value}}" hover-class="detail-pressed" bindtap="switchGranularity" aria-pressed="{{indicatorSettings.granularity === item.value}}">{{item.label}}</button>
+      <text class="micro">粒度</text><button wx:for="{{granularityOptions}}" wx:key="value" class="feature-option {{indicatorSettings.granularity === item.value ? 'is-selected' : ''}} ui-btn ui-choice {{indicatorSettings.granularity === item.value ? 'ui-selected' : ''}}" data-value="{{item.value}}" hover-class="ui-pressed" bindtap="switchGranularity" aria-pressed="{{indicatorSettings.granularity === item.value}}">{{item.label}}</button>
     </view>
     <view wx:if="{{indicatorNotice}}" class="feature-help" role="status">{{indicatorNotice}}</view>
     <view wx:if="{{chartLoading}}" class="chart-loading-note" role="status">正在更新图表…</view>
     <view wx:if="{{!hasChart && chartLoading}}" class="chart-placeholder" aria-hidden="true"><view></view><view></view><view></view><view></view></view>
     <view wx:if="{{chartError}}" class="chart-error" role="alert">
       <text>{{chartError}}</text>
-      <button class="tab chart-retry" bindtap="loadChart" disabled="{{chartLoading}}" aria-label="重新加载图表">重试</button>
+      <button class="tab chart-retry ui-btn ui-secondary" bindtap="loadChart" disabled="{{chartLoading}}" aria-label="重新加载图表" hover-class="ui-pressed">重试</button>
     </view>
     <view wx:if="{{hasChart}}" class="chart-box"
       ><canvas
@@ -111,23 +111,23 @@
     >
     <view wx:if="{{asset.market === 'US'}}" class="foot">图表按纽约交易日期与时间显示，自动处理夏令时。</view>
     <view wx:if="{{hasChart && chartRangeText}}" class="foot">实际区间：{{chartRangeText}}</view>
-    <button wx:if="{{chartPeriod !== 'intraday' && hasChart}}" class="chart-tools-trigger {{chartToolsOpen ? 'is-open' : ''}}" bindtap="toggleChartTools" aria-expanded="{{chartToolsOpen}}" aria-controls="chart-tools" hover-class="detail-pressed"><view><text>浏览工具</text><text class="tools-caption">平移 · 缩放 · 回最新</text></view><view class="detail-chevron" aria-hidden="true"></view></button>
+    <button wx:if="{{chartPeriod !== 'intraday' && hasChart}}" class="chart-tools-trigger {{chartToolsOpen ? 'is-open' : ''}} ui-row" bindtap="toggleChartTools" aria-expanded="{{chartToolsOpen}}" aria-controls="chart-tools" hover-class="ui-pressed"><view><text>浏览工具</text><text class="tools-caption">平移 · 缩放 · 回最新</text></view><view class="detail-chevron" aria-hidden="true"></view></button>
     <view wx:if="{{chartToolsOpen && chartPeriod !== 'intraday' && hasChart}}" id="chart-tools" class="chart-tools">
     <view wx:if="{{chartPeriod !== 'intraday' && hasChart}}" class="granularity-control" role="group" aria-label="图表触摸模式">
       <text class="micro">手势</text>
-      <button class="feature-option {{chartInteraction === 'inspect' ? 'is-selected' : ''}}" hover-class="detail-pressed" bindtap="selectChartInteraction" data-value="inspect" aria-pressed="{{chartInteraction === 'inspect'}}" aria-label="查看模式，拖动十字光标查看价格">查看</button>
-      <button class="feature-option {{chartInteraction === 'pan' ? 'is-selected' : ''}}" hover-class="detail-pressed" bindtap="selectChartInteraction" data-value="pan" aria-pressed="{{chartInteraction === 'pan'}}" aria-label="平移模式，左右拖动浏览历史">平移</button>
+      <button class="feature-option {{chartInteraction === 'inspect' ? 'is-selected' : ''}} ui-btn ui-choice {{chartInteraction === 'inspect' ? 'ui-selected' : ''}}" hover-class="ui-pressed" bindtap="selectChartInteraction" data-value="inspect" aria-pressed="{{chartInteraction === 'inspect'}}" aria-label="查看模式，拖动十字光标查看价格">查看</button>
+      <button class="feature-option {{chartInteraction === 'pan' ? 'is-selected' : ''}} ui-btn ui-choice {{chartInteraction === 'pan' ? 'ui-selected' : ''}}" hover-class="ui-pressed" bindtap="selectChartInteraction" data-value="pan" aria-pressed="{{chartInteraction === 'pan'}}" aria-label="平移模式，左右拖动浏览历史">平移</button>
       <text class="feature-help">{{chartInteraction === 'pan' ? '左右拖动浏览历史' : '拖动十字光标查看价格'}}</text>
     </view>
     <view wx:if="{{chartPeriod !== 'intraday' && hasChart}}" class="chart-navigation" role="group" aria-label="历史图表浏览">
-      <button class="feature-option" hover-class="detail-pressed" bindtap="panChart" data-direction="older" disabled="{{!canOlder}}" aria-label="浏览更早历史">← 更早</button>
-      <button class="feature-option" hover-class="detail-pressed" bindtap="zoomChart" data-direction="in" disabled="{{!canZoomIn}}" aria-label="放大历史K线">放大</button>
-      <button class="feature-option" hover-class="detail-pressed" bindtap="zoomChart" data-direction="out" disabled="{{!canZoomOut}}" aria-label="缩小历史K线">缩小</button>
-      <button class="feature-option" hover-class="detail-pressed" bindtap="panChart" data-direction="newer" disabled="{{!canNewer}}" aria-label="浏览较新历史">较新 →</button>
-      <button class="feature-option" hover-class="detail-pressed" bindtap="latestChart" disabled="{{!canNewer}}" aria-label="回到最新K线">回最新</button>
+      <button class="feature-option ui-btn ui-secondary ui-compact" hover-class="ui-pressed" bindtap="panChart" data-direction="older" disabled="{{!canOlder}}" aria-label="浏览更早历史">← 更早</button>
+      <button class="feature-option ui-btn ui-secondary ui-compact" hover-class="ui-pressed" bindtap="zoomChart" data-direction="in" disabled="{{!canZoomIn}}" aria-label="放大历史K线">放大</button>
+      <button class="feature-option ui-btn ui-secondary ui-compact" hover-class="ui-pressed" bindtap="zoomChart" data-direction="out" disabled="{{!canZoomOut}}" aria-label="缩小历史K线">缩小</button>
+      <button class="feature-option ui-btn ui-secondary ui-compact" hover-class="ui-pressed" bindtap="panChart" data-direction="newer" disabled="{{!canNewer}}" aria-label="浏览较新历史">较新 →</button>
+      <button class="feature-option ui-btn ui-secondary ui-compact" hover-class="ui-pressed" bindtap="latestChart" disabled="{{!canNewer}}" aria-label="回到最新K线">回最新</button>
     </view>
     </view>
-    <button wx:if="{{chartPeriod !== 'intraday'}}" class="chart-settings-button" hover-class="detail-pressed" bindtap="toggleIndicatorEditor" aria-expanded="{{indicatorEditing}}" aria-controls="indicator-editor">{{indicatorEditing ? '收起指标设置' : '指标设置'}}<text class="settings-summary">{{indicatorSettings.subIndicator === 'macd' ? 'MACD' : '成交量'}} · {{maLegend}}</text></button>
+    <button wx:if="{{chartPeriod !== 'intraday'}}" class="chart-settings-button ui-row" hover-class="ui-pressed" bindtap="toggleIndicatorEditor" aria-expanded="{{indicatorEditing}}" aria-controls="indicator-editor">{{indicatorEditing ? '收起指标设置' : '指标设置'}}<text class="settings-summary">{{indicatorSettings.subIndicator === 'macd' ? 'MACD' : '成交量'}} · {{maLegend}}</text></button>
     <view wx:if="{{indicatorEditing && chartPeriod !== 'intraday'}}" id="indicator-editor" class="indicator-editor">
       <view class="feature-setting-row"><label for="ma-enabled">显示价格均线</label><switch id="ma-enabled" checked="{{maEnabledDraft}}" bindchange="onMaToggle" aria-label="显示价格均线" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" /></view>
       <view class="feature-setting-row"><label for="boll-enabled">布林带 BOLL(20,2)</label><switch id="boll-enabled" checked="{{bollEnabledDraft}}" bindchange="onBollToggle" aria-label="显示布林带 BOLL20标准差2" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" /></view>
@@ -138,25 +138,25 @@
       <view id="ma-help" class="feature-help">最多 3 条，周期为 1–250，逗号分隔。均线和副图设置仅用于历史 K 线。</view>
       <view class="feature-label">K 线副图</view>
       <view class="feature-actions">
-        <button class="feature-option {{subIndicatorDraft === 'volume' ? 'is-selected' : ''}}" data-value="volume" bindtap="selectSubIndicator" aria-pressed="{{subIndicatorDraft === 'volume'}}">成交量</button>
-        <button class="feature-option {{subIndicatorDraft === 'macd' ? 'is-selected' : ''}}" data-value="macd" bindtap="selectSubIndicator" aria-pressed="{{subIndicatorDraft === 'macd'}}">MACD</button>
+        <button class="feature-option {{subIndicatorDraft === 'volume' ? 'is-selected' : ''}} ui-btn ui-choice {{subIndicatorDraft === 'volume' ? 'ui-selected' : ''}}" data-value="volume" bindtap="selectSubIndicator" aria-pressed="{{subIndicatorDraft === 'volume'}}" hover-class="ui-pressed">成交量</button>
+        <button class="feature-option {{subIndicatorDraft === 'macd' ? 'is-selected' : ''}} ui-btn ui-choice {{subIndicatorDraft === 'macd' ? 'ui-selected' : ''}}" data-value="macd" bindtap="selectSubIndicator" aria-pressed="{{subIndicatorDraft === 'macd'}}" hover-class="ui-pressed">MACD</button>
       </view>
       <view wx:if="{{indicatorError}}" id="indicator-error" class="feature-error" role="alert">{{indicatorError}}</view>
-      <button class="feature-save" hover-class="detail-pressed" bindtap="saveIndicators">应用并保存</button>
+      <button class="feature-save ui-btn ui-primary" hover-class="ui-pressed" bindtap="saveIndicators">应用并保存</button>
     </view>
     <view wx:if="{{selectedInfo}}" class="ohlc">{{selectedInfo}}</view
     ><view wx:if="{{chartPeriod !== 'intraday' && indicatorSettings.subIndicator === 'macd' && macdSummary}}" class="ohlc">{{macdSummary}}</view
     ><view wx:if="{{indicatorHint}}" class="feature-help">{{indicatorHint}}</view
-    ><button wx:if="{{chartPeriod !== 'intraday' && hasChart}}" class="chart-info-trigger" bindtap="toggleChartInfo" aria-expanded="{{chartInfoOpen}}" aria-controls="chart-info" hover-class="detail-pressed">{{chartInfoOpen ? '收起图表说明' : '了解图表与指标口径'}}<view class="detail-chevron" aria-hidden="true"></view></button>
+    ><button wx:if="{{chartPeriod !== 'intraday' && hasChart}}" class="chart-info-trigger ui-row" bindtap="toggleChartInfo" aria-expanded="{{chartInfoOpen}}" aria-controls="chart-info" hover-class="ui-pressed">{{chartInfoOpen ? '收起图表说明' : '了解图表与指标口径'}}<view class="detail-chevron" aria-hidden="true"></view></button>
     <view wx:if="{{chartInfoOpen && chartPeriod !== 'intraday' && hasChart}}" id="chart-info" class="feature-help">未复权日线按交易所日期聚合；指标先基于该区间全部历史计算，再显示当前视窗。缩放、左右浏览不改变指标起点，切换历史区间会重新计算。</view
     ><view wx:if="{{partialHint}}" class="feature-help" role="status">{{partialHint}}</view
     ><view wx:if="{{hasChart}}" class="foot">{{chartSource}} · {{chartHint}}</view></view
   >
   <view wx:if="{{asset.kind === 'stock' && (asset.market === 'SH' || asset.market === 'SZ')}}" class="feature-card">
     <view class="feature-heading">盘口与资金</view>
-    <view class="feature-actions"><button class="feature-option {{extraMode === 'orderbook' ? 'is-selected' : ''}}" data-mode="orderbook" hover-class="detail-pressed" bindtap="chooseExtra" aria-pressed="{{extraMode === 'orderbook'}}">五档盘口</button><button class="feature-option {{extraMode === 'flow' ? 'is-selected' : ''}}" data-mode="flow" hover-class="detail-pressed" bindtap="chooseExtra" aria-pressed="{{extraMode === 'flow'}}">资金流向</button></view>
+    <view class="feature-actions"><button class="feature-option {{extraMode === 'orderbook' ? 'is-selected' : ''}} ui-btn ui-choice {{extraMode === 'orderbook' ? 'ui-selected' : ''}}" data-mode="orderbook" hover-class="ui-pressed" bindtap="chooseExtra" aria-pressed="{{extraMode === 'orderbook'}}">五档盘口</button><button class="feature-option {{extraMode === 'flow' ? 'is-selected' : ''}} ui-btn ui-choice {{extraMode === 'flow' ? 'ui-selected' : ''}}" data-mode="flow" hover-class="ui-pressed" bindtap="chooseExtra" aria-pressed="{{extraMode === 'flow'}}">资金流向</button></view>
     <view wx:if="{{extraBusy}}" class="feature-help" role="status">正在获取快照…</view>
-    <view wx:if="{{extraError}}" class="feature-error" role="alert">{{extraError}}<button class="feature-link" bindtap="loadExtra" disabled="{{extraBusy}}">重试</button></view>
+    <view wx:if="{{extraError}}" class="feature-error" role="alert">{{extraError}}<button class="feature-link ui-btn ui-text" bindtap="loadExtra" disabled="{{extraBusy}}" hover-class="ui-pressed">重试</button></view>
     <view wx:if="{{extraMode === 'orderbook' && bookRows.length}}" class="book-table">
       <view class="book-row book-heading"><text>买盘 / 股</text><text>卖盘 / 股</text></view>
       <view wx:for="{{bookRows}}" wx:key="depth" class="book-row"><view><text>买{{item.depth}} {{item.bidPrice}}</text><text>{{item.bidVolume}}</text></view><view><text>卖{{item.depth}} {{item.askPrice}}</text><text>{{item.askVolume}}</text></view></view>
@@ -166,7 +166,7 @@
     <view class="feature-help">仅支持已验证的沪深股票。盘口是挂单快照，单位为股，不能当作成交明细；展开后随页面刷新。</view>
   </view>
   <view wx:if="{{priceTargets.length}}" class="feature-card">
-    <view class="feature-heading"><text>目标提醒</text><button class="feature-link" hover-class="detail-pressed" bindtap="openAlert" disabled="{{busy}}">管理</button></view>
+    <view class="feature-heading"><text>目标提醒</text><button class="feature-link ui-btn ui-text" hover-class="ui-pressed" bindtap="openAlert" disabled="{{busy}}">管理</button></view>
     <view wx:for="{{priceTargets}}" wx:key="id" class="target-summary">
       <view class="target-heading"><text>{{item.label}}</text><text>{{item.priceText}} {{asset.unit}}</text></view>
       <view class="feature-help">距现价 {{item.distanceText}} · 差额 {{item.differenceText}}<text wx:if="{{item.inRange === false}}"> · 超出图表区间</text></view>
@@ -174,7 +174,7 @@
     <view class="feature-help">仅展示已开启的到价规则；距离按当前显示报价计算，缓存行情下仅供参考。</view>
   </view>
   <view wx:if="{{following}}" class="feature-card">
-    <view class="feature-heading"><text>关注笔记</text><button wx:if="{{!noteEditing}}" class="feature-link" hover-class="detail-pressed" bindtap="startNoteEdit" disabled="{{busy}}">{{annotation.note || annotation.tags.length ? '编辑' : '添加备注'}}</button></view>
+    <view class="feature-heading"><text>关注笔记</text><button wx:if="{{!noteEditing}}" class="feature-link ui-btn ui-text" hover-class="ui-pressed" bindtap="startNoteEdit" disabled="{{busy}}">{{annotation.note || annotation.tags.length ? '编辑' : '添加备注'}}</button></view>
     <block wx:if="{{noteEditing}}">
       <label for="watch-note" class="feature-label">关注原因</label>
       <textarea id="watch-note" class="feature-textarea" value="{{noteDraft}}" bindinput="onNoteInput" disabled="{{busy}}" maxlength="-1" placeholder="记录关注原因、观察条件或计划" aria-label="关注备注" aria-describedby="note-help note-error" />
@@ -183,8 +183,8 @@
       <input id="watch-tags" class="feature-input" value="{{tagsDraft}}" bindinput="onTagsInput" disabled="{{busy}}" maxlength="-1" placeholder="例如 宽基,长期观察" aria-label="备注标签，用逗号分隔" aria-describedby="tags-help note-error" />
       <view id="tags-help" class="feature-help">最多 3 个，每个最多 8 字，逗号分隔。清空备注和标签后保存可移除笔记。</view>
       <view wx:if="{{noteError}}" id="note-error" class="feature-error" role="alert">{{noteError}}</view>
-      <button wx:if="{{noteConflict}}" class="feature-link" bindtap="reloadAnnotation" disabled="{{busy}}">载入最新备注（替换草稿）</button>
-      <view class="feature-actions"><button class="feature-save" hover-class="detail-pressed" bindtap="saveNote" disabled="{{busy}}" loading="{{busy}}">保存备注</button><button class="feature-cancel" hover-class="detail-pressed" bindtap="cancelNoteEdit" disabled="{{busy}}">取消</button></view>
+      <button wx:if="{{noteConflict}}" class="feature-link ui-btn ui-text" bindtap="reloadAnnotation" disabled="{{busy}}" hover-class="ui-pressed">载入最新备注（替换草稿）</button>
+      <view class="feature-actions"><button class="feature-save ui-btn ui-primary" hover-class="ui-pressed" bindtap="saveNote" disabled="{{busy}}" loading="{{busy}}">保存备注</button><button class="feature-cancel ui-btn ui-secondary" hover-class="ui-pressed" bindtap="cancelNoteEdit" disabled="{{busy}}">取消</button></view>
     </block>
     <block wx:else>
       <view wx:if="{{annotation.note}}" class="saved-note">{{annotation.note}}</view>

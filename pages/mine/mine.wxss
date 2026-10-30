@@ -41,22 +41,8 @@
   flex-shrink: 0;
   gap: 6rpx;
   width: 96rpx;
-  min-height: 96rpx;
-  padding: 14rpx 10rpx;
-  border: 1rpx solid var(--card-border);
-  border-radius: 24rpx;
-  background: var(--card);
-  color: var(--text-mid);
-  font-size: 20rpx;
 }
 .mine-page .theme-toggle-icon { display: block; width: 32rpx; height: 32rpx; }
-.mine-page .theme-toggle.glass-control {
-  border-color: var(--glass-edge);
-  border-radius: 30rpx;
-  background-color: var(--glass-tint);
-  background-image: linear-gradient(145deg, var(--glass-sheen), transparent 65%);
-  color: var(--glass-text);
-}
 .mine-page .mine-card {
   margin-top: 24rpx;
   padding: 30rpx;
@@ -110,11 +96,6 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 88rpx;
-  padding: 22rpx 24rpx;
-  border-radius: 16rpx;
-  background: var(--btn-bg);
-  color: var(--btn-text);
 }
 .mine-page .helper {
   margin-top: 16rpx;
@@ -225,14 +206,8 @@
   justify-content: space-between;
   gap: 20rpx;
   width: 100%;
-  min-height: 88rpx;
-  padding: 24rpx 0 0;
   border-top: 1rpx solid var(--card-border);
-  border-radius: 0;
   text-align: left;
-  background: transparent;
-  color: var(--text);
-  font-size: 24rpx;
 }
 .mine-page .question { margin-top: 24rpx; font-size: 25rpx; font-weight: 500; line-height: 1.6; }
 .mine-page .page-footer { padding: 0 8rpx; margin-top: 28rpx; font-size: 21rpx; line-height: 1.85; color: var(--text-mid); }

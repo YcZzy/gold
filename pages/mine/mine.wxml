@@ -5,7 +5,7 @@
       <view class="hero-title">我的</view>
       <view class="hero-sub">管理提醒，按自己的节奏关注行情</view>
     </view>
-    <button class="theme-toggle glass-control" bindtap="onThemeTap" hover-class="glass-control-pressed" aria-label="{{theme === 'paper' ? '切换深色主题' : '切换浅色主题'}}">
+    <button class="theme-toggle ui-icon ui-icon-label" bindtap="onThemeTap" hover-class="ui-pressed" aria-label="{{theme === 'paper' ? '切换深色主题' : '切换浅色主题'}}">
       <image class="theme-toggle-icon" src="{{theme === 'paper' ? '/assets/icons/moon.svg' : '/assets/icons/sun.svg'}}" mode="aspectFit" aria-hidden="true" />
       <text>{{theme === 'paper' ? '深色' : '浅色'}}</text>
     </button>
@@ -29,7 +29,7 @@
         <view class="quota-value">{{quota.vol}}<text class="metric-unit">次</text></view>
       </view>
     </view>
-    <button class="primary" bindtap="onAuthTap" loading="{{authBusy}}" disabled="{{authBusy}}" hover-class="control-pressed">{{authBusy ? '正在登记授权' : '增加授权次数'}}</button>
+    <button class="primary ui-btn ui-primary" bindtap="onAuthTap" loading="{{authBusy}}" disabled="{{authBusy}}" hover-class="ui-pressed">{{authBusy ? '正在登记授权' : '增加授权次数'}}</button>
     <view class="helper">每次同意订阅，增加对应模板 1 次授权。</view>
   </view>
 
@@ -58,15 +58,15 @@
 
   <view class="section-label">看盘工具</view>
   <view class="mine-card">
-    <button class="service-action" data-target="market" bindtap="openWorkspace"><view class="action-copy"><view class="action-title">行情发现</view><view class="action-description">指数、板块、成分股与市场榜单</view></view><view class="chevron" aria-hidden="true"></view></button>
-    <button class="service-action" data-target="holdings" bindtap="openWorkspace"><view class="action-copy"><view class="action-title">我的持仓</view><view class="action-description">手工交易、现金和分币种盈亏</view></view><view class="chevron" aria-hidden="true"></view></button>
-    <button class="service-action" data-target="data" bindtap="openWorkspace"><view class="action-copy"><view class="action-title">分组、显示与备份</view><view class="action-description">分组排序、低调模式、导入导出</view></view><view class="chevron" aria-hidden="true"></view></button>
+    <button class="service-action ui-row" data-target="market" bindtap="openWorkspace" hover-class="ui-pressed"><view class="action-copy"><view class="action-title">行情发现</view><view class="action-description">指数、板块、成分股与市场榜单</view></view><view class="chevron" aria-hidden="true"></view></button>
+    <button class="service-action ui-row" data-target="holdings" bindtap="openWorkspace" hover-class="ui-pressed"><view class="action-copy"><view class="action-title">我的持仓</view><view class="action-description">手工交易、现金和分币种盈亏</view></view><view class="chevron" aria-hidden="true"></view></button>
+    <button class="service-action ui-row" data-target="data" bindtap="openWorkspace" hover-class="ui-pressed"><view class="action-copy"><view class="action-title">分组、显示与备份</view><view class="action-description">分组排序、低调模式、导入导出</view></view><view class="chevron" aria-hidden="true"></view></button>
   </view>
   <view class="section-label">通知与服务</view>
   <view class="mine-card diagnostic-card">
     <view class="section-title">自助检测</view>
     <view class="muted">收不到提醒？先检查通知条件。</view>
-    <button class="service-action" bindtap="checkNotifications" loading="{{checkBusy}}" disabled="{{checkBusy}}" hover-class="control-pressed">
+    <button class="service-action ui-row" bindtap="checkNotifications" loading="{{checkBusy}}" disabled="{{checkBusy}}" hover-class="ui-pressed">
       <view class="action-copy"><view class="action-title">{{checkBusy ? '正在检查' : '检查通知条件'}}</view><view class="action-description">查看规则、授权与最近发送状态</view></view>
       <view class="chevron" aria-hidden="true"></view>
     </button>
@@ -86,7 +86,7 @@
         </view>
       </block>
     </view>
-    <button class="service-action test-action" bindtap="testNotification" loading="{{testBusy}}" disabled="{{testBusy}}" hover-class="control-pressed">
+    <button class="service-action test-action ui-row" bindtap="testNotification" loading="{{testBusy}}" disabled="{{testBusy}}" hover-class="ui-pressed">
       <view class="action-copy"><view class="action-title">{{testBusy ? '正在发送' : '测试通知'}}</view><view class="action-description">发送一条消息，确认微信能否接收</view></view>
       <view class="chevron" aria-hidden="true"></view>
     </button>
@@ -104,7 +104,7 @@
       <view><view class="benefit-value">{{limits.activeRules}}<text class="metric-unit">条</text></view><view class="metric-label">启用提醒上限</view></view>
     </view>
     <view wx:if="{{limits.expiresAt}}" class="helper">有效期以账户为准</view>
-    <button class="benefits-link" bindtap="openAuth" hover-class="control-pressed"><text>查看订阅授权与提醒</text><view class="chevron" aria-hidden="true"></view></button>
+    <button class="benefits-link ui-btn ui-text" bindtap="openAuth" hover-class="ui-pressed"><text>查看订阅授权与提醒</text><view class="chevron" aria-hidden="true"></view></button>
   </view>
 
   <view class="mine-card faq-card">

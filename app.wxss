@@ -1,4 +1,5 @@
 @import "styles/glass.wxss";
+@import "styles/buttons.wxss";
 
 /* 全局样式：双主题变量（paper 纸感浅色 / blackgold 黑金深色）+ 涨红跌绿 */
 /* 变量绑定在各页面根节点 theme-paper / theme-blackgold 类上，向后代级联 */

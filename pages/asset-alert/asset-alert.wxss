@@ -16,11 +16,10 @@
 .asset-alert-page .muted { margin-top: 12rpx; color: var(--text-mid); font-size: 24rpx; line-height: 1.8; }
 .asset-alert-page .helper { margin-top: 20rpx; color: var(--text-mid); font-size: 22rpx; line-height: 1.75; }
 .asset-alert-page .type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16rpx; margin-top: 26rpx; }
-.asset-alert-page .type-button { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; width: 100%; min-width: 0; min-height: 120rpx; padding: 22rpx; border: 1rpx solid var(--chip-border); border-radius: 18rpx; background: var(--ohlc-bg); color: var(--text); text-align: left; overflow-wrap: break-word; }
+.asset-alert-page .type-button { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; width: 100%; min-width: 0; text-align: left; overflow-wrap: break-word; }
 .asset-alert-page .type-label { font-size: 26rpx; font-weight: 500; line-height: 1.5; }
 .asset-alert-page .type-description { margin-top: 6rpx; color: var(--text-mid); font-size: 21rpx; line-height: 1.6; }
-.asset-alert-page .type-button.selected { border-color: var(--btn-bg); background: var(--btn-bg); color: var(--btn-text); }
-.asset-alert-page .selected .type-description { color: var(--btn-text); }
+.asset-alert-page .selected .type-description { color: var(--text-mid); }
 .asset-alert-page .editor { margin-top: 24rpx; border-top: 4rpx solid var(--accent); }
 .asset-alert-page .editor-badge { padding: 5rpx 14rpx; border: 1rpx solid var(--chip-border); border-radius: 8rpx; background: var(--chip-bg); color: var(--text-mid); font-size: 21rpx; line-height: 1.5; }
 .asset-alert-page .field-label { color: var(--text-mid); font-size: 23rpx; line-height: 1.6; }
@@ -40,9 +39,9 @@
 .asset-alert-page .enabled-setting { margin-top: 24rpx; border-top: 1rpx solid var(--card-border); }
 .asset-alert-page .close-description { margin-top: 26rpx; padding: 22rpx 24rpx; border-radius: 16rpx; background: var(--ohlc-bg); color: var(--text-mid); font-size: 24rpx; line-height: 1.8; }
 .asset-alert-page .editor-actions { margin-top: 12rpx; }
-.asset-alert-page .primary { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; min-height: 88rpx; padding: 22rpx; border-radius: 16rpx; background: var(--btn-bg); color: var(--btn-text); font-size: 27rpx; font-weight: 500; }
+.asset-alert-page .primary { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; }
 .asset-alert-page .follow-card .primary { margin-top: 26rpx; }
-.asset-alert-page .cancel-button { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 88rpx; margin-top: 8rpx; padding: 20rpx; background: transparent; color: var(--text-mid); font-size: 24rpx; }
+.asset-alert-page .cancel-button { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 8rpx; }
 .asset-alert-page .rules-heading { margin: 36rpx 6rpx 18rpx; }
 .asset-alert-page .rules-card { padding-top: 8rpx; padding-bottom: 8rpx; }
 .asset-alert-page .rule-row { padding: 24rpx 0; border-top: 1rpx solid var(--card-border); }
@@ -54,7 +53,7 @@
 .asset-alert-page .rule-actions { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; margin-top: 12rpx; }
 .asset-alert-page .rule-toggle { display: flex; align-items: center; gap: 12rpx; min-height: 88rpx; }
 .asset-alert-page .rule-status { font-size: 22rpx; color: var(--text-mid); }
-.asset-alert-page .rule-delete { display: flex; align-items: center; justify-content: center; width: auto; min-width: 104rpx; min-height: 88rpx; padding: 20rpx; border: 1rpx solid var(--card-border); border-radius: 14rpx; background: var(--ohlc-bg); color: var(--text-mid); font-size: 23rpx; }
+.asset-alert-page .rule-delete { display: flex; align-items: center; justify-content: center; width: auto; min-width: 104rpx; }
 .asset-alert-page .empty-rules { padding: 36rpx 0; text-align: center; }
 .asset-alert-page .empty-title { font-size: 27rpx; font-weight: 500; line-height: 1.6; }
 .asset-alert-page .page-footer { margin: 30rpx 6rpx 0; padding-top: 24rpx; border-top: 1rpx solid var(--card-border); color: var(--text-mid); font-size: 21rpx; line-height: 1.85; }

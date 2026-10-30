@@ -5,7 +5,7 @@
       <view class="hero-title">提醒设置</view>
       <view class="hero-sub">订阅消息按次授权 · 关闭小程序也能收到提醒</view>
     </view>
-    <button class="refresh svg-icon-button" bindtap="refreshStatus" aria-label="刷新提醒状态"><image class="svg-action-icon" src="/assets/icons/refresh.svg" mode="aspectFit" aria-hidden="true" /></button>
+    <button class="refresh svg-icon-button ui-icon" bindtap="refreshStatus" aria-label="刷新提醒状态" hover-class="ui-pressed"><image class="svg-action-icon" src="/assets/icons/refresh.svg" mode="aspectFit" aria-hidden="true" /></button>
   </view>
 
   <view class="panel">
@@ -14,13 +14,13 @@
       <view class="quota-item"><view class="quota-num">{{quota.brief}}</view><view class="quota-label">简报 / 定时播报</view></view>
       <view class="quota-item"><view class="quota-num">{{quota.vol}}</view><view class="quota-label">到价 / 波动预警</view></view>
     </view>
-    <button class="auth-btn" bindtap="onAuthTap">点击增加推送次数</button>
+    <button class="auth-btn ui-btn ui-primary" bindtap="onAuthTap" hover-class="ui-pressed">点击增加推送次数</button>
     <view class="hint">每次授权，同意的模板增加 1 次。共用现有两个模板，同组提醒共享次数；每个模板上限 {{quotaCap}} 次。</view>
   </view>
 
   <view class="save-error" wx:if="{{saveError}}">
     <text>修改已保留</text>
-    <button class="retry-btn" bindtap="doSave">重试保存</button>
+    <button class="retry-btn ui-btn ui-secondary" bindtap="doSave" hover-class="ui-pressed">重试保存</button>
   </view>
 
   <view class="panel">

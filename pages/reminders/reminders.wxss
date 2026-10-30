@@ -17,7 +17,7 @@
 .reminders-page .active-value { margin-top: 8rpx; font-size: 64rpx; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .reminders-page .value-limit { margin-left: 14rpx; color: var(--text-mid); font-size: 24rpx; font-weight: 400; }
 .reminders-page .pending-value { margin-top: 12rpx; font-size: 30rpx; line-height: 1.5; }
-.reminders-page .auth-button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: auto; min-height: 88rpx; padding: 22rpx 26rpx; border-radius: 16rpx; background: var(--btn-bg); color: var(--btn-text); font-size: 26rpx; font-weight: 500; }
+.reminders-page .auth-button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: auto; }
 .reminders-page .quota-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24rpx; margin-top: 30rpx; padding: 26rpx 0 0; border-top: 1rpx solid var(--card-border); }
 .reminders-page .quota-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6rpx 16rpx; }
 .reminders-page .quota-value { font-size: 32rpx; font-weight: 600; line-height: 1.4; font-variant-numeric: tabular-nums; }

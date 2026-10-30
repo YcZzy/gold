@@ -15,7 +15,7 @@
       bindcompositionstart="onCompositionStart"
       bindcompositionend="onCompositionEnd"
       aria-label="搜索股票、ETF 或黄金"
-    /><button class="search-submit" bindtap="onConfirm">搜索</button></view
+    /><button class="search-submit ui-btn ui-primary" bindtap="onConfirm" hover-class="ui-pressed">搜索</button></view
   >
   <view wx:if="{{!keyword && history.length}}" class="history-section"
     ><view class="section-title">最近搜索</view
@@ -23,10 +23,10 @@
       ><button
         wx:for="{{history}}"
         wx:key="*this"
-        class="history-chip"
+        class="history-chip ui-btn ui-choice"
         data-keyword="{{item}}"
         bindtap="useHistory"
-      >
+       hover-class="ui-pressed">
         {{item}}
       </button></view
     ></view
@@ -53,13 +53,13 @@
           >{{item.code}} · {{item.marketText}} · {{item.kindText}} · {{item.unit}}</view
         ></view
       ><button
-        class="result-add {{item.added ? 'is-added' : ''}}"
+        class="result-add {{item.added ? 'is-added' : ''}} ui-btn ui-secondary {{item.added ? 'ui-complete' : ''}}"
         data-id="{{item.id}}"
         catchtap="addAsset"
         loading="{{adding === item.id}}"
         disabled="{{adding || item.added}}"
         aria-label="{{item.added ? item.name + '已加入自选' : '添加' + item.name + '到自选'}}"
-      >
+       hover-class="ui-pressed">
         <view wx:if="{{adding !== item.id}}" class="result-symbol {{item.added ? 'result-check' : 'icon-plus sm'}}" aria-hidden="true"></view><text>{{adding === item.id ? '加入中' : item.added ? '已自选' : '自选'}}</text>
       </button></view
     ></view

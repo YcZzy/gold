@@ -11,14 +11,14 @@
   <view wx:if="{{asset && !following && !loading}}" class="settings-card follow-card">
     <view class="section-title">先关注，再设置提醒</view>
     <view class="muted">加入自选后，即可为这个标的设置专属行情提醒。</view>
-    <button class="primary" bindtap="follow" loading="{{busy}}" disabled="{{busy}}" hover-class="control-pressed">加入自选</button>
+    <button class="primary ui-btn ui-primary" bindtap="follow" loading="{{busy}}" disabled="{{busy}}" hover-class="ui-pressed">加入自选</button>
   </view>
   <view wx:if="{{errorText && !editing}}" class="error-bar" role="alert">{{errorText}}</view>
   <view wx:if="{{following}}">
     <view class="settings-card types-card">
       <view class="section-heading"><view class="section-title">选择提醒类型</view><text class="section-caption">按需设置</text></view>
       <view class="type-grid">
-        <button wx:for="{{types}}" wx:key="value" class="type-button {{draft.type === item.value && editing ? 'selected' : ''}}" data-type="{{item.value}}" bindtap="editRule" disabled="{{busy}}" aria-pressed="{{draft.type === item.value && editing}}" hover-class="control-pressed">
+        <button wx:for="{{types}}" wx:key="value" class="type-button {{draft.type === item.value && editing ? 'selected' : ''}} ui-btn ui-choice {{draft.type === item.value && editing ? 'ui-selected' : ''}}" data-type="{{item.value}}" bindtap="editRule" disabled="{{busy}}" aria-pressed="{{draft.type === item.value && editing}}" hover-class="ui-pressed">
           <view class="type-label">{{item.label}}</view>
           <view class="type-description">{{item.value === 'priceAbove' ? '达到目标高价' : item.value === 'priceBelow' ? '达到目标低价' : item.value === 'dailyMove' ? '关注日内涨跌' : item.value === 'rapidMove' ? '捕捉短时波动' : item.value === 'scheduled' ? '按设定时间播报' : '查看当日收盘'}}</view>
         </button>
@@ -45,15 +45,15 @@
       <view wx:elif="{{draft.type === 'close'}}" class="close-description">根据当日有效收盘报价播报，行情缺失时等待有效报价。</view>
       <view class="setting-row enabled-setting"><view class="setting-copy"><view>开启此提醒</view><view class="setting-description">{{draft.enabled ? '保存后按设定条件监测' : '保存条件，暂不触发推送'}}</view></view><switch checked="{{draft.enabled}}" disabled="{{busy}}" bindchange="onEnabled" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="开启此提醒" /></view>
       <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
-      <view class="editor-actions"><button class="primary" bindtap="saveRule" loading="{{busy}}" disabled="{{busy}}" hover-class="control-pressed">{{busy ? '正在保存' : '保存提醒'}}</button><button class="cancel-button" bindtap="cancelEdit" disabled="{{busy}}" hover-class="control-pressed">取消编辑</button></view>
+      <view class="editor-actions"><button class="primary ui-btn ui-primary" bindtap="saveRule" loading="{{busy}}" disabled="{{busy}}" hover-class="ui-pressed">{{busy ? '正在保存' : '保存提醒'}}</button><button class="cancel-button ui-btn ui-secondary" bindtap="cancelEdit" disabled="{{busy}}" hover-class="ui-pressed">取消编辑</button></view>
     </view>
 
     <view class="section-heading rules-heading"><view class="section-title">已设置提醒</view><text class="section-caption">{{rules.length}} 条规则</text></view>
     <view class="settings-card rules-card">
       <view wx:if="{{!rules.length}}" class="empty-rules"><view class="empty-title">还没有提醒规则</view><view class="muted">选择上方类型，设置你的第一条提醒。</view></view>
       <view wx:for="{{rules}}" wx:key="id" class="rule-row">
-        <button class="rule-copy" data-type="{{item.type}}" bindtap="editRule" disabled="{{busy}}" aria-label="编辑{{item.summary}}" hover-class="control-pressed"><view class="rule-summary">{{item.summary}}</view><view class="edit-hint"><text>编辑提醒条件</text><view class="chevron" aria-hidden="true"></view></view></button>
-        <view class="rule-actions"><view class="rule-toggle"><switch checked="{{item.enabled}}" disabled="{{busy}}" data-id="{{item.id}}" bindchange="toggleRule" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="切换{{item.summary}}" /><text class="rule-status">{{item.enabled ? '已开启' : '已暂停'}}</text></view><button class="rule-delete" data-id="{{item.id}}" bindtap="deleteRule" disabled="{{busy}}" aria-label="删除{{item.summary}}提醒" hover-class="control-pressed">删除</button></view>
+        <button class="rule-copy ui-row" data-type="{{item.type}}" bindtap="editRule" disabled="{{busy}}" aria-label="编辑{{item.summary}}" hover-class="ui-pressed"><view class="rule-summary">{{item.summary}}</view><view class="edit-hint"><text>编辑提醒条件</text><view class="chevron" aria-hidden="true"></view></view></button>
+        <view class="rule-actions"><view class="rule-toggle"><switch checked="{{item.enabled}}" disabled="{{busy}}" data-id="{{item.id}}" bindchange="toggleRule" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="切换{{item.summary}}" /><text class="rule-status">{{item.enabled ? '已开启' : '已暂停'}}</text></view><button class="rule-delete ui-btn ui-danger" data-id="{{item.id}}" bindtap="deleteRule" disabled="{{busy}}" aria-label="删除{{item.summary}}提醒" hover-class="ui-pressed">删除</button></view>
       </view>
     </view>
   </view>

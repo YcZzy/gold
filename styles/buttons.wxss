@@ -1,0 +1,174 @@
+/* Common action controls and navigation tabs use separate visual hierarchies.
+   Pages own placement and width; this file owns surfaces, sizing and states. */
+.page {
+  --control-height: 72rpx;
+  --control-radius: 12rpx;
+  --control-font: 24rpx;
+  --control-padding-x: 20rpx;
+}
+.page button.ui-btn.ui-primary,
+.page button.ui-btn.ui-secondary,
+.page button.ui-btn.ui-text,
+.page button.ui-btn.ui-choice,
+.page button.ui-btn.ui-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  padding: 12rpx var(--control-padding-x);
+  border: 1rpx solid transparent;
+  border-radius: var(--control-radius);
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--text);
+  font-size: var(--control-font);
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: none;
+}
+.page button.ui-btn.ui-primary {
+  border-color: var(--btn-bg);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  font-weight: 500;
+}
+.page button.ui-btn.ui-secondary {
+  min-height: 64rpx;
+  padding: 10rpx 18rpx;
+  border-color: var(--chip-border);
+  background: transparent;
+  color: var(--text-mid);
+}
+.page button.ui-btn.ui-text {
+  min-height: 56rpx;
+  padding: 8rpx;
+  color: var(--text-mid);
+  font-size: 23rpx;
+  font-weight: 400;
+}
+/* Filter choices are quiet compact chips; selected chips do not use CTA fills. */
+.page button.ui-btn.ui-choice {
+  min-height: 56rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  background: var(--ohlc-bg);
+  color: var(--text-mid);
+  font-size: 23rpx;
+  font-weight: 400;
+}
+.page button.ui-btn.ui-choice.ui-selected {
+  border-color: var(--accent-border);
+  background: var(--intl-bg);
+  color: var(--accent);
+  font-weight: 500;
+}
+.page button.ui-btn.ui-danger {
+  min-height: 64rpx;
+  padding: 10rpx 18rpx;
+  color: var(--error-text);
+  font-weight: 400;
+}
+.page button.ui-btn.ui-compact {
+  min-height: 56rpx;
+  padding: 8rpx 14rpx;
+  font-size: 23rpx;
+}
+.page button.ui-btn.ui-complete {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-sub);
+  font-weight: 400;
+}
+.page button.ui-btn.ui-complete[disabled] { opacity: 1; }
+
+/* Tabs navigate content. A short underline marks the current view. */
+.page button.ui-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 72rpx;
+  margin: 0;
+  padding: 16rpx 8rpx;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--text-mid);
+  font-size: 25rpx;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+}
+.page button.ui-tab.ui-selected { color: var(--text); font-weight: 600; }
+.page button.ui-tab::after {
+  content: '';
+  position: absolute;
+  top: auto;
+  right: 50%;
+  bottom: 0;
+  left: auto;
+  width: 28rpx;
+  height: 3rpx;
+  margin-right: -14rpx;
+  border: 0;
+  border-radius: 2rpx;
+  background: transparent;
+  transform: none;
+}
+.page button.ui-tab.ui-selected::after { background: var(--accent); }
+.page button.ui-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 64rpx;
+  height: 64rpx;
+  min-height: 64rpx;
+  padding: 16rpx;
+  border: 0;
+  border-radius: 12rpx;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--text-mid);
+  line-height: 1;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.page button.ui-icon.ui-icon-label {
+  flex-direction: column;
+  gap: 4rpx;
+  width: 80rpx;
+  height: auto;
+  min-height: 80rpx;
+  padding: 8rpx;
+  font-size: 20rpx;
+  line-height: 1.5;
+}
+.page button.ui-btn::after,
+.page button.ui-icon::after { border: none; }
+.page button.ui-btn[disabled],
+.page button.ui-tab[disabled],
+.page button.ui-icon[disabled],
+.page button.ui-row[disabled] { opacity: .5; }
+.page button.ui-pressed { opacity: .65; }
+.page button.ui-btn:focus-visible,
+.page button.ui-tab:focus-visible,
+.page button.ui-icon:focus-visible,
+.page button.ui-row:focus-visible {
+  outline: 3rpx solid var(--accent);
+  outline-offset: 4rpx;
+}

@@ -13,7 +13,7 @@
         <view wx:if="{{hasPortfolio}}" class="active-value">{{activeCount}}<text class="value-limit">/ {{limits.activeRules}} 条</text></view>
         <view wx:else class="pending-value">待获取</view>
       </view>
-      <button class="auth-button" bindtap="onAuthTap" loading="{{authBusy}}" disabled="{{authBusy}}" hover-class="control-pressed">{{authBusy ? '授权中' : '增加授权'}}</button>
+      <button class="auth-button ui-btn ui-primary" bindtap="onAuthTap" loading="{{authBusy}}" disabled="{{authBusy}}" hover-class="ui-pressed">{{authBusy ? '授权中' : '增加授权'}}</button>
     </view>
     <view wx:if="{{hasStatus}}" class="quota-grid">
       <view class="quota-item"><text class="metric-label">播报授权</text><view class="quota-value">{{quota.brief}}<text class="value-unit">次</text></view></view>
@@ -36,7 +36,7 @@
     <view class="muted">从「自选」打开标的，<text>即可设置专属提醒。</text></view>
   </view>
 
-  <button wx:for="{{groups}}" wx:key="id" class="reminder-card asset-card" data-id="{{item.id}}" bindtap="openAsset" hover-class="control-pressed" aria-label="管理{{item.name}}提醒">
+  <button wx:for="{{groups}}" wx:key="id" class="reminder-card asset-card ui-row" data-id="{{item.id}}" bindtap="openAsset" hover-class="ui-pressed" aria-label="管理{{item.name}}提醒">
     <view class="section-heading asset-heading">
       <view class="asset-identity"><view class="asset-title">{{item.name}}</view><view class="asset-code">{{item.code}}<text wx:if="{{item.market}}"> · {{item.marketText}} · {{item.kindText}}</text></view></view>
       <view class="manage-link"><text>管理</text><view class="chevron" aria-hidden="true"></view></view>

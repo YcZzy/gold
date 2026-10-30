@@ -11,8 +11,7 @@
 .detail-page .hero-title { color: var(--text); font-size: 42rpx; font-weight: 600; line-height: 1.4; overflow-wrap: break-word; }
 .detail-page .hero-sub { margin-top: 10rpx; color: var(--text-mid); font-size: 21rpx; line-height: 1.7; overflow-wrap: break-word; }
 .detail-page .detail-loading { padding: 8rpx 4rpx 28rpx; }
-.detail-page .follow-button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box; gap: 10rpx; width: auto; min-width: 150rpx; min-height: 88rpx; margin: 0; padding: 18rpx 24rpx; border: 1rpx solid var(--btn-bg); border-radius: 999rpx; color: var(--btn-text); background: var(--btn-bg); font-size: 24rpx; line-height: 1.5; white-space: nowrap; }
-.detail-page .follow-button.is-following { border-color: var(--chip-border); color: var(--text-mid); background: transparent; }
+.detail-page .follow-button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box; gap: 10rpx; width: auto; min-width: 120rpx; margin: 0; white-space: nowrap; }
 .detail-page .follow-symbol { position: relative; display: block; flex-shrink: 0; box-sizing: border-box; width: 20rpx; height: 20rpx; }
 .detail-page .follow-plus::before, .detail-page .follow-plus::after { content: ''; position: absolute; top: 9rpx; left: 1rpx; width: 18rpx; height: 2rpx; border-radius: 1rpx; background: currentColor; }
 .detail-page .follow-plus::after { transform: rotate(90deg); }
@@ -25,7 +24,7 @@
 .detail-page .quote-state { max-width: 100%; padding: 5rpx 12rpx; border-radius: 8rpx; color: var(--text-mid); background: var(--ohlc-bg); font-size: 20rpx; line-height: 1.5; }
 .detail-page .price-row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 20rpx; }
 .detail-page .card-price { min-width: 0; font-size: 66rpx; font-weight: 600; line-height: 1.25; letter-spacing: -2rpx; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-.detail-page .refresh-button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; gap: 8rpx; width: auto; min-height: 88rpx; margin: 0 -8rpx 0 0; padding: 18rpx 12rpx; border-radius: 14rpx; color: var(--text-mid); background: transparent; font-size: 22rpx; }
+.detail-page .refresh-button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; gap: 8rpx; width: auto; margin: 0 -8rpx 0 0; }
 .detail-page .refresh-button .svg-action-icon { width: 28rpx; height: 28rpx; }
 .detail-page .card-chg { display: flex; align-items: center; flex-wrap: wrap; gap: 14rpx; margin-top: 8rpx; font-size: 27rpx; font-weight: 500; line-height: 1.5; font-variant-numeric: tabular-nums; }
 .detail-page .chg-pill { padding: 4rpx 14rpx; border-radius: 8rpx; background: var(--pill-flat); font-size: 24rpx; }
@@ -52,9 +51,8 @@
 .detail-page .chart-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-bottom: 24rpx; }
 .detail-page .chart-panel-heading .detail-eyebrow { margin-bottom: 6rpx; font-size: 17rpx; }
 .detail-page .chart-auto-note { flex-shrink: 0; color: var(--text-mid); font-size: 20rpx; }
-.detail-page .tabs { display: flex; align-items: center; gap: 6rpx; padding: 6rpx; border-radius: 16rpx; background: var(--ohlc-bg); }
-.detail-page .tab { display: flex; align-items: center; justify-content: center; flex: 1; box-sizing: border-box; min-width: 0; min-height: 80rpx; margin: 0; padding: 16rpx 0; border: 0; border-radius: 12rpx; color: var(--text-mid); background: transparent; font-size: 24rpx; line-height: 1.5; white-space: nowrap; }
-.detail-page .tab-on { color: var(--btn-text); background: var(--btn-bg); font-weight: 600; }
+.detail-page .tabs { display: flex; align-items: center; gap: 6rpx; padding: 0; border-bottom: 1rpx solid var(--card-border); }
+.detail-page .tab { display: flex; align-items: center; justify-content: center; flex: 1; box-sizing: border-box; min-width: 0; margin: 0; white-space: nowrap; }
 .detail-page .chart-box { width: 100%; height: 560rpx; margin-top: 20rpx; }
 .detail-page .kline { width: 100%; height: 100%; }
 .detail-page .chart-loading-note { padding-top: 18rpx; color: var(--text-mid); font-size: 22rpx; line-height: 1.6; }
@@ -66,7 +64,7 @@
 .detail-page .lg-tip { margin-left: auto; color: var(--text-mid); }
 .detail-page .ohlc { margin-top: 16rpx; padding: 16rpx; border-radius: 12rpx; color: var(--text); background: var(--ohlc-bg); font-size: 22rpx; line-height: 1.8; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .detail-page .chart-error { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8rpx 18rpx; margin-top: 20rpx; padding: 16rpx 18rpx; border-radius: 14rpx; color: var(--error-text); background: var(--error-bg); font-size: 23rpx; line-height: 1.7; }
-.detail-page .chart-retry { flex: 0 0 auto; min-width: 88rpx; min-height: 80rpx; padding: 16rpx; color: var(--error-text); background: transparent; font-weight: 600; }
+.detail-page .chart-retry { flex: 0 0 auto; min-width: 88rpx; }
 .detail-page .chart-tools-trigger, .detail-page .chart-settings-button { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8rpx 16rpx; box-sizing: border-box; width: 100%; min-height: 88rpx; margin: 16rpx 0 0; padding: 18rpx; border: 1rpx solid var(--chip-border); border-radius: 14rpx; color: var(--text); background: var(--ohlc-bg); font-size: 24rpx; line-height: 1.6; text-align: left; }
 .detail-page .chart-tools-trigger .detail-chevron { transform: rotate(135deg); }
 .detail-page .chart-tools-trigger.is-open .detail-chevron { transform: rotate(-45deg); }
@@ -75,11 +73,11 @@
 .detail-page .chart-info-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; box-sizing: border-box; width: 100%; min-height: 80rpx; margin: 12rpx 0 0; padding: 16rpx 0; color: var(--text-mid); background: transparent; font-size: 22rpx; line-height: 1.6; text-align: left; }
 .detail-page .granularity-control { display: flex; align-items: center; flex-wrap: wrap; gap: 10rpx; margin-top: 18rpx; }
 .detail-page .granularity-control .micro { margin-right: 8rpx; color: var(--text-mid); font-size: 21rpx; }
-.detail-page .granularity-control .feature-option { flex: 1; min-width: 88rpx; padding: 14rpx 12rpx; }
+.detail-page .granularity-control .feature-option { flex: 1; min-width: 88rpx; }
 .detail-page .granularity-control .feature-help { flex-basis: 100%; margin-top: 0; }
 .detail-page .chart-tools .granularity-control { margin-top: 0; }
 .detail-page .chart-navigation { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12rpx; margin-top: 16rpx; }
-.detail-page .chart-navigation .feature-option { min-width: 0; padding: 16rpx 8rpx; font-size: 22rpx; }
+.detail-page .chart-navigation .feature-option { min-width: 0; }
 .detail-page .chart-navigation .feature-option:last-child { grid-column: span 2; }
 .detail-page .feature-heading, .detail-page .feature-setting-row, .detail-page .target-heading { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
 .detail-page .feature-heading { min-height: 44rpx; color: var(--text); font-size: 29rpx; font-weight: 600; line-height: 1.5; }
@@ -88,7 +86,7 @@
 .detail-page .feature-setting-row { min-height: 88rpx; border-bottom: 1rpx solid var(--card-border); color: var(--text); font-size: 24rpx; line-height: 1.6; }
 .detail-page .feature-setting-row label { flex: 1; min-width: 0; }
 .detail-page .feature-setting-row switch { flex-shrink: 0; }
-.detail-page .feature-link { flex-shrink: 0; box-sizing: border-box; width: auto; min-height: 88rpx; margin: 0; padding: 18rpx 8rpx; color: var(--text-mid); background: transparent; font-size: 23rpx; line-height: 1.6; }
+.detail-page .feature-link { flex-shrink: 0; box-sizing: border-box; width: auto; margin: 0; }
 .detail-page .feature-input, .detail-page .feature-textarea { box-sizing: border-box; width: 100%; padding: 18rpx; border: 1rpx solid var(--chip-border); border-radius: 14rpx; color: var(--text); background: var(--ohlc-bg); font-size: 25rpx; line-height: 1.7; }
 .detail-page .feature-input { height: 88rpx; }
 .detail-page .feature-textarea { height: 208rpx; }
@@ -96,10 +94,7 @@
 .detail-page .feature-help { margin-top: 14rpx; color: var(--text-mid); font-size: 21rpx; line-height: 1.8; overflow-wrap: break-word; }
 .detail-page .feature-error { margin-top: 14rpx; padding: 14rpx; border-radius: 12rpx; color: var(--error-text); background: var(--error-bg); font-size: 23rpx; line-height: 1.7; }
 .detail-page .feature-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12rpx; margin-top: 20rpx; }
-.detail-page .feature-save, .detail-page .feature-cancel, .detail-page .feature-option { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: auto; min-height: 84rpx; margin: 0; padding: 18rpx 24rpx; border: 1rpx solid transparent; border-radius: 14rpx; font-size: 24rpx; line-height: 1.6; }
-.detail-page .feature-save { color: var(--btn-text); background: var(--btn-bg); font-weight: 600; }
-.detail-page .feature-cancel, .detail-page .feature-option { border-color: var(--chip-border); color: var(--text); background: var(--ohlc-bg); }
-.detail-page .feature-option.is-selected { border-color: var(--btn-bg); color: var(--btn-text); background: var(--btn-bg); }
+.detail-page .feature-save, .detail-page .feature-cancel, .detail-page .feature-option { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: auto; margin: 0; }
 .detail-page .indicator-editor { margin-top: 16rpx; padding: 18rpx; border: 1rpx solid var(--card-border); border-radius: 16rpx; }
 .detail-page .indicator-editor > .feature-save { width: 100%; margin-top: 24rpx; }
 .detail-page .target-summary { margin-top: 14rpx; padding: 18rpx; border-radius: 14rpx; background: var(--ohlc-bg); font-variant-numeric: tabular-nums; }
@@ -122,7 +117,7 @@
   .detail-page .card-price { font-size: 60rpx; }
   .detail-page .stats { gap: 22rpx 12rpx; }
   .detail-page .stats > view { font-size: 24rpx; }
-  .detail-page .follow-button { min-width: 140rpx; padding-left: 20rpx; padding-right: 20rpx; }
+  .detail-page .follow-button { min-width: 112rpx; }
   .detail-page .tools-caption { display: block; margin-left: 0; margin-top: 4rpx; }
   .detail-page .book-row { gap: 14rpx; font-size: 21rpx; }
 }
