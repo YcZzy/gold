@@ -1,16 +1,15 @@
 const portfolio=require('../../utils/portfolio-client');
 const market=require('../../utils/market-client');
 const transfer=require('../../utils/data-transfer');
-const display=require('../../utils/display-preferences');
 const theme=require('../../utils/theme');
 const invoke=(fn,args)=>new Promise((resolve,reject)=>fn({...args,success:resolve,fail:reject}));
 Page({
   data:{theme:theme.getTheme(),items:[],groups:[],revision:0,busy:false,errorText:'',notice:'',offline:false,
     raw:'',preview:[],pendingGroupCount:0,groupEditing:false,groupDraft:{name:'',assetIds:[],sortBy:'manual',sortDirection:'asc'},
-    memberOptions:[],display:display.get(),exportText:'',exportPath:'',exportFormat:'json',
+    memberOptions:[],exportText:'',exportPath:'',exportFormat:'json',
     sortOptions:['手动','价格','涨跌幅','成交额'],sortIndex:0},
   onLoad(){this._alive=true;this._visible=true;theme.applyChrome(this.data.theme);},
-  async onShow(){this._visible=true;this.setData({theme:theme.getTheme(),display:display.get(wx)});theme.applyChrome(this.data.theme);
+  async onShow(){this._visible=true;this.setData({theme:theme.getTheme()});theme.applyChrome(this.data.theme);
     if(this._pendingFile && this._pendingFile.request===this._fileRequest){this.onImportInput({detail:{value:this._pendingFile.text}});this._pendingFile=null;}
     await this.loadState();},
   onHide(){if(this._alive)this.setData({busy:false});this._visible=false;this._request=(this._request||0)+1;this._previewRequest=(this._previewRequest||0)+1;},
@@ -52,10 +51,6 @@ Page({
       try{const s=await portfolio.deleteGroup(id,this.data.revision);if(this.isCurrent(request)){this.apply(s);this.setData({notice:'分组已删除'});}}
       catch(e){if(this.isCurrent(request))this.setData({errorText:e.message});}finally{if(this.isCurrent(request))this.setData({busy:false});}
     }});
-  },
-  changeDisplay(e){
-    try{const next=display.save({[e.currentTarget.dataset.key]:e.detail.value},wx);this.setData({display:next,notice:'显示设置已保存到本设备',errorText:''});}
-    catch(e){this.setData({errorText:e.message||'设备保存失败'});}
   },
   onImportInput(e){
     this._fileRequest=(this._fileRequest||0)+1;

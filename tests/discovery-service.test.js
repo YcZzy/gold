@@ -79,3 +79,19 @@ test('marketData action route exposes discovery without changing stock identity 
  const result=await service.handle({action:'discovery',mode:'indices'});assert.equal(result.ok,true);assert.equal(result.items.length,8);
  assert.equal((await service.handle({action:'resolve',assetId:'index:sh000001'})).ok,false);
 });
+
+test('flow ranking falls back to the delayed Eastmoney route and labels it', async () => {
+ const requests=[];
+ const {api}=service({request:async url=>{requests.push(url);if(new URL(url).hostname==='push2.eastmoney.com')throw Error('socket hang up');return samples.east_flow_list.body;}});
+ const result=await api.handle({mode:'flowRanking',page:1});
+ assert.ok(result.items.length);assert.equal(result.delayed,true);
+ assert.equal(requests.length,2);assert.equal(new URL(requests[1]).hostname,'push2delay.eastmoney.com');
+ assert.equal(result.stale,false);assert.ok(result.sourceTime);
+});
+
+test('flow fallback validates payloads and keeps cold-cache failure explicit', async () => {
+ const requests=[];
+ const {api}=service({request:async url=>{requests.push(url);return '{"rc":0,"data":{"diff":[{"f12":"600519"}]}}';}});
+ await assert.rejects(()=>api.handle({mode:'flowRanking'}),/校验/);
+ assert.equal(requests.length,2);
+});

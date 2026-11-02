@@ -18,7 +18,7 @@
  *
  * 注意：
  *   - 已存在的集合会被跳过（createCollection 对已存在集合会报错，这里识别为 exists）
- *   - 集合创建后必须在控制台改为「所有用户不可读写」，只允许云函数访问。
+ *   - 除publicQuotes仅允许客户端读、禁止写外，所有集合禁止客户端读写。
  *     客户端只调用云函数；仅创建者权限不足以保护会员权益、次数和自选上限。
  *   - 索引（sendTasks 的 status+triggerTime 等）SDK 不支持创建，量大后在控制台「索引管理」手动加
  */
@@ -28,7 +28,7 @@ const db = cloud.database();
 
 const COLLECTIONS = [
   "subscriptions", "preferences", "authLogs", "sendTasks", "quoteSnapshots",
-  "portfolios", "entitlements", "instruments", "quoteCache", "chartCache", "searchCache", "sendBudgets", "investmentLedgers"
+  "portfolios", "entitlements", "instruments", "quoteCache", "publicQuotes", "cloudCallBudgets", "chartCache", "searchCache", "sendBudgets", "investmentLedgers"
 ];
 
 function classifyError(err) {

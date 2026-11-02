@@ -1,0 +1,22 @@
+.authorization-card { margin-bottom: 24rpx; padding: 28rpx; border: 1rpx solid var(--accent-border); border-top: 4rpx solid var(--accent); border-radius: 24rpx; background: var(--card); }
+.auth-explanation { margin-top: 12rpx; font-size: 24rpx; line-height: 1.7; color: var(--text); }
+.authorization-quotas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16rpx; margin: 22rpx 0; }
+.authorization-quota { padding: 20rpx; background: var(--ohlc-bg); border-radius: 16rpx; }
+.auth-label { font-size: 24rpx; color: var(--text-mid); line-height: 1.6; }
+.auth-count { margin: 6rpx 0; font-size: 42rpx; font-weight: 600; font-variant-numeric: tabular-nums; }
+.auth-count text { font-size: 23rpx; font-weight: 400; }
+.auth-state { font-size: 22rpx; line-height: 1.6; color: var(--text-mid); }
+.quota-empty .auth-state { color: var(--error-text); }
+.page .authorization-button { display: flex; align-items: center; justify-content: center; width: 100%; }
+.auth-detail { margin-top: 12rpx; color: var(--text-mid); font-size: 22rpx; line-height: 1.7; }
+.auth-error { margin-top: 16rpx; color: var(--error-text); font-size: 24rpx; line-height: 1.7; }
+.auth-retry { margin-top: 12rpx !important; }
+.status-note { margin-top: 20rpx; padding: 22rpx; border-radius: 16rpx; background: var(--ohlc-bg); font-size: 24rpx; line-height: 1.7; }
+.percent-editor { margin-top: 26rpx; }
+.percent-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12rpx; margin-top: 16rpx; }
+.percent-options button { width: 100%; min-width: 0; padding-left: 8rpx; padding-right: 8rpx; }
+
+.quiet-hours { margin-top: 24rpx; }
+.quiet-pickers { display: flex; align-items: center; gap: 20rpx; margin-top: 20rpx; }
+.quiet-pickers picker { flex: 1; min-width: 0; }
+.quiet-time { padding: 22rpx 16rpx; text-align: center; border: 1rpx solid var(--chip-border); border-radius: 14rpx; background: var(--ohlc-bg); font-size: 32rpx; font-variant-numeric: tabular-nums; }

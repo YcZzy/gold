@@ -14,3 +14,22 @@ test('read transport failures do not claim that a save was attempted',async()=>{
  await assert.rejects(c.list(),e=>/读取/.test(e.hint)&&!/保存结果/.test(e.hint));
  await assert.rejects(c.saveNote('sh600519','note',0),e=>/保存结果尚未确认/.test(e.hint));
 });
+
+test('overlapping lists share transport and return independent snapshots without caching later reads',async()=>{
+ let calls=0,release;const platform={cloud:{callFunction:async()=>{calls++;return new Promise(r=>release=r);}}};const c=createClient(platform);
+ const a=c.list(),b=c.list();assert.equal(calls,1);release({result:{ok:true,revision:1,entries:[]}});const [x,y]=await Promise.all([a,b]);x.entries.push('private');assert.deepEqual(y.entries,[]);
+ const later=c.list();assert.equal(calls,2);release({result:{ok:true,revision:1}});await later;
+});
+test('a read started before a write cannot be reused after the write',async()=>{
+ const reads=[];const c=createClient({cloud:{callFunction:async req=>req.data.action==='list'?new Promise(r=>reads.push(r)):{result:{ok:true,revision:2}}}});
+ const old=c.list();await c.saveNote('sh600519','note',1);const current=c.list();assert.equal(reads.length,2);
+ reads[0]({result:{ok:true,revision:1}});reads[1]({result:{ok:true,revision:2}});assert.equal((await old).revision,1);assert.equal((await current).revision,2);
+});
+
+test('failed shared reads clear pending transport so retry can recover',async()=>{
+ let calls=0;const c=createClient({cloud:{callFunction:async()=>{calls++;if(calls===1)throw Error('offline');return{result:{ok:true,revision:1}};}}});
+ const failures=await Promise.allSettled([c.list(),c.list()]);assert.equal(calls,1);assert.ok(failures.every(r=>r.status==='rejected'));assert.equal((await c.list()).revision,1);assert.equal(calls,2);
+});
+test('identical concurrent writes remain independent transports',async()=>{
+ let calls=0;const c=createClient({cloud:{callFunction:async()=>{calls++;return{result:{ok:true}};}}});await Promise.all([c.saveNote('sh600519','note',1),c.saveNote('sh600519','note',1)]);assert.equal(calls,2);
+});

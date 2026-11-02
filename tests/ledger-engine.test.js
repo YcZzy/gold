@@ -18,10 +18,10 @@ test('same-day buy/sell and complete sale retain correct day gain',()=>{
  let p=engine.evaluate(rows,assets,{},[{assetId:asset.id,price:11,prevClose:10,sessionDate:'2026-10-29'}]).positions[0];assert.equal(p.daily,132);assert.equal(p.realized,75);assert.equal(p.unrealized,57);
  rows=entries([...seed,raw('sell',{date:'2026-10-29',quantity:100,price:12,fee:5})]);p=engine.evaluate(rows,assets,{},[{assetId:asset.id,price:12,prevClose:10,sessionDate:'2026-10-29'}]).positions[0];assert.equal(p.quantity,0);assert.equal(p.cost,0);assert.equal(p.realized,395);assert.equal(p.daily,195);
 });
-test('replay validates every intermediate cash and quantity and supports edit/void versions',()=>{
+test('replay validates quantities and supports edit/void versions without requiring funding',()=>{
  const rows=entries([...seed,raw('sell',{quantity:50,price:10})]);
  assert.throws(()=>engine.replay([...rows,{...rows[1],id:'correction',version:2,voided:true}],assets),/卖出|持仓/);
- assert.throws(()=>engine.replay(entries([raw('buy',{quantity:1,price:10})]),assets),/现金/);
+ assert.equal(engine.replay(entries([raw('buy',{quantity:1,price:10})]),assets).positions[0].quantity,1);
  assert.throws(()=>engine.replay(entries([...seed,raw('sell',{quantity:101,price:10})]),assets),/卖出|持仓/);
  const edit={...rows[1],id:'edit',version:2,cost:'900'};assert.equal(engine.replay([...rows,edit],assets).positions[0].cost,450);
 });
@@ -47,3 +47,22 @@ test('trade normalization retains gross source and recomputes automatic amount a
 test('realized return uses transferred sale cost and is unknown before a sale',()=>{let rows=entries(seed);assert.equal(engine.replay(rows,assets).positions[0].realizedRate,null);rows=entries([...seed,raw('sell',{quantity:50,price:12,fee:5})]);const p=engine.replay(rows,assets).positions[0];assert.equal(p.realizedCost,400);assert.equal(p.realizedRate,195/400*100);});
 test('daily currency grouping includes independent fee once and excludes external deposits',()=>{const rows=entries([...seed,raw('expense',{assetId:'',date:'2026-10-29',amount:10}),raw('deposit',{assetId:'',date:'2026-10-29',amount:500})]);const c=engine.evaluate(rows,assets,{},[{assetId:asset.id,price:11,prevClose:10,sessionDate:'2026-10-29'}]).currencies[0];assert.equal(c.totalPnl,290);assert.equal(c.dailyGroups[0].value,90);assert.equal(c.dailyGroups[0].complete,true);});
 test('independent cash expense cannot masquerade as complete account daily profit without that session baseline',()=>{const rows=entries([...seed,raw('expense',{assetId:'',date:'2026-10-29',amount:10})]);const c=engine.evaluate(rows,assets,{},[{assetId:asset.id,price:11,prevClose:10,sessionDate:'2026-10-28'}]).currencies[0];const day=c.dailyGroups.find(g=>g.date==='2026-10-29');assert.ok(day);assert.equal(day.complete,false);assert.equal(day.value,null);assert.equal(day.knownCashFlow,-10);});
+
+test('unfunded trades record positions and PnL without pretending to track account cash',()=>{
+ const rows=entries([raw('buy',{quantity:100,price:10,fee:5}),raw('sell',{date:'2026-10-29',quantity:40,price:12,fee:3})]);
+ const r=engine.evaluate(rows,assets,{},[{assetId:asset.id,price:11,prevClose:10,sessionDate:'2026-10-29'}]);
+ assert.equal(r.positions[0].quantity,60);assert.equal(r.positions[0].cost,603);assert.equal(r.positions[0].realized,75);assert.equal(r.positions[0].unrealized,57);
+ assert.equal(r.currencies[0].cashTracked,false);assert.equal(r.currencies[0].cashComplete,false);assert.equal(r.currencies[0].cash,null);assert.equal(r.currencies[0].equity,null);assert.equal(r.currencies[0].allocation,null);
+});
+test('insufficient optional cash never blocks trades or fabricates a known balance',()=>{
+ const rows=entries([raw('openingCash',{assetId:'',amount:100}),raw('buy',{quantity:100,price:10}),raw('sell',{quantity:100,price:12})]);
+ const r=engine.evaluate(rows,assets,{},[]);assert.equal(r.positions[0].realized,200);assert.equal(r.currencies[0].cashTracked,true);assert.equal(r.currencies[0].cashComplete,false);assert.equal(r.currencies[0].cash,null);assert.equal(r.currencies[0].equity,null);
+});
+test('backdated funding repairs incomplete cash without changing trade costs',()=>{
+ const rows=entries([raw('buy',{quantity:100,price:10}),raw('openingCash',{assetId:'',date:'2026-10-27',amount:2000})]);
+ const r=engine.evaluate(rows,assets,{},[{assetId:asset.id,price:11}]);assert.equal(r.currencies[0].cashComplete,true);assert.equal(r.currencies[0].cash,1000);assert.equal(r.currencies[0].equity,2100);assert.equal(r.positions[0].cost,1000);
+});
+test('income and expenses without funding do not turn a tracker into a cash account',()=>{
+ const r=engine.replay(entries([raw('buy',{quantity:10,price:10}),raw('income',{amount:5}),raw('expense',{assetId:'',amount:2})]),assets);
+ assert.equal(r.currencies[0].cashTracked,false);assert.equal(r.currencies[0].cash,null);assert.equal(r.positions[0].income,5);
+});

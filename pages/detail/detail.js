@@ -391,7 +391,7 @@ Page({
         selectedInfo: "",
         chartSource: fmt.sourceName(c.source),
         chartRangeText: bars[0].time + ' 至 ' + bars[bars.length - 1].time,
-        chartError: cached ? "图表刷新失败，保留上次图表；可重试或切换周期" : "",
+        chartError: cached && !result.budgetCached ? "图表刷新失败，保留上次图表；可重试或切换周期" : "",
         chartHint: (cached ? "缓存图表 · " : "") +
           (c.coverage && c.coverage.status === 'unverified' ? '历史数据可能不完整 · ' : '') + fmt.time(c.sourceTime),
       });

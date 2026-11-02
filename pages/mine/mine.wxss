@@ -50,10 +50,8 @@
   border: 1rpx solid var(--card-border);
   border-radius: 28rpx;
 }
-.mine-page .subscription-card {
-  margin-top: 0;
-  border-top: 4rpx solid var(--accent);
-}
+.mine-page .reminder-entry-card { margin-top: 0; padding: 0 24rpx; }
+.mine-page .reminder-entry-card .service-action { margin-top: 0; padding: 24rpx 0; background: transparent; }
 .mine-page .section-heading {
   display: flex;
   align-items: center;
@@ -74,29 +72,9 @@
   color: var(--text-mid);
   overflow-wrap: break-word;
 }
-.mine-page .quota-grid,
-.mine-page .benefits-grid,
-.mine-page .time-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-.mine-page .quota-grid { padding: 32rpx 0; margin-top: 8rpx; }
-.mine-page .quota-item + .quota-item { border-left: 1rpx solid var(--card-border); padding-left: 32rpx; }
+.mine-page .benefits-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .mine-page .metric-label { font-size: 23rpx; line-height: 1.6; color: var(--text-mid); }
-.mine-page .quota-value {
-  margin-top: 8rpx;
-  font-size: 64rpx;
-  font-weight: 600;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-}
 .mine-page .metric-unit { margin-left: 10rpx; font-size: 23rpx; font-weight: 400; color: var(--text-mid); }
-.mine-page .primary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
 .mine-page .helper {
   margin-top: 16rpx;
   font-size: 22rpx;
@@ -104,35 +82,6 @@
   color: var(--text-mid);
   overflow-wrap: break-word;
 }
-.mine-page .subscription-card > .helper { text-align: center; }
-.mine-page .time-grid { gap: 20rpx; margin-top: 26rpx; }
-.mine-page .time-picker { min-width: 0; }
-.mine-page .time-field {
-  padding: 22rpx 24rpx;
-  border: 1rpx solid var(--card-border);
-  border-radius: 18rpx;
-  background: var(--ohlc-bg);
-}
-.mine-page .time-value {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12rpx;
-  margin-top: 12rpx;
-  font-size: 36rpx;
-  line-height: 1.4;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.mine-page .picker-chevron {
-  width: 10rpx;
-  height: 10rpx;
-  flex-shrink: 0;
-  border-right: 2rpx solid var(--text-mid);
-  border-bottom: 2rpx solid var(--text-mid);
-  transform: translateY(-4rpx) rotate(45deg);
-}
-.mine-page .is-busy { opacity: 0.5; }
 .mine-page .section-label {
   margin: 36rpx 6rpx -8rpx;
   font-size: 23rpx;
@@ -200,15 +149,6 @@
 }
 .mine-page .benefits-grid { gap: 24rpx; padding: 26rpx 0; }
 .mine-page .benefit-value { margin-bottom: 8rpx; font-size: 40rpx; line-height: 1.4; font-weight: 600; font-variant-numeric: tabular-nums; }
-.mine-page .benefits-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20rpx;
-  width: 100%;
-  border-top: 1rpx solid var(--card-border);
-  text-align: left;
-}
 .mine-page .question { margin-top: 24rpx; font-size: 25rpx; font-weight: 500; line-height: 1.6; }
 .mine-page .page-footer { padding: 0 8rpx; margin-top: 28rpx; font-size: 21rpx; line-height: 1.85; color: var(--text-mid); }
 .mine-page .disclaimer { margin-top: 12rpx; }

@@ -193,3 +193,165 @@ test("asset short-move snapshots retain each minute and the 15-minute baseline",
   assert.equal(f.tables.sendTasks.length, 1);
   assert.equal(f.tables.sendTasks[0].type, "rapidMove");
 });
+
+test('scan skips zero relevant quota and resumes after replenishment', async () => {
+  const f = fixture();
+  f.tables.subscriptions[0].remaining = 0;
+  await f.engine.scan();
+  assert.equal(f.calls.length, 0);
+  assert.equal(f.tables.portfolios[0].rules[0].enabled, true);
+  f.tables.subscriptions[0].remaining = 1;
+  await f.engine.scan();
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.tables.sendTasks.length, 1);
+});
+
+test('price monitoring skips lunch, weekends and closed sessions before requesting quotes', async () => {
+  for (const at of ['2026-10-27T12:00:00+08:00', '2026-10-31T10:00:00+08:00', '2026-10-27T23:00:00+08:00']) {
+    const f = fixture();
+    f.advance(Date.parse(at) - now);
+    await f.engine.scan();
+    assert.equal(f.calls.length, 0, at);
+  }
+});
+
+test('scheduled rules only request quotes inside the six-minute due window including midnight', async () => {
+  const f = fixture();
+  f.tables.portfolios[0].rules = [{ ...rule, type: 'scheduled', time: '23:59', weekdaysOnly: false }];
+  await f.engine.scan();
+  assert.equal(f.calls.length, 0);
+  f.advance(Date.parse('2026-10-28T00:00:00+08:00') - now);
+  await f.engine.scan();
+  assert.equal(f.calls.length, 1);
+  assert.ok(f.tables.sendTasks[0]._id.endsWith('20261027'));
+});
+
+test('close reminder skips morning but queries inside its close window', async () => {
+  const f = fixture();
+  f.tables.portfolios[0].rules = [{ ...rule, type: 'close' }];
+  await f.engine.scan();
+  assert.equal(f.calls.length, 0);
+  f.advance(Date.parse('2026-10-27T15:10:00+08:00') - now);
+  await f.engine.scan();
+  assert.equal(f.calls.length, 1);
+});
+
+test('already exhausted daily budgets do not request quotes', async () => {
+  const f = fixture({ tables: { sendBudgets: [{ _id: 'u:20261027', targets: 4, regular: 0 }] } });
+  await f.engine.scan();
+  assert.equal(f.calls.length, 0);
+});
+
+test('HK broadcasts with only brief quota skip quotes; CNY fallback can use volatility quota', async () => {
+  const f = fixture();
+  f.tables.portfolios[0].rules = [{ ...rule, type: 'scheduled', time: '10:00' }];
+  f.tables.instruments = [{ _id: asset.id, asset: { ...asset, currency: 'HKD' } }];
+  f.tables.subscriptions[0].remaining = 0;
+  await f.engine.scan();
+  assert.equal(f.calls.length, 0);
+  f.tables.instruments[0].asset.currency = 'CNY';
+  f.tables.subscriptions[1].remaining = 0;
+  f.tables.subscriptions[0].remaining = 1;
+  await f.engine.scan();
+  assert.equal(f.calls.length, 1);
+  // Actual returned CNY price fits amount template, whose quota is empty.
+  assert.equal((f.tables.sendTasks || []).length, 0);
+});
+
+async function scaleScan(shared, at = now, { users = 100, authorized = true, warmWatchlists = false } = {}) {
+  const assets = Array.from({ length: shared ? 5 : users * 5 }, (_, i) => ({ ...asset, id: 'sh' + String(600000 + i) }));
+  const portfolios = Array.from({ length: users }, (_, i) => ({
+    _id: 'u' + i, openid: 'u' + i, migrationVersion: 1,
+    items: assets.slice(shared ? 0 : i * 5, shared ? 5 : i * 5 + 5).map(a => a.id),
+    rules: assets.slice(shared ? 0 : i * 5, shared ? 5 : i * 5 + 5).map((a, j) => ({ ...rule, id: `r${i}-${j}`, assetId: a.id })),
+  }));
+  const { db } = memoryDb({ portfolios, subscriptions: !authorized ? [] : portfolios.map(p => ({
+    _id: p._id + ':' + templates.volatility, openid: p._id, templateId: templates.volatility, remaining: 5,
+  })) });
+  const calls = [];
+  const cloud = { async callFunction(request) {
+    calls.push(request);
+    return { result: { ok: true, assets: assets.filter(a => request.data.assetIds.includes(a.id)),
+      quotes: request.data.assetIds.map(id => ({ ...quote, assetId: id, sourceTime: at, fetchedAt: at })) } };
+  } };
+  const engine = createAssetTasks({ db, cloud, templates, now: () => at });
+  return { result: await engine.scan({warmWatchlists}), calls };
+}
+
+test('100 users with five distinct stocks each use one bulk quote call during trading and zero at night', async () => {
+  const trading = await scaleScan(false);
+  assert.equal(trading.calls.length, 1);
+  assert.equal(trading.result.scanStats.quotedAssets, 500);
+  assert.ok(trading.calls.every(call => call.data.assetIds.length <= 500));
+  const night = await scaleScan(false, Date.parse('2026-10-27T23:00:00+08:00'));
+  assert.equal(night.calls.length, 0);
+});
+
+test('100 users watching the same five stocks share one quote batch per scan', async () => {
+  const { calls, result } = await scaleScan(true);
+  assert.equal(calls.length, 1);
+  assert.equal(result.scanStats.quotedAssets, 5);
+  assert.equal(result.scanStats.eligible, 500);
+});
+
+test('500 users each watching five distinct stocks scan all 2500 stocks with one cloud invocation', async () => {
+  const {calls, result} = await scaleScan(false, now, {users:500});
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].data.assetIds.length, 2500);
+  assert.equal(new Set(calls[0].data.assetIds).size, 2500);
+  assert.equal(result.scanStats.eligible, 2500);
+  assert.equal(result.scanStats.quotedAssets, 2500);
+  assert.equal(result.scanStats.marketCalls, 1);
+  assert.equal(result.created, 2500, 'last-page users must receive their matching tasks too');
+  const night = await scaleScan(false, Date.parse('2026-10-27T23:00:00+08:00'), {users:500, warmWatchlists:true});
+  assert.equal(night.calls.length, 0);
+});
+
+test('500 users sharing five stocks still need only one deduplicated quote request', async () => {
+  const {calls, result} = await scaleScan(true, now, {users:500});
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].data.assetIds.length, 5);
+  assert.equal(result.scanStats.eligible, 2500);
+});
+
+test('2500 watchlist stocks are warmed without notification authorization or creating tasks', async () => {
+  const {calls, result} = await scaleScan(false, now, {users:500, authorized:false, warmWatchlists:true});
+  assert.equal(calls.length, 1);
+  assert.equal(result.scanStats.quotedAssets, 2500);
+  assert.equal(result.scanStats.eligible, 0);
+  assert.equal(result.created, 0);
+});
+
+test('scan rejects capacity overflow explicitly before requesting quotes instead of dropping users', async () => {
+  const f = fixture();
+  f.tables.portfolios[0].items = Array.from({length:2501}, (_, i) => 'sh' + (600000+i));
+  f.tables.portfolios[0].rules = [];
+  await assert.rejects(f.engine.scan({warmWatchlists:true}), /超过2500/);
+  assert.equal(f.calls.length, 0);
+});
+
+test('known instrument currency and exchange calendars preserve HK and US regular-session scans', async () => {
+  for (const [id, market, currency, at, expected] of [
+    ['hk00700', 'HK', 'HKD', '2026-10-27T12:30:00+08:00', 0],
+    ['hk00700', 'HK', 'HKD', '2026-10-27T14:00:00+08:00', 1],
+    ['usAAPL', 'US', 'USD', '2026-10-27T10:00:00+08:00', 0],
+    ['usAAPL', 'US', 'USD', '2026-10-27T22:00:00+08:00', 1],
+    ['usAAPL', 'US', 'USD', '2026-11-03T22:00:00+08:00', 0],
+    ['usAAPL', 'US', 'USD', '2026-11-03T23:00:00+08:00', 1],
+  ]) {
+    const f = fixture();
+    f.tables.portfolios[0].items = [id];
+    f.tables.portfolios[0].rules = [{ ...rule, assetId: id }];
+    f.tables.instruments = [{ _id: id, asset: { ...asset, id, market, currency } }];
+    f.advance(Date.parse(at) - now);
+    await f.engine.scan();
+    assert.equal(f.calls.length, expected, id + ' ' + at);
+  }
+});
+
+ test('watchlist warming updates public feed without enabling reminders or consuming authorization', async()=>{
+ const p={_id:'u',openid:'u',migrationVersion:1,items:[asset.id],rules:[]};
+ const {db}=memoryDb({portfolios:[p]});const calls=[];
+ const engine=createAssetTasks({db,templates,now:()=>now,cloud:{callFunction:async r=>{calls.push(r);return{result:{ok:true,assets:[asset],quotes:[quote]}};}}});
+ const result=await engine.scan({warmWatchlists:true});assert.equal(calls.length,1);assert.equal(result.created,0);
+ });

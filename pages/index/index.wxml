@@ -17,15 +17,15 @@
     <button class="ui-row" data-target="data" bindtap="openWorkspace" hover-class="ui-pressed"><view class="shortcut-icon shortcut-groups" aria-hidden="true"></view><view class="shortcut-copy"><view class="shortcut-title">分组与备份</view><view class="shortcut-caption">整理 · 导入 · 备份</view></view><view class="shortcut-chevron" aria-hidden="true"></view></button>
   </view>
 
-  <scroll-view wx:if="{{!manage && groups.length}}" class="group-scroll" scroll-x enhanced show-scrollbar="{{false}}" aria-label="自选分组">
-    <view class="group-chips">
-      <button wx:for="{{groups}}" wx:key="id" class="{{view.groupId === item.id ? 'selected' : ''}} ui-tab {{view.groupId === item.id ? 'ui-selected' : ''}}" data-id="{{item.id}}" bindtap="chooseGroup" hover-class="ui-pressed" aria-pressed="{{view.groupId === item.id}}">{{item.name}}</button>
-    </view>
-  </scroll-view>
-
   <view class="watchlist-card {{manage ? 'is-editing' : ''}}">
-    <view class="watchlist-heading">
-      <view class="watchlist-title">{{manage ? '编辑自选' : groupName}}<text class="watchlist-count">{{manage ? rows.length : visibleRows.length}} 个</text></view>
+    <view class="watchlist-heading {{!manage && groups.length ? 'has-group-tabs' : ''}}">
+      <scroll-view wx:if="{{!manage && groups.length}}" class="group-scroll" scroll-x enhanced show-scrollbar="{{false}}" aria-label="自选分组">
+        <view class="group-chips">
+          <button class="{{!view.groupId ? 'selected' : ''}} ui-tab {{!view.groupId ? 'ui-selected' : ''}}" data-id="" bindtap="chooseGroup" hover-class="ui-pressed" aria-pressed="{{!view.groupId}}">全部自选</button>
+          <button wx:for="{{groups}}" wx:key="id" class="{{view.groupId === item.id ? 'selected' : ''}} ui-tab {{view.groupId === item.id ? 'ui-selected' : ''}}" data-id="{{item.id}}" bindtap="chooseGroup" hover-class="ui-pressed" aria-pressed="{{view.groupId === item.id}}">{{item.name}}</button>
+        </view>
+      </scroll-view>
+      <view wx:else class="watchlist-title">{{manage ? '编辑自选' : groupName}}<text class="watchlist-count">{{manage ? rows.length : visibleRows.length}} 个</text></view>
       <button wx:if="{{rows.length}}" class="home-manage {{manage ? 'is-managing' : ''}} ui-btn ui-text" bindtap="toggleManage" disabled="{{busy}}" hover-class="ui-pressed">{{manage ? '完成' : '管理'}}</button>
     </view>
 

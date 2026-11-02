@@ -866,6 +866,10 @@ function createService(options = {}) {
               ...q,
               expiresAt: now() + CACHE_MS,
             });
+          // Explicit public projection: no owner, rule, holding or authorization data.
+          await set('publicQuotes', a.id, {
+            asset: a, quote: q, updatedAt: now(),
+          });
           return q;
         } catch (e) {
           errors.push({ assetId: a.id, hint: e.message });
@@ -1036,7 +1040,7 @@ function createService(options = {}) {
     );
     const local = instruments.catalogSearch(keyword);
     const key =
-        "v2-" +
+        "v3-" +
         instruments.catalogVersion +
         "-" +
         Buffer.from(keyword.toLowerCase()).toString("hex"),
@@ -1214,6 +1218,7 @@ function createService(options = {}) {
       if (event.action === "resolve")
         return { ok: true, asset: await resolve(event.assetId, true) };
       if (event.action === "search") return await search(event.keyword);
+      if (event.action === "batchQuotes") return await require('./batch-quotes').batchQuotes(event.assetIds, quotes);
       if (event.action === "quotes") return await quotes(event.assetIds);
       if (event.action === "quote") {
         const a = await resolve(event.assetId),
@@ -1231,10 +1236,12 @@ function createService(options = {}) {
       }
       throw Error("不支持的操作");
     } catch (e) {
+      const sourceUnavailable = event.action === 'discovery' && /socket|ECONN|ETIMEDOUT|timeout|超时|certificate|ENOTFOUND|TLS|HTTP/i.test(e.message || '');
       return {
         ok: false,
         err: "market-data-unavailable",
-        hint: event.action === 'discovery' && /socket|ECONN|ETIMEDOUT|timeout|certificate|ENOTFOUND|TLS|HTTP/i.test(e.message || '')
+        ...(sourceUnavailable ? { retryable: true } : {}),
+        hint: sourceUnavailable
           ? '数据源连接暂不可用，请稍后重试；其他行情功能可继续使用'
           : e.message || "行情服务暂不可用",
       };

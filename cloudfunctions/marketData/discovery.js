@@ -137,6 +137,20 @@ function createDiscovery(options) {
     })();
     pending.set(key,work);return work;
   }
+  async function flowRanking(path) {
+    let lastError;
+    // Same provider and accounting definition; the second route may be delayed.
+    // Keep retries bounded so a source outage cannot multiply cloud invocations.
+    for (const host of ['push2.eastmoney.com', 'push2delay.eastmoney.com']) {
+      try {
+        const raw=await request('https://'+host+path,5000);
+        const items=parseFlowRows(raw,now()),rawCount=json(raw).data.diff.length;
+        if (rawCount && !items.length) throw Error('榜单证券身份或数据未通过校验');
+        return {items,rawCount,delayed:host==='push2delay.eastmoney.com'};
+      } catch (error) { lastError=error; }
+    }
+    throw lastError;
+  }
   async function directory(type) {
     const url=type==='industry'?'https://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php':'https://money.finance.sina.com.cn/q/view/newFLJK.php?param=class';
     return cached('directory-'+type,300000,async()=>({items:parseSectors(await request(url,5000),type),source:'sina',sourceTime:null}));
@@ -184,10 +198,10 @@ function createDiscovery(options) {
     const sort=event.sort || (mode==='flowRanking'?'netInflow':'gainers');
     if (mode==='flowRanking' ? sort!=='netInflow' : !Object.prototype.hasOwnProperty.call(SORTS,sort)) throw Error('不支持的榜单排序');
     return {ok:true,mode,page,...await cached(mode+'-'+node+'-'+sort+'-'+page,30000,async()=>{
-      let items,rawCount,source,scope;
+      let items,rawCount,source,scope,delayed=false;
       if (mode==='flowRanking') {
-        const url='https://push2.eastmoney.com/api/qt/clist/get?pn='+page+'&pz='+PAGE_SIZE+'&po=1&np=1&fltt=2&fid=f62&fs=m:1+t:2,m:0+t:6,m:0+t:80&fields=f12,f13,f14,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87,f124';
-        const raw=await request(url,5000);items=parseFlowRows(raw,now());rawCount=json(raw).data.diff.length;source='eastmoney';
+        const path='/api/qt/clist/get?pn='+page+'&pz='+PAGE_SIZE+'&po=1&np=1&fltt=2&fid=f62&fs=m:1+t:2,m:0+t:6,m:0+t:80&fields=f12,f13,f14,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87,f124';
+        const result=await flowRanking(path);items=result.items;rawCount=result.rawCount;delayed=result.delayed;source='eastmoney';
         scope='东方财富估算净流入，仅验证沪深主板/创业板口径；不代表机构或北向资金';
       } else {
         const [field,asc]=SORTS[sort];
@@ -197,7 +211,7 @@ function createDiscovery(options) {
       }
       // A non-empty but wholly invalid payload is an adapter failure, not a genuine empty page.
       if (rawCount && !items.length) throw Error('榜单证券身份或数据未通过校验');
-      return {items,hasMore:page<MAX_PAGE && rawCount===PAGE_SIZE,source,sourceTime:mode==='flowRanking' && items.length?Math.max(...items.map(r=>r.sourceTime)):null,scope};
+      return {items,hasMore:page<MAX_PAGE && rawCount===PAGE_SIZE,source,...(mode==='flowRanking'?{delayed}:{}),sourceTime:mode==='flowRanking' && items.length?Math.max(...items.map(r=>r.sourceTime)):null,scope};
     })};
   }
   return {handle};

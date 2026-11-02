@@ -38,3 +38,77 @@ test('unexpected errors expose a safe diagnostic without requiring access to clo
  const {db}=memoryDb();const main=createHandler({db,getOpenid:()=> 'private-owner',resolve:async()=>{throw Object.assign(Error('private-note credential=secret'),{errCode:-504003});},logger:{error(){}}});
  const r=await main({action:'saveEntry',entry:initial,revision:0,requestId:'diag-response'});assert.deepEqual(r.diagnostic,{stage:'resolve-assets',code:'-504003',version:1});assert.equal(JSON.stringify(r).includes('private-note'),false);assert.equal(JSON.stringify(r).includes('secret'),false);assert.equal(JSON.stringify(r).includes('private-owner'),false);
 });
+
+test('fresh server instrument metadata avoids nested resolve and stale metadata falls back',async()=>{
+ const timestamp=Date.parse('2026-10-29T12:00Z');
+ for(const age of [1000,86400000,-1000]){
+  const {db}=memoryDb({instruments:[{_id:asset.id,asset,updatedAt:timestamp-age}]});let resolves=0;
+  const main=createHandler({db,getOpenid:()=> 'a',now:()=>timestamp,resolve:async()=>{resolves++;return asset;}});
+  const r=await main({action:'saveEntry',entry:initial,revision:0,requestId:'cache'});
+  assert.equal(r.ok,true,r.hint);assert.equal(resolves,age===1000?0:1);
+ }
+});
+test('invalid cached instrument identity is reverified remotely',async()=>{
+ const timestamp=Date.parse('2026-10-29T12:00Z');const {db}=memoryDb({instruments:[{_id:asset.id,asset:{...asset,currency:'USD'},updatedAt:timestamp}]});let resolves=0;
+ const main=createHandler({db,getOpenid:()=> 'a',now:()=>timestamp,resolve:async()=>{resolves++;return asset;}});
+ assert.equal((await main({action:'saveEntry',entry:initial,revision:0,requestId:'bad-cache'})).ok,true);assert.equal(resolves,1);
+});
+test('fully closed holdings no longer request quotes but retain realized profit',async()=>{
+ const {db}=memoryDb();const requests=[];
+ const main=createHandler({db,getOpenid:()=> 'a',resolve:async()=>asset,getQuotes:async ids=>{requests.push(ids);return[{assetId:asset.id,price:11}];},now:()=>Date.parse('2026-10-29T12:00Z')});
+ await main({action:'saveEntry',entry:initial,revision:0,requestId:'open'});requests.length=0;
+ const r=await main({action:'saveEntry',entry:{type:'sell',assetId:asset.id,currency:'CNY',date:'2026-10-29',quantity:'100',price:'12',fee:'0'},revision:1,requestId:'close'});
+ assert.equal(r.ok,true,r.hint);assert.equal(requests.length,0);assert.equal(r.positions[0].realized,400);assert.equal(r.currencies[0].complete,true);
+ await main({action:'list'});assert.equal(requests.length,0);
+});
+test('note saves use shared quotes without nested market calls and mark old quotes stale',async()=>{
+ const timestamp=Date.parse('2026-10-29T12:00Z');
+ const {db}=memoryDb({quoteCache:[{_id:asset.id,assetId:asset.id,price:11,prevClose:10,sessionDate:'2026-10-29',sourceTime:timestamp-60000,fetchedAt:timestamp-60000,status:'fresh',source:'test'}]});let calls=0;
+ const main=createHandler({db,getOpenid:()=> 'a',resolve:async()=>asset,getQuotes:async()=>{calls++;return[];},now:()=>timestamp});
+ await main({action:'saveEntry',entry:initial,revision:0,requestId:'open'});calls=0;
+ const r=await main({action:'saveNote',assetId:asset.id,note:'new',revision:1,requestId:'note'});
+ assert.equal(r.ok,true,r.hint);assert.equal(calls,0);assert.equal(r.positions[0].marketValue,1100);assert.equal(r.positions[0].stale,true);assert.match(r.quoteWarning,/缓存/);assert.equal(r.positions[0].note,'new');
+});
+test('slow quotes cannot hold a successful ledger write indefinitely',async()=>{
+ const {db}=memoryDb();const main=createHandler({db,getOpenid:()=> 'a',resolve:async()=>asset,getQuotes:()=>new Promise(()=>{}),quoteTimeoutMs:10,now:()=>Date.parse('2026-10-29T12:00Z')});
+ const r=await main({action:'saveEntry',entry:initial,revision:0,requestId:'slow'});
+ assert.equal(r.ok,true,r.hint);assert.equal(r.revision,1);assert.equal(r.positions[0].marketValue,null);assert.match(r.quoteWarning,/行情/);
+});
+
+test('unusable note quote caches stay incomplete without remote refresh',async()=>{
+ const timestamp=Date.parse('2026-10-29T12:00Z');
+ for(const q of [null,{assetId:'wrong',fetchedAt:timestamp},{assetId:asset.id,fetchedAt:timestamp+1000},{assetId:asset.id,fetchedAt:timestamp-7*86400000}]){
+  const {db}=memoryDb({quoteCache:q?[{_id:asset.id,price:11,...q}]:[]});let calls=0;
+  const main=createHandler({db,getOpenid:()=> 'a',resolve:async()=>asset,getQuotes:async()=>{calls++;return[];},now:()=>timestamp});
+  await main({action:'saveEntry',entry:initial,revision:0,requestId:'open'});calls=0;
+  const r=await main({action:'saveNote',assetId:asset.id,note:'note',revision:1,requestId:'note'});
+  assert.equal(r.ok,true,r.hint);assert.equal(calls,0);assert.equal(r.positions[0].marketValue,null);assert.equal(r.currencies[0].complete,false);
+ }
+});
+test('gold identity is server-local and requires no nested resolve',async()=>{
+ const {db}=memoryDb();let resolves=0;const main=createHandler({db,getOpenid:()=> 'a',resolve:async()=>{resolves++;throw Error('offline');},now:()=>Date.parse('2026-10-29T12:00Z')});
+ const r=await main({action:'saveEntry',entry:{...initial,assetId:'gold-au9999'},revision:0,requestId:'gold'});assert.equal(r.ok,true,r.hint);assert.equal(resolves,0);assert.equal(r.positions[0].currency,'CNY');
+});
+
+test('buy without funding saves and unfunded edits and imports retain quantity validation',async()=>{
+ const f=setup();let r=await save(f,{type:'buy',assetId:asset.id,currency:'CNY',date:'2026-10-28',quantity:100,price:10,fee:5},0,'unfunded');
+ assert.equal(r.ok,true,r.hint);assert.equal(r.currencies[0].cash,null);assert.equal(r.currencies[0].cashTracked,false);
+ r=await save(f,{type:'sell',assetId:asset.id,currency:'CNY',date:'2026-10-29',quantity:101,price:12},1,'oversell');assert.equal(r.err,'oversell');
+ const saved=await f.main({action:'list'}),entry=saved.entries[0];r=await save(f,{...entry,quantity:200},1,'edit-unfunded',{entryId:entry.logicalId});assert.equal(r.ok,true,r.hint);assert.equal(r.positions[0].cost,2005);
+ const backup=(await f.main({action:'export'})).backup;f.user('b');const preview=await f.main({action:'previewImport',backup,revision:0});assert.equal(preview.ok,true,preview.hint);assert.equal(preview.preview.positions[0].quantity,200);
+ f.user('a');r=await f.main({action:'voidEntry',entryId:entry.logicalId,revision:2,requestId:'void-unfunded'});assert.equal(r.ok,true,r.hint);assert.equal(r.positions.length,0);
+});
+
+test('listing and saving a ledger never wait for external market providers',async()=>{
+ const {db}=memoryDb();let calls=0;const timestamp=Date.parse('2026-11-02T02:00Z');
+ const main=createHandler({db,getOpenid:()=> 'a',resolve:async()=>asset,getQuotes:async()=>{calls++;throw Error('provider unavailable');},now:()=>timestamp});
+ const saved=await main({action:'saveEntry',entry:initial,revision:0,requestId:'fast-open'});
+ assert.equal(saved.ok,true);assert.equal(calls,0);
+ const listed=await main({action:'list'});assert.equal(listed.ok,true);assert.equal(listed.positions[0].quantity,100);assert.equal(calls,0);assert.equal(listed.positions[0].marketValue,null);
+});
+test('holdings valuations read one bounded cache query instead of one database request per asset',async()=>{
+ const timestamp=Date.parse('2026-11-02T02:00Z');const {db}=memoryDb({quoteCache:[{_id:asset.id,assetId:asset.id,price:11,fetchedAt:timestamp,sourceTime:timestamp,status:'fresh'}]});
+ let queries=0,docs=0;const original=db.collection;db.collection=name=>{const q=original(name);if(name==='quoteCache'){const doc=q.doc;q.doc=id=>{docs++;return doc(id);};const where=q.where;q.where=f=>{queries++;return where(f);};}return q;};
+ const main=createHandler({db,getOpenid:()=> 'a',resolve:async()=>asset,now:()=>timestamp});await main({action:'saveEntry',entry:initial,revision:0,requestId:'cache-open'});queries=0;docs=0;
+ const r=await main({action:'list'});assert.equal(r.positions[0].marketValue,1100);assert.equal(queries,1);assert.equal(docs,0);assert.doesNotMatch(r.quoteWarning,/备注已保存/);
+});

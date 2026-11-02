@@ -41,3 +41,14 @@ test('cross-runtime metadata writes retain earlier evidence transactionally',asy
   await Promise.all([store.setInstrument({...a,historyAvailableFrom:'2025-01-01'},NOW),store.setInstrument({...m.canonical(a.id),name:a.name},NOW)]);
   assert.equal(tables.instruments[0].asset.historyAvailableFrom,'2020-01-01');
 });
+
+test('STAR market GP-A-KCB is searchable and quote-verified only for Shanghai 68 stocks', () => {
+  const instruments = require('../cloudfunctions/marketData/instruments');
+  const found = m.parseTencentSearch('v_hint="sh~688836~宇树科技W~yskjw~GP-A-KCB^sh~600519~错误类型~err~GP-A-KCB^sz~300750~错误类型~err~GP-A-KCB";');
+  assert.deepEqual(found.map(a => a.id), ['sh688836']);
+  const p = Array(83).fill('');
+  Object.assign(p, { 1: '宇树科技-W', 2: '688836', 3: '669.00', 61: 'GP-A-KCB' });
+  assert.equal(instruments.verifiedQuoteAsset(found[0], p).kind, 'stock');
+  assert.equal(instruments.verifiedQuoteAsset(m.stockAsset('SH', '600519', '茅台'), { ...p, 2: '600519' }), null);
+  assert.equal(instruments.verifiedQuoteAsset(found[0], { ...p, 61: 'GP-B' }), null);
+});

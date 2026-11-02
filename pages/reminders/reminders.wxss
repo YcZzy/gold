@@ -1,3 +1,4 @@
+@import "../asset-alert/asset-alert.wxss";
 /* 本页独立排版，共用 app.wxss 的纸感 / 黑金主题变量。 */
 .reminders-page {
   padding: 40rpx 28rpx calc(40rpx + env(safe-area-inset-bottom));
@@ -63,3 +64,17 @@
 .reminders-page .monitor-mark { width: 8rpx; height: 8rpx; border: 2rpx solid var(--text-mid); border-radius: 50%; }
 .reminders-page .guide-copy { margin-top: 8rpx; color: var(--text-mid); font-size: 21rpx; line-height: 1.85; }
 .reminders-page .error-bar { margin-bottom: 24rpx; padding: 22rpx 24rpx; border-radius: 16rpx; background: var(--error-bg); color: var(--error-text); font-size: 24rpx; line-height: 1.7; }
+
+.reminders-page .inline-settings { padding: 0; }
+.reminders-page .asset-selector { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; margin-bottom: 18rpx; padding: 24rpx 28rpx; border: 1rpx solid var(--chip-border); border-radius: 20rpx; background: var(--card); font-size: 24rpx; }
+.reminders-page .inline-editor .rules-heading { margin-top: 28rpx; margin-bottom: 16rpx; }
+
+.reminders-page .inline-editor .rule-status { white-space: nowrap; }
+.reminders-page .inline-editor .rule-actions { margin-top: 0; }
+
+/* Native disabled buttons otherwise paint a gray surface over the themed card. */
+.reminders-page button.asset-card[disabled] {
+  background: var(--card);
+  color: var(--text);
+  opacity: 1;
+}

@@ -1,6 +1,18 @@
 /** Private ledger: no persistent device cache or optimistic writes. */
 function createClient(platform){
  const pending=new Map();
+ let listWork=null;
+ function list(){
+  if(!listWork){
+   const work=call('list');listWork=work;
+   const clear=()=>{if(listWork===work)listWork=null;};work.then(clear,clear);
+  }
+  return listWork.then(value=>JSON.parse(JSON.stringify(value)));
+ }
+ async function write(action,payload){
+  listWork=null;
+  try{return await call(action,payload,true);}finally{listWork=null;}
+ }
  function identity(key){if(!pending.has(key))pending.set(key,'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,14));return pending.get(key);}
  async function call(action,payload={},mutation=false){
   const key=JSON.stringify({action,...payload}),data={...payload,action};
@@ -9,6 +21,7 @@ function createClient(platform){
   let result;
   try{result=(await platform.cloud.callFunction({name:'ledger',data})).result;}
   catch(cause){
+   if(cause&&/^cloud-call-budget-/.test(cause.code||''))throw cause;
    const e=cause instanceof Error?cause:Object.assign(new Error(cause&& (cause.errMsg||cause.message)||String(cause)),cause&&typeof cause==='object'?cause:{});
    const detail=[e.message,e.errMsg].filter(Boolean).join(' ');
    if(/invalid credential|access_token\s+is\s+invalid\s+or\s+not\s+latest/i.test(detail)){
@@ -23,6 +36,6 @@ function createClient(platform){
   }
   pending.delete(key);return result;
  }
- return{list:()=>call('list'),saveEntry:(entry,revision,entryId)=>call('saveEntry',{entry,revision,...(entryId?{entryId}:{})},true),voidEntry:(entryId,revision)=>call('voidEntry',{entryId,revision},true),saveNote:(assetId,note,revision)=>call('saveNote',{assetId,note,revision},true),exportBackup:()=>call('export'),previewImport:(backup,revision)=>call('previewImport',{backup,revision}),importBackup:(backup,revision,previewHash)=>call('import',{backup,revision,previewHash},true)};
+ return{list,saveEntry:(entry,revision,entryId)=>write('saveEntry',{entry,revision,...(entryId?{entryId}:{})}),voidEntry:(entryId,revision)=>write('voidEntry',{entryId,revision}),saveNote:(assetId,note,revision)=>write('saveNote',{assetId,note,revision}),exportBackup:()=>call('export'),previewImport:(backup,revision)=>call('previewImport',{backup,revision}),importBackup:(backup,revision,previewHash)=>write('import',{backup,revision,previewHash})};
 }
 module.exports={...createClient(typeof wx==='undefined'?null:wx),createClient};

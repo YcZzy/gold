@@ -43,6 +43,41 @@ function fresh(quote, asset, now) {
   return current.phase === 'regular' && source.phase === 'regular' && current.date === source.date && current.segment === source.segment;
 }
 
+// This is an advisory scan filter; sending still reserves quota transactionally.
+function quotaIndex(rows) {
+  const result = new Map();
+  for (const row of rows) if (Number.isInteger(row.remaining) && row.remaining > 0)
+    result.set(row.openid && row.templateId ? row.openid + ":" + row.templateId : row._id, row.remaining);
+  return result;
+}
+function scheduledDue(rule, now) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(rule.time || "")) return null;
+  const [h, m] = rule.time.split(":").map(Number);
+  let due = dayStart(now) + (h * 60 + m) * MINUTE;
+  if (due > now) due -= 24 * 60 * MINUTE;
+  if (now - due >= 6 * MINUTE || (rule.weekdaysOnly !== false && [0, 6].includes(parts(due).weekday))) return null;
+  return due;
+}
+function ruleDue(rule, asset, now) {
+  if (rule.type === "scheduled") return scheduledDue(rule, now) !== null;
+  if (rule.type !== "close") return !asset || asset.kind === "gold" || calendar.session(asset, now).phase === "regular";
+  if (!asset) return true; // Missing metadata must not silently disable a rule.
+  if (asset.id === "gold-xauusd" || asset.supportsClose === false) return false;
+  if (asset.id === "gold-au9999") {
+    const p = parts(now);
+    return ![0, 6].includes(p.weekday) && p.minutes >= 15*60+40 && p.minutes <= 16*60+25;
+  }
+  const current = calendar.session(asset, now);
+  return current.known && !!current.closeTime && now >= current.closeTime + 10*MINUTE && now <= current.closeTime + 55*MINUTE;
+}
+// IDs are already validated by portfolio. Only infer the market for time filtering;
+// authoritative currency, precision and close capability still come from instruments.
+function scanAsset(id) {
+  if (id === "gold-au9999" || id === "gold-xauusd") return { id, kind: "gold" };
+  const prefix = /^(sh|sz|bj|hk|us)/.exec(id);
+  return prefix ? { id, market: prefix[1].toUpperCase() } : null;
+}
+
 function planRuleTask(rule, asset, quote, samples, now, openid) {
   if (!rule || !rule.enabled || !TYPES.includes(rule.type) || rule.assetId !== asset.id || !validQuote(quote, asset, now)) return null;
   const p = parts(now);
@@ -72,12 +107,9 @@ function planRuleTask(rule, asset, quote, samples, now, openid) {
     reason = `约15分钟${pct(change)}`;
     expiry = now + 15 * MINUTE;
   } else if (rule.type === "scheduled") {
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(rule.time || "")) return null;
-    const [h, m] = rule.time.split(":").map(Number);
-    let due = dayStart(now) + (h * 60 + m) * MINUTE;
-    if (due > now) due -= 24 * 60 * MINUTE;
+    const due = scheduledDue(rule, now);
+    if (due === null) return null;
     const scheduledDay = parts(due);
-    if (now - due >= 6 * MINUTE || (rule.weekdaysOnly !== false && [0, 6].includes(scheduledDay.weekday))) return null;
     date = scheduledDay.ymd;
     reason = "定时行情播报";
   } else {
@@ -191,22 +223,53 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
       return !!(result.stats && result.stats.updated);
     }
   }
-  async function scan() {
-    const portfolios = (await all("portfolios")).filter(p => p.migrationVersion === 1);
-    const enabled = [];
-    for (const p of portfolios) for (const rule of p.rules || []) {
-      if (!rule.enabled || !(p.items || []).includes(rule.assetId)) continue;
-      if (target(rule.type)) {
-        const sent = await maybe(db.collection("sendTasks").doc(`v2:${rule.id}:${rule.version}`));
-        if (sent && sent.status === "sent") { await consume(sent); continue; }
+  async function scan({ quotas, warmWatchlists = false } = {}) {
+    const time = now();
+    if (!quotas) quotas = quotaIndex(await all("subscriptions", { remaining: _.gt(0) }));
+    const portfolios = (await all("portfolios", { migrationVersion: 1 }));
+    const enabled = [], metadata = new Map();
+    const hasQuota = (openid, templateId) => (quotas.get(openid + ":" + templateId) || 0) > 0;
+    let considered = 0;
+    for (const p of portfolios) {
+      let budget;
+      const openid = p.openid || p._id;
+      for (const rule of p.rules || []) {
+        if (!rule.enabled || !TYPES.includes(rule.type) || !(p.items || []).includes(rule.assetId)) continue;
+        considered++;
+        // Repair confirmed targets even when their last authorization was consumed.
+        if (target(rule.type)) {
+          const sent = await maybe(db.collection("sendTasks").doc(`v2:${rule.id}:${rule.version}`));
+          if (sent && sent.status === "sent") { await consume(sent); continue; }
+        }
+        if (!hasQuota(openid, templates.volatility) && (!brief(rule.type) || !hasQuota(openid, templates.dailyBrief))) continue;
+        // Scheduled timing is independent of metadata and can be rejected first.
+        if (rule.type === "scheduled" && scheduledDue(rule, time) === null) continue;
+        const hint = scanAsset(rule.assetId);
+        if (hint && !ruleDue(rule, hint, time)) continue;
+        if (!metadata.has(rule.assetId)) {
+          const saved = await maybe(db.collection("instruments").doc(rule.assetId));
+          metadata.set(rule.assetId, saved && saved.asset && saved.asset.id === rule.assetId ? saved.asset : scanAsset(rule.assetId));
+        }
+        const asset = metadata.get(rule.assetId);
+        if (!ruleDue(rule, asset, time)) continue;
+        if (brief(rule.type) && asset && asset.currency && !["CNY", "USD"].includes(asset.currency) && !hasQuota(openid, templates.volatility)) continue;
+        if (budget === undefined) budget = await maybe(db.collection("sendBudgets").doc(openid + ":" + parts(time).ymd));
+        const group = target(rule.type) ? "targets" : "regular";
+        const key = countKey({ type: rule.type, assetId: rule.assetId, meta: { asset }, triggerTime: time });
+        if (budget && ((budget[group] || 0) >= (group === "targets" ? 4 : 6) || (budget.counts && budget.counts[key] || 0) >= 1)) continue;
+        enabled.push({ portfolio: p, rule });
       }
-      enabled.push({ portfolio: p, rule });
     }
-    const ids = [...new Set(enabled.map(item => item.rule.assetId))];
+    const watched = warmWatchlists ? portfolios.flatMap(p => p.items || []).filter(id => {
+      const asset = scanAsset(id);
+      return asset && (asset.kind === 'gold' || calendar.session(asset, time).phase === 'regular');
+    }) : [];
+    const ids = [...new Set([...enabled.map(item => item.rule.assetId), ...watched])];
+    if (ids.length > 2500) throw Error('分钟行情容量超过2500个标的，请扩容后再启用更多自选');
     const assets = new Map(), quotes = new Map();
-    // 每次调用最多 30 个去重标的，避免按用户重复请求同一只股票。
-    for (let offset = 0; offset < ids.length; offset += 30) {
-      const response = await cloud.callFunction({ name: "marketData", data: { action: "quotes", assetIds: ids.slice(offset, offset + 30) } });
+    // One invocation; marketData batches provider I/O internally with bounded concurrency.
+    if (ids.length) {
+      const response = await cloud.callFunction({ name: "marketData", data: { action: "batchQuotes", assetIds: ids } });
       if (!response.result || !response.result.ok) throw new Error(response.result && response.result.hint || "行情服务不可用");
       for (const asset of response.result.assets || []) assets.set(asset.id, asset);
       for (const quote of response.result.quotes || []) quotes.set(quote.assetId, quote);
@@ -229,9 +292,9 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
       const asset = assets.get(rule.assetId);
       if (!asset) continue;
       const task = planRuleTask(rule, asset, quotes.get(rule.assetId), history.get(rule.assetId), now(), portfolio.openid || portfolio._id);
-      if (task && await create(task)) created++;
+      if (task && hasQuota(task.openid, amountTemplate(task) ? templates.dailyBrief : templates.volatility) && await create(task)) created++;
     }
-    return { ok: true, created };
+    return { ok: true, created, scanStats: { considered, eligible: enabled.length, quotedAssets: ids.length, marketCalls: ids.length ? 1 : 0 } };
   }
   async function seedBudget(openid, time) {
     const budget = { regular: 0, targets: 0, counts: {}, reservations: {} };
@@ -340,4 +403,4 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
   }
   return { scan, handleTask };
 }
-module.exports = { createAssetTasks, planRuleTask, buildMessage, fresh, currentRule };
+module.exports = { quotaIndex, createAssetTasks, planRuleTask, buildMessage, fresh, currentRule };

@@ -13,6 +13,7 @@ App({
       env: cloudEnv,
       traceUser: true
     });
+    require("./utils/cloud-call-budget").install(wx);
   },
   globalData: {}
 });

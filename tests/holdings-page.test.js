@@ -10,8 +10,8 @@ test('note conflict refresh preserves note draft and updates the revision used f
 test('editing quantity or price never resubmits a stale calculated gross amount',async()=>{const trade={...state.entries[0],type:'buy',quantity:'100',price:'10',grossAmount:'1000',grossAmountMode:'auto',fee:'0'};const f=load({ledger:{list:async()=>structuredClone({...state,entries:[trade]})}});await f.page.onShow();f.page.editEntry({currentTarget:{dataset:{id:'a'}}});f.page.inputDraft({currentTarget:{dataset:{key:'price'}},detail:{value:'20'}});await f.page.saveEntry();assert.equal(f.calls[0].grossAmount,'');assert.equal(f.calls[0].grossAmountMode,'auto');});
 test('changing quantity explicitly clears a prior manual gross amount with a visible warning',async()=>{const trade={...state.entries[0],type:'buy',quantity:'100',price:'10',grossAmount:'1001',grossAmountMode:'explicit',fee:'0'};const f=load({ledger:{list:async()=>structuredClone({...state,entries:[trade]})}});await f.page.onShow();f.page.editEntry({currentTarget:{dataset:{id:'a'}}});f.page.inputDraft({currentTarget:{dataset:{key:'quantity'}},detail:{value:'200'}});assert.equal(f.page.data.draft.grossAmount,'');assert.match(f.page.data.grossWarning,/手工|实际/);});
 test('return sorting places cost-unknown ratios last and supports both floating and realized rates',async()=>{const ps=[{...state.positions[0],assetId:'a',unrealizedRate:-5,realizedRate:20},{...state.positions[0],assetId:'b',unrealizedRate:null,realizedRate:null},{...state.positions[0],assetId:'c',unrealizedRate:10,realizedRate:-10}];const f=load({ledger:{list:async()=>structuredClone({...state,positions:ps})}});await f.page.onShow();for(const[label,expected]of [['浮动收益率',['c','a','b']],['已实现收益率',['a','c','b']]]){const i=f.page.data.sortOptions.findIndex(x=>x.includes(label));assert.ok(i>=0,label);f.page.changeSort({detail:{value:i}});assert.deepEqual(Array.from(f.page.data.rows,r=>r.assetId),expected);}});
-test('asset resolve does not change hidden page state after navigation',async()=>{let resolve;const f=load({market:{resolve:()=>new Promise(r=>resolve=r)}});await f.page.onShow();await f.page.openEntry();const pending=f.page.selectAsset({currentTarget:{dataset:{id:'sh600519'}}});f.page.onHide();const before=JSON.stringify(f.page.data);resolve({asset:state.assets[0]});await pending;assert.equal(JSON.stringify(f.page.data),before);});
-test('an old selected asset or search response cannot overwrite a newer interaction',async()=>{const requests={};const f=load({market:{resolve:id=>new Promise(r=>requests[id]=r)}});await f.page.onShow();await f.page.openEntry();const first=f.page.selectAsset({currentTarget:{dataset:{id:'sh600519'}}}),second=f.page.selectAsset({currentTarget:{dataset:{id:'sh510300'}}});requests.sh510300({asset:{...state.assets[0],id:'sh510300'}});await second;requests.sh600519({asset:state.assets[0]});await first;assert.equal(f.page.data.draft.assetId,'sh510300');});
+test('asset resolve does not change hidden page state after navigation',async()=>{let resolve;const f=load({market:{resolve:()=>new Promise(r=>resolve=r)}});await f.page.onShow();await f.page.openEntry();const pending=f.page.selectAsset({currentTarget:{dataset:{id:'sh600000'}}});f.page.onHide();const before=JSON.stringify(f.page.data);resolve({asset:state.assets[0]});await pending;assert.equal(JSON.stringify(f.page.data),before);});
+test('an old selected asset or search response cannot overwrite a newer interaction',async()=>{const requests={};const f=load({market:{resolve:id=>new Promise(r=>requests[id]=r)}});await f.page.onShow();await f.page.openEntry();const first=f.page.selectAsset({currentTarget:{dataset:{id:'sh600000'}}}),second=f.page.selectAsset({currentTarget:{dataset:{id:'sh510300'}}});requests.sh510300({asset:{...state.assets[0],id:'sh510300'}});await second;requests.sh600000({asset:state.assets[0]});await first;assert.equal(f.page.data.draft.assetId,'sh510300');});
 test('enabling hidden amounts rerenders old snapshot before an offline reload fails',async()=>{const preferences={hideAmounts:false};let offline=false;const f=load({preferences,ledger:{list:async()=>{if(offline)throw Error('offline');return structuredClone(state);}}});await f.page.onShow();assert.notEqual(f.page.data.rows[0].valueText,'••••');f.page.onHide();preferences.hideAmounts=true;offline=true;const reload=f.page.onShow();assert.equal(f.page.data.summary.equityText,'••••');assert.equal(f.page.data.rows[0].valueText,'••••');assert.equal(f.page.data.historyRows[0].amountText,'••••');await reload;assert.equal(f.page.data.rows[0].valueText,'••••');assert.equal(f.page.data.offline,true);});
 test('old search response is invalidated when choosing an asset',async()=>{let release;const f=load({market:{search:()=>new Promise(r=>release=r)}});await f.page.onShow();await f.page.openEntry();f.page.inputKeyword({detail:{value:'stock'}});const pending=f.page.searchAssets();await f.page.selectAsset({currentTarget:{dataset:{id:'sh600519'}}});release({assets:[{...state.assets[0],id:'old-result'}]});await pending;assert.equal(f.page.data.searchResults.length,0);assert.equal(f.page.data.draft.assetId,'sh600519');});
 test('calculation and capacity notes stay collapsed until an explicit accessible toggle',()=>{const f=load();assert.equal(f.page.data.explanationsExpanded,false);assert.equal(typeof f.page.toggleExplanations,'function');f.page.toggleExplanations();assert.equal(f.page.data.explanationsExpanded,true);f.page.toggleExplanations();assert.equal(f.page.data.explanationsExpanded,false);const w=fs.readFileSync('pages/holdings/holdings.wxml','utf8');assert.match(w,/aria-expanded="{{explanationsExpanded}}"/);assert.match(w,/wx:if="{{explanationsExpanded}}"/);assert.match(w,/移动加权平均成本/);assert.match(w,/1000条含修订流水/);const css=fs.readFileSync('pages/holdings/holdings.wxss','utf8');assert.match(css,/\.heading-row[^}]*\.text-button[^}]*width:auto/);});
@@ -40,7 +40,7 @@ test('live editor preview updates after input and missing fields clear after cor
  const {page:p}=load();await p.onShow();await p.openEntry({currentTarget:{dataset:{id:'sh600519',type:'buy'}}});
  await p.saveEntry();assert.ok(p.data.formErrors.quantity);
  for(const [key,value] of [['quantity','2'],['price','10'],['fee','1']])p.inputDraft({currentTarget:{dataset:{key}},detail:{value}});
- assert.equal(p.data.entryPreview.cashText,'−21.00');assert.equal(Object.keys(p.data.formErrors).length,0);
+ assert.equal(p.data.entryPreview.cashText,'21.00');assert.equal(Object.keys(p.data.formErrors).length,0);
 });
 test('overview defaults to collapsed and toggles without changing summary',async()=>{
  const {page:p}=load();await p.onShow();assert.equal(p.data.overviewExpanded,false);p.toggleOverview();assert.equal(p.data.overviewExpanded,true);
@@ -121,4 +121,41 @@ test('opening the editor uses cached candidates without requesting portfolio rem
 });
 test('missing cached watchlist never prevents recording or retaining ledger candidates',async()=>{
  const {page:p}=load({portfolioApi:{getCached:()=>null,list:async()=>{throw Error('must not call');}}});await p.onShow();await p.openEntry({currentTarget:{dataset:{type:'buy'}}});assert.equal(p.data.editing,true);assert.equal(p.data.quickAssets[0].id,'sh600519');
+});
+
+test('quick return reuses page memory but explicit refresh and expired snapshots read cloud',async()=>{
+ let reads=0;const {page:p}=load({ledger:{list:async()=>{reads++;return structuredClone(state);}}});await p.onShow();p.onHide();await p.onShow();assert.equal(reads,1);
+ await p.onPullDownRefresh();assert.equal(reads,2);p.onHide();p._loadedAt=Date.now()-16000;await p.onShow();assert.equal(reads,3);
+});
+test('selecting a ledger asset is immediate and skips remote identity lookup',async()=>{
+ let resolves=0;const {page:p}=load({market:{resolve:async()=>{resolves++;throw Error('offline');}}});await p.onShow();await p.openEntry();await p.selectAsset({currentTarget:{dataset:{id:'sh600519'}}});
+ assert.equal(resolves,0);assert.equal(p.data.selectedAsset.id,'sh600519');assert.equal(p.data.assetSearchOpen,false);assert.equal(p.data.searchBusy,false);
+});
+test('history and refresh are direct accessible controls and position filters reset together',async()=>{
+ const {page:p}=load();await p.onShow();p.setData({positionQuery:'missing',sortIndex:2,showClosed:true});p.clearPositionFilters();assert.equal(p.data.positionQuery,'');assert.equal(p.data.sortIndex,0);assert.equal(p.data.showClosed,false);
+ p.showHistory();assert.equal(p.data.view,'history');const w=fs.readFileSync('pages/holdings/holdings.wxml','utf8');assert.match(w,/bindtap="showHistory"/);assert.match(w,/bindtap="reload"/);assert.match(w,/bindtap="clearPositionFilters"/);
+});
+
+test('overview always prioritizes position value even when a cash account exists',async()=>{
+ const {page:p}=load();await p.onShow();assert.equal(p.data.summary.primaryLabel,'持仓市值');assert.equal(p.data.summary.primaryText,'1,100.00');
+});
+test('incomplete cash history displays unknown balance without corrupting position summary',async()=>{
+ const {page:p}=load({ledger:{list:async()=>structuredClone({...state,currencies:[{...state.currencies[0],cash:null,cashTracked:true,cashComplete:false,equity:null,allocation:null}]})}});await p.onShow();
+ assert.equal(p.data.summary.cashText,'记录不完整');assert.equal(p.data.summary.primaryText,'1,100.00');assert.equal(p.data.summary.cashComplete,false);
+});
+test('header has one primary action with named more below and details inside the card',()=>{
+ const w=fs.readFileSync('pages/holdings/holdings.wxml','utf8'),heading=w.slice(0,w.indexOf('<view wx:if="{{errorText}}"'));
+ assert.doesNotMatch(heading,/bindtap="showMore"/);assert.match(w,/bindtap="showMore"[^>]*>更多<\/button>/);assert.doesNotMatch(w,/•••/);
+ const footer=w.slice(w.indexOf('class="overview-footer"'));assert.match(footer,/bindtap="toggleOverview"/);assert.match(footer,/bindtap="refreshPrices"/);assert.match(w,/无需入金/);
+});
+test('holdings load without provider calls and explicit price refresh keeps the ledger visible on provider failure',async()=>{
+ let release,calls=0;const {page:p}=load({market:{quotes:()=>{calls++;return new Promise((_,reject)=>release=reject);}}});
+ await p.onShow();assert.equal(calls,0);assert.equal(p.data.loaded,true);
+ assert.equal(typeof p.refreshPrices,'function');const pending=p.refreshPrices();
+ await new Promise(r=>setTimeout(r,0));assert.equal(calls,1);assert.equal(p.data.rows.length,1);assert.equal(p.data.refreshing,false);
+ release(Error('provider slow'));await pending;assert.equal(p.data.offline,false);assert.equal(p.data.rows.length,1);assert.match(p.data.quoteWarning,/provider slow/);assert.equal(p.data.quoteRefreshing,false);
+});
+test('explicit price refresh rereads server-authoritative valuations and never submits a transaction',async()=>{
+ let reads=0,quotes=0;const {page:p,calls}=load({ledger:{list:async()=>{reads++;return structuredClone(state);}},market:{quotes:async ids=>{quotes++;assert.deepEqual(Array.from(ids),['sh600519']);return{ok:true};}}});
+ await p.onShow();await p.refreshPrices();assert.equal(quotes,1);assert.equal(reads,3);assert.equal(calls.length,0);assert.equal(p.data.quoteRefreshing,false);
 });

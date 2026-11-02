@@ -1,0 +1,2 @@
+const{test}=require('node:test');const assert=require('node:assert/strict');const{memoryDb}=require('./helpers/asset-db');const{claim}=require('../cloudfunctions/sendTask/scan-lease');
+test('overlapping timers claim one scan per minute across runtimes',async()=>{const{db}=memoryDb({});const now=Date.parse('2026-11-02T02:00Z');const r=await Promise.all(Array.from({length:5},()=>claim(db,now)));assert.equal(r.filter(Boolean).length,1);assert.equal(await claim(db,now+59999),false);assert.equal(await claim(db,now+60000),true);});

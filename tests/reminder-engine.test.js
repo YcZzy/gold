@@ -119,7 +119,7 @@ test("unsent daily alert cancelled by edited threshold can trigger again with th
 
 test("scan paginates users rather than silently omitting users after the first 100", async () => {
   const users = Array.from({ length: 105 }, (_, i) => ({ _id: String(i).padStart(3, "0"), openid: "u" + i, scheduledBrief: true, scheduledTime: "09:00" }));
-  const e = engine({ tables: { preferences: users } });
+  const e = engine({ tables: { preferences: users, subscriptions: users.map(u => ({ _id: u.openid + ":brief", openid: u.openid, templateId: templates.dailyBrief, remaining: 1 })) } });
   await e.main({ TriggerName: "scanTimer" });
   assert.equal(e.tables.sendTasks.length, 105);
 });
@@ -254,4 +254,30 @@ test("minute timer sends multi-asset price and daily moves without another timer
     await e.main({ TriggerName: "dispatchTimer" });
     assert.equal(e.sent.length, 1, type);
   }
+});
+
+
+test("legacy zero-quota scan avoids quote HTTP requests and retains enabled rules", async () => {
+  const e = engine({ tables: { preferences: [prefs], subscriptions: [] } });
+  await e.main({ TriggerName: "scanTimer" });
+  assert.equal(e.quoteRequests.length, 0);
+  assert.equal(e.tables.sendTasks.length, 0);
+  assert.equal(e.tables.preferences[0].targetAuLow, true);
+  e.tables.subscriptions.push(...structuredClone(subs));
+  await e.main({ TriggerName: "scanTimer" });
+  assert.ok(e.quoteRequests.length > 0);
+  assert.equal(e.tables.sendTasks.length, 1);
+});
+
+test("pending tasks still dispatch when no new rules are eligible to scan", async () => {
+  const e = engine({ time: "2026-10-27T15:35:00+08:00", tables: {
+    preferences: [{ ...prefs, targetAuLow: false, dailyBrief: true }], subscriptions: subs,
+  } });
+  await e.main({ TriggerName: "scanTimer" });
+  const task = e.tables.sendTasks[0];
+  e.advance(21 * 60000); // Past the brief's creation window, still inside its delivery validity.
+  const result = await e.main({ TriggerName: "dispatchTimer" });
+  assert.ok(result.ok);
+  assert.equal(task.status, "sent");
+  assert.equal(e.sent.length, 1);
 });

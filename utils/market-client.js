@@ -1,4 +1,6 @@
 /** Server-authoritative market data. All methods resolve to {ok,...} envelopes. */
+const readPool = require("./read-pool");
+const publicQuotes = require("./public-quotes");
 async function callMarket(action, data) {
   if (typeof wx === "undefined" || !wx.cloud || !wx.cloud.callFunction) {
     const error = new Error("云开发尚未初始化");
@@ -7,11 +9,13 @@ async function callMarket(action, data) {
   }
   let response;
   try {
-    response = await wx.cloud.callFunction({
+    const envelope = Object.assign({ action }, data || {});
+    response = await readPool.forPlatform(wx).run("market:" + JSON.stringify(envelope), () => wx.cloud.callFunction({
       name: "marketData",
-      data: Object.assign({ action }, data || {}),
-    });
+      data: envelope,
+    }));
   } catch (cause) {
+    if (/^cloud-call-budget-/.test(cause && cause.code || "")) throw cause;
     // Local compatibility may succeed and otherwise hide cloud runtime/deployment errors.
     console.warn("[marketData] 云函数调用失败", {
       action,
@@ -206,12 +210,27 @@ async function readMarket(key, request, valid) {
 const search = (keyword) => readMarket("search:" + keyword.trim(), () => callMarket("search", { keyword }), r => Array.isArray(r.assets || r.items));
 const resolve = (assetId) => readMarket("resolve:" + assetId, () => withGoldFallback("resolve", { assetId }), r => !!r.asset);
 async function quote(assetId) {
+  const feed = await publicQuotes.read(typeof wx === 'undefined' ? null : wx, [assetId]);
+  for (const a of feed.assets) cache().write('asset:' + a.id, a);
+  if (!feed.missing.length && feed.quotes.length) {
+    return remember(cache().write('quote:' + assetId, { ok:true, asset:feed.assets[0], quote:feed.quotes[0] }));
+  }
+  if (feed.quotes.length) cache().write('quote:' + assetId, {ok:true,asset:feed.assets[0],quote:feed.quotes[0]});
   return readMarket("quote:" + assetId,
     () => withGoldFallback("quote", { assetId }), r => usableQuote(r.quote));
 }
 async function quotes(assetIds) {
+  if (!Array.isArray(assetIds) || !assetIds.length || assetIds.length > 30) throw Error('请传入 1 至 30 个资产代码');
+  const feed = await publicQuotes.read(typeof wx === 'undefined' ? null : wx, assetIds);
+  for (const a of feed.assets) cache().write('asset:' + a.id, a);
+  for (const q of feed.quotes) cache().write('quote:' + q.assetId, {ok:true,quote:q});
   let result;
-  try { result = await withGoldFallback("quotes", { assetIds }); }
+  try {
+    const fetched = feed.missing.length ? await withGoldFallback("quotes", { assetIds:feed.missing }) : {ok:true};
+    const freshIds = new Set((fetched.quotes || []).map(q => q.assetId));
+    result = {...fetched, assets:[...feed.assets,...fetched.assets || []],
+      quotes:[...feed.quotes.filter(q => !freshIds.has(q.assetId)),...fetched.quotes || []],errors:fetched.errors || []};
+  }
   catch (error) {
     const previous = assetIds.map(id => cache().read("quote:" + id)).filter(Boolean);
     if (!previous.length) throw error;

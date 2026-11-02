@@ -26,11 +26,19 @@ function validateNotes(notes,assets){
 }
 function capacity(doc){if(doc.entries.length>LIMITS.records||Object.keys(doc.assets).length>LIMITS.assets||Object.keys(doc.receipts).length>LIMITS.operations)engine.fail('ledger-limit','台账上限：30个标的、1000条含修订流水、1000次写操作；请先导出备份');bounded(doc);}
 function backup(doc){return{schemaVersion:1,entries:doc.entries,notes:doc.notes};}
-function createHandler({db,getOpenid,resolve,getQuotes=async()=>[],now=Date.now,logger=console}){
+function createHandler({db,getOpenid,resolve,getQuotes=async()=>[],quoteTimeoutMs=1500,now=Date.now,logger=console}){
+ async function resolveAsset(id){
+  // Only server-owned directory data can skip remote identity verification.
+  if(id==='gold-au9999'||id==='gold-xauusd')return verifyAsset({id,kind:'gold',...(id==='gold-au9999'?{code:'AU9999',market:'SGE',currency:'CNY',unit:'元/克'}:{code:'XAU',market:'GLOBAL',currency:'USD',unit:'美元/盎司'})},id);
+  let saved;try{saved=await read(db.collection('instruments').doc(id));}catch(_){}
+  const age=saved&&now()-saved.updatedAt;
+  if(saved&&Number.isFinite(age)&&age>=0&&age<86400000){try{return verifyAsset(saved.asset,id);}catch(_){}}
+  return verifyAsset(await resolve(id),id);
+ }
  async function resolveMany(ids){
   const unique=[...new Set(ids)];if(unique.length>LIMITS.assets)engine.fail('ledger-limit','最多30个持仓标的');
   if(unique.some(id=>!securities.validId(id)))engine.fail('unknown-asset','备份包含无效标的');
-  const result={};for(let i=0;i<unique.length;i+=5)await Promise.all(unique.slice(i,i+5).map(async id=>{result[id]=verifyAsset(await resolve(id),id);}));return result;
+  const result={};for(let i=0;i<unique.length;i+=5)await Promise.all(unique.slice(i,i+5).map(async id=>{result[id]=await resolveAsset(id);}));return result;
  }
  async function imported(input){
   if(!input||input.schemaVersion!==1||!Array.isArray(input.entries))engine.fail('import-invalid','仅支持本工具schemaVersion=1的JSON备份');
@@ -40,8 +48,20 @@ function createHandler({db,getOpenid,resolve,getQuotes=async()=>[],now=Date.now,
   engine.replay(entries,assets);const notes=validateNotes(input.notes||{},assets),doc={...fresh(),entries,assets,notes};capacity(doc);return doc;
  }
  async function view(doc){
-  let quotes=[],quoteWarning='';const ids=Object.keys(doc.assets);
-  if(ids.length)try{const r=await getQuotes(ids);quotes=Array.isArray(r)?r:r&&Array.isArray(r.quotes)?r.quotes:[];if(quotes.length<ids.length)quoteWarning='部分行情暂不可用，合计已标明缺失';}catch(_){quoteWarning='行情暂不可用，账本已保留，估值显示缺失';}
+  let quotes=[],quoteWarning='';
+  const ids=engine.replay(doc.entries,doc.assets).positions.filter(p=>p.quantity>0).map(p=>p.assetId);
+  if(ids.length){let timer;try{
+   // The ledger path must never depend on an external quote provider.
+   // One bounded database query covers the maximum 30 held assets.
+   const work=db.collection('quoteCache').where({_id:db.command.in(ids)}).limit(LIMITS.assets).get();
+   const r=await Promise.race([work,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('quote cache timeout')),quoteTimeoutMs);})]);
+   quotes=(r.data||[]).flatMap(q=>{
+    const age=now()-q.fetchedAt;
+    if(!ids.includes(q.assetId)||q._id!==q.assetId||!Number.isFinite(age)||age<0||age>=7*86400000)return [];
+    const stale=!!q.stale||age>=15000;return [{...q,stale,status:stale?'stale':q.status}];
+   });
+   quoteWarning=quotes.length<ids.length?'部分行情暂不可用，合计已标明缺失；可单独刷新行情':'估值使用缓存行情；下拉刷新更新报价';
+  }catch(_){quoteWarning='行情缓存暂不可用，账本已保留，估值显示缺失';}finally{clearTimeout(timer);}}
   const result=engine.evaluate(doc.entries,doc.assets,doc.notes,quotes);
   return{ok:true,revision:doc.revision,...result,assets:Object.values(doc.assets),notes:doc.notes,auditCount:doc.entries.length,operationCount:Object.keys(doc.receipts).length,limits:LIMITS,quoteWarning};
  }
@@ -105,5 +125,7 @@ function createHandler({db,getOpenid,resolve,getQuotes=async()=>[],now=Date.now,
 exports.createHandler=createHandler;exports.LIMITS=LIMITS;
 exports.main=async event=>{
  const cloud=require('wx-server-sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV});
- return createHandler({db:cloud.database(),getOpenid:()=>cloud.getWXContext().OPENID,resolve:async assetId=>{const r=(await cloud.callFunction({name:'marketData',data:{action:'resolve',assetId}})).result;if(!r||!r.ok||!r.asset)engine.fail('unknown-asset','标的验证暂不可用，请重试');return r.asset;},getQuotes:async assetIds=>{const r=(await cloud.callFunction({name:'marketData',data:{action:'quotes',assetIds}})).result;if(!r||!r.ok)throw Error('quote unavailable');return r.quotes||[];}})(event);
+ let invocationCost=1;
+ const result=await createHandler({db:cloud.database(),getOpenid:()=>cloud.getWXContext().OPENID,resolve:async assetId=>{invocationCost++;const r=(await cloud.callFunction({name:'marketData',data:{action:'resolve',assetId}})).result;if(!r||!r.ok||!r.asset)engine.fail('unknown-asset','标的验证暂不可用，请重试');return r.asset;}})(event);
+ return {...result,invocationCost};
 };

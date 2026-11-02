@@ -1,0 +1,15 @@
+<template name="reminder-authorization">
+  <view class="authorization-card">
+    <view class="section-title">先增加授权次数，才能收到通知</view>
+    <view class="auth-explanation">仅保存或开启提醒不会获得通知次数。请点击下方按钮，并在微信弹窗中选择「允许」。</view>
+    <view class="authorization-quotas">
+      <view class="authorization-quota {{hasStatus && quota.brief === 0 ? 'quota-empty' : ''}}"><view class="auth-label">定时 / 收盘</view><view class="auth-count">{{hasStatus ? quota.brief : '—'}}<text> 次</text></view><view class="auth-state">{{!hasStatus ? '次数待确认' : quota.brief > 0 ? '剩余可用次数' : '次数为 0，无法发送'}}</view></view>
+      <view class="authorization-quota {{hasStatus && quota.vol === 0 ? 'quota-empty' : ''}}"><view class="auth-label">到价 / 波动</view><view class="auth-count">{{hasStatus ? quota.vol : '—'}}<text> 次</text></view><view class="auth-state">{{!hasStatus ? '次数待确认' : quota.vol > 0 ? '剩余可用次数' : '次数为 0，无法发送'}}</view></view>
+    </view>
+    <button class="authorization-button ui-btn ui-primary" bindtap="onAuthTap" loading="{{authBusy}}" disabled="{{authBusy}}" hover-class="ui-pressed">{{authBusy ? '正在登记授权…' : '增加授权次数'}}</button>
+    <view class="auth-detail">每次允许，对应组增加 1 次（有累计上限）；成功发送一条消耗 1 次。同组所有标的共享，用完需再次增加。</view>
+    <view class="auth-detail">部分港元或高精度播报使用到价 / 波动组次数，以实际消息模板为准。</view>
+    <view wx:if="{{authNote}}" class="auth-detail" role="status">{{authNote}}</view>
+    <view wx:if="{{authError}}" class="auth-error" role="alert">{{authError}}<button class="auth-retry ui-btn ui-secondary" bindtap="refreshAuth" disabled="{{authBusy}}" hover-class="ui-pressed">刷新次数</button></view>
+  </view>
+</template>

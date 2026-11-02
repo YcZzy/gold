@@ -551,9 +551,9 @@ test("gold detail international reference failure leaves primary quote intact", 
   assert.equal(page.data.intlError, "");
   page.onHide();
 });
-test("mine uses incremental DND patch and displays per-template quota", async () => {
+test("reminders owns incremental DND settings and per-template quota", async () => {
   const calls = [];
-  const { page, wx } = load("pages/mine/mine.js", {
+  const { page, wx } = load("pages/reminders/reminders.js", {
     portfolio: { list: async () => state },
   });
   const config = require("../utils/app-config");
@@ -1149,4 +1149,91 @@ test('selector callbacks after hiding cannot create canvases or mutate chart sta
  const work=page.initCanvas();page.onHide();let contexts=0;
  finish([{node:{getContext(){contexts++;return {scale(){}}}},width:350,height:300}]);await work;
  assert.equal(contexts,0);assert.equal(page.chart,undefined);
+});
+
+test('settings page exposes quota and registers authorization without leaving the page', async () => {
+  const { page, wx, routes } = load('pages/asset-alert/asset-alert.js', {
+    market: { resolve: async () => ({ asset: a }) },
+    portfolio: { list: async () => state },
+  });
+  page.onLoad({ assetId: a.id });
+  await page.onShow();
+  wx.requestSubscribeMessage = options => options.success({});
+  wx.cloud.callFunction = async () => ({ result: { ok: false } });
+  page.onAuthTap();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(page.data.authError, /授权登记失败/);
+  assert.equal(page.data.authBusy, false);
+  assert.equal(routes.length, 0);
+});
+
+test('reminder hub edits and saves a selected watchlist asset inline', async () => {
+  let saved;
+  const { page, routes } = load('pages/reminders/reminders.js', {
+    portfolio: {
+      list: async () => state,
+      saveRule: async r => { saved = r; return { ...state, rules: [{ ...r, id: 'inline', version: 1 }] }; },
+    },
+  });
+  await page.onShow();
+  page.openAsset({ currentTarget: { dataset: { id: a.id } } });
+  page.editRule({ currentTarget: { dataset: { type: 'priceAbove' } } });
+  page.onValue({ detail: { value: '1500' } });
+  await page.saveRule();
+  assert.equal(saved.assetId, a.id);
+  assert.equal(saved.value, 1500);
+  assert.equal(page.data.groups[0].rules[0].id, 'inline');
+  assert.equal(routes.length, 0);
+});
+
+test('pausing a reminder saves directly without an extra confirmation', async () => {
+  const rule = { id: 'r1', assetId: a.id, type: 'priceAbove', value: 100, enabled: true, version: 1 };
+  let confirmations = 0, saved;
+  const { page, wx } = load('pages/asset-alert/asset-alert.js', {
+    market: { resolve: async () => ({ asset: a }) },
+    portfolio: { list: async () => ({ ...state, rules: [rule] }), saveRule: async r => { saved = r; return { ...state, rules: [r] }; } },
+  });
+  page.onLoad({ assetId: a.id });
+  await page.onShow();
+  wx.showModal = () => confirmations++;
+  await page.toggleRule({ currentTarget: { dataset: { id: 'r1' } }, detail: { value: false } });
+  assert.equal(confirmations, 0);
+  assert.equal(saved.enabled, false);
+});
+
+test('inline quiet hours retain confirmed time after a failed save', async () => {
+  const { page, wx } = load('pages/reminders/reminders.js', { portfolio: { list: async () => state } });
+  await page.onShow();
+  wx.cloud.callFunction = async () => ({ result: { ok: false } });
+  const before = page.data.prefs.dndStart;
+  await page.saveDnd({ currentTarget: { dataset: { key: 'dndStart' } }, detail: { value: '22:00' } });
+  assert.equal(page.data.prefs.dndStart, before);
+  assert.match(page.data.dndError, /保存失败/);
+  wx.cloud.callFunction = async () => ({ result: { ok: true } });
+  await page.saveDnd({ currentTarget: { dataset: { key: 'dndStart' } }, detail: { value: '22:00' } });
+  assert.equal(page.data.prefs.dndStart, '22:00');
+});
+
+test('declined subscription keeps an explanation on the current settings page', async () => {
+  const { page, wx } = load('pages/asset-alert/asset-alert.js', {
+    market: { resolve: async () => ({ asset: a }) }, portfolio: { list: async () => state },
+  });
+  page.onLoad({ assetId: a.id });
+  await page.onShow();
+  const { templates } = require('../utils/app-config');
+  wx.requestSubscribeMessage = options => options.success({ [templates.dailyBrief]: 'reject', [templates.volatility]: 'reject' });
+  wx.cloud.callFunction = async () => ({ result: { ok: true, remaining: {} } });
+  page.onAuthTap();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(page.data.authNote, /未增加/);
+  assert.equal(page.data.quota.vol, 0);
+});
+
+
+test('Mine reminder settings entry switches to the reminders tab', () => {
+  const { page, wx } = load('pages/mine/mine.js');
+  let target;
+  wx.switchTab = options => { target = options.url; };
+  page.openAuth();
+  assert.equal(target, '/pages/reminders/reminders');
 });

@@ -9,6 +9,7 @@ function loadEngine(options = {}) {
   for (const name of ["preferences", "subscriptions", "sendTasks", "quoteSnapshots"]) tables[name] ||= [];
   const sent = [];
   const logs = [];
+  const quoteRequests = [];
   const matches = (row, filter) => filter && filter.op === "or" ? filter.value.some(part => matches(row, part)) : Object.entries(filter || {}).every(([key, value]) => {
     if (value && value.op === "lte") return row[key] <= value.value;
     if (value && value.op === "gte") return row[key] >= value.value;
@@ -64,6 +65,7 @@ function loadEngine(options = {}) {
   db.command.or = value => ({ op: "or", value });
   const https = {
     get(url, _opts, callback) {
+      quoteRequests.push(url);
       const request = new EventEmitter();
       request.setTimeout = () => request;
       request.destroy = error => request.emit("error", error);
@@ -95,6 +97,10 @@ function loadEngine(options = {}) {
     require(name) {
       if (name === "https") return https;
       if (name === "wx-server-sdk") return cloud;
+      if (name === "./scan-lease") {
+        const lease = require('../../cloudfunctions/sendTask/scan-lease');
+        return {claim: (db,time) => db.runTransaction ? lease.claim(db,time) : Promise.resolve(true)};
+      }
       if (name === "./rules") return require("../../cloudfunctions/sendTask/rules");
       if (name === "./asset-tasks") {
         const module = require("../../cloudfunctions/sendTask/asset-tasks");
@@ -104,6 +110,6 @@ function loadEngine(options = {}) {
     }
   };
   vm.runInNewContext(readFileSync(join(__dirname, "../../cloudfunctions/sendTask/index.js"), "utf8"), context);
-  return { main: context.exports.main, tables, sent, logs, advance(ms) { now += ms; }, now: () => now, db };
+  return { main: context.exports.main, tables, sent, logs, quoteRequests, advance(ms) { now += ms; }, now: () => now, db };
 }
 module.exports = { loadEngine };

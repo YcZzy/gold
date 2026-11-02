@@ -1,9 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {inspectDraft}=require('../utils/holdings-form');
 const trade={type:'buy',assetId:'a',date:'2026-10-30',quantity:'3',price:'10.25',fee:'0.10',grossAmount:''};
-test('trade preview includes fees with correct cash direction',()=>{
- assert.equal(inspectDraft(trade).preview.cashText,'−30.85');
- assert.equal(inspectDraft({...trade,type:'sell'}).preview.cashText,'+30.65');
+test('trade preview includes fees in buy total and sell net income',()=>{
+ assert.equal(inspectDraft(trade).preview.cashText,'30.85');
+ assert.equal(inspectDraft({...trade,type:'sell'}).preview.cashText,'30.65');
  assert.equal(inspectDraft({...trade,grossAmount:'31'}).preview.grossText,'31.00');
 });
 test('invalid decimals and missing fields cannot produce misleading previews',()=>{
@@ -20,4 +20,9 @@ test('opening positions never imply cash movement and opening cash sets balance'
 test('oversized input is rejected before generating a cash preview',()=>{
  assert.ok(inspectDraft({...trade,quantity:'1000000000001'}).errors.quantity);
  assert.ok(inspectDraft({...trade,type:'deposit',amount:'1000000000001'}).errors.amount);
+});
+
+test('trade preview describes trade totals rather than a required account debit',()=>{
+ const buy=inspectDraft(trade).preview,sell=inspectDraft({...trade,type:'sell'}).preview;
+ assert.equal(buy.cashLabel,'买入合计（含费用）');assert.equal(buy.cashText,'30.85');assert.equal(sell.cashLabel,'卖出净收入');assert.equal(sell.cashText,'30.65');
 });

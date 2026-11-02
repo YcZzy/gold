@@ -48,31 +48,32 @@ button:focus-visible, input:focus-visible { outline: 3rpx solid var(--accent); o
 .module-status > text { min-width: 0; line-height: 1.7; overflow-wrap: anywhere; }
 /* Shared filters sit above the rows and retain a stable hierarchy. */
 .discovery-panel { background: var(--card); border: 1rpx solid var(--card-border); border-radius: 24rpx; padding: 28rpx 24rpx 8rpx; }
-.discovery-heading { margin-bottom: 24rpx; }
+.discovery-heading { margin-bottom: 12rpx; }
 .section-note { font-size: 20rpx; color: var(--text-sub); }
-.section-tabs { display: flex; gap: 12rpx; padding: 0; border-bottom: 1rpx solid var(--card-border); }
-.tab { flex: 1; display: flex; justify-content: center; align-items: center; min-width: 0; text-align: center; }
+.section-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; padding: 0; border-bottom: 1rpx solid var(--card-border); }
+.tab { width: 100%; flex: 1; display: flex; justify-content: center; align-items: center; min-width: 0; text-align: center; }
 /* Constrain native button widths so all three sort options fit the panel. */
 .sort-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12rpx; width: 100%; min-width: 0; box-sizing: border-box; margin: 20rpx 0 8rpx; }
 .sort-tabs .sort { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; margin: 0; }
 .member-heading { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; border-bottom: 1rpx solid var(--card-border); margin-top: 12rpx; }
 .member-heading > text { min-width: 0; font-size: 25rpx; overflow-wrap: anywhere; }
-.sector-tools { margin-top: 24rpx; }
+.sector-tools { margin-top: 20rpx; padding-bottom: 12rpx; border-bottom: 1rpx solid var(--card-border); }
 .field-label { display: block; min-width: 0; font-size: 22rpx; color: var(--text-mid); line-height: 1.6; overflow-wrap: anywhere; }
-.search-row { display: flex; gap: 12rpx; margin-top: 12rpx; }
+.search-row { display: flex; align-items: stretch; gap: 12rpx; min-width: 0; }
 .search-field { flex: 1; min-width: 0; display: flex; align-items: center; background: var(--chip-bg); border: 1rpx solid var(--chip-border); border-radius: 12rpx; }
 .search-field input { flex: 1; min-width: 0; height: 72rpx; padding: 0 16rpx; box-sizing: border-box; font-size: 24rpx; }
 .search-placeholder { color: var(--text-sub); }
 .clear-search { display: flex; align-items: center; flex-shrink: 0; }
-.search-button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.sector-sort-row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 16rpx; }
+.market-page button.search-button { display: flex; align-items: center; justify-content: center; flex: 0 0 112rpx; width: 112rpx; min-width: 112rpx; }
+.sector-sort-row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 8rpx; }
+.sector-sort-row > .field-label { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .sector-sort-row picker { flex-shrink: 0; }
 .picker-value { display: flex; align-items: center; gap: 14rpx; min-height: 56rpx; padding: 8rpx 0 8rpx 12rpx; box-sizing: border-box; border: 0; background: transparent; font-size: 23rpx; color: var(--text); }
 .flow-note { margin-top: 20rpx; color: var(--text-mid); font-size: 22rpx; line-height: 1.7; }
 .list-heading { margin-top: 12rpx; }
 .list-title { min-width: 0; font-size: 25rpx; font-weight: 600; overflow-wrap: anywhere; }
 .loading-status { padding: 8rpx 0 16rpx; }
-.table-caption { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; border-bottom: 1rpx solid var(--card-border); padding: 12rpx 0 20rpx 48rpx; color: var(--text-sub); font-size: 20rpx; }
+.table-caption { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; border-bottom: 1rpx solid var(--card-border); padding: 10rpx 0 14rpx 44rpx; color: var(--text-sub); font-size: 20rpx; }
 /* Separate identity and quote columns; long names wrap without moving quotes. */
 .market-row { padding: 24rpx 0; border-bottom: 1rpx solid var(--card-border); }
 .sector-row, .security-row { display: flex; align-items: flex-start; gap: 16rpx; width: 100%; }
@@ -125,4 +126,50 @@ button:focus-visible, input:focus-visible { outline: 3rpx solid var(--accent); o
   .section-note { font-size: 19rpx; }
   .row-name { font-size: 26rpx; }
   .row-numbers { max-width: 46%; }
+}
+
+/* Keep sector identity and metrics aligned; supplier IDs belong in data, not rows. */
+.market-page button.sector-row {
+  display: grid;
+  grid-template-columns: 28rpx minmax(0, 1fr) 156rpx 10rpx;
+  align-items: center;
+  gap: 14rpx;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 96rpx;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+.market-page .sector-row .rank { width: auto; padding-top: 0; text-align: left; }
+.market-page .sector-row .row-numbers { max-width: none; min-width: 0; }
+.sector-name-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4rpx 12rpx; }
+.sector-name-line .row-name { min-width: 0; font-size: 27rpx; line-height: 1.5; font-weight: 600; overflow-wrap: break-word; }
+.member-count { flex-shrink: 0; color: var(--text-mid); font-size: 20rpx; line-height: 1.5; }
+.sector-leader { display: flex; align-items: baseline; gap: 10rpx; margin-top: 8rpx; color: var(--text-mid); font-size: 22rpx; line-height: 1.5; overflow-wrap: break-word; }
+.leader-label { flex-shrink: 0; color: var(--text-sub); font-size: 20rpx; }
+.sector-amount { margin-top: 6rpx; color: var(--text-mid); font-size: 21rpx; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.row-chevron { width: 10rpx; height: 10rpx; box-sizing: border-box; border-top: 2rpx solid var(--text-sub); border-right: 2rpx solid var(--text-sub); transform: rotate(45deg); }
+.sort-chevron { width: 10rpx; height: 10rpx; box-sizing: border-box; border-bottom: 2rpx solid var(--text-mid); border-right: 2rpx solid var(--text-mid); transform: translateY(-3rpx) rotate(45deg); }
+.market-page .market-row { padding: 16rpx 0; }
+.market-page .market-row:last-child { border-bottom: 0; }
+@media (max-width: 360px) {
+  .market-page button.sector-row { grid-template-columns: 24rpx minmax(0, 1fr) 144rpx 8rpx; gap: 10rpx; }
+  .sector-name-line .row-name { font-size: 26rpx; }
+  .sector-leader { font-size: 21rpx; }
+}
+
+/* Native default-size buttons need explicit constraints inside equal grid tracks. */
+.market-page .section-tabs button.tab {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 16rpx 4rpx;
+  font-size: 24rpx;
+  white-space: nowrap;
 }

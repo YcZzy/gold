@@ -1,8 +1,9 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const { loadEngine } = require("./helpers/cloud-harness");
+const { templates } = require("../utils/app-config");
 function loadTask(time = "2026-10-26T15:35:00+08:00") {
-  const e = loadEngine({ time, tables: { preferences: [{ _id: "test-user", openid: "test-user", dailyBrief: true }] } });
+  const e = loadEngine({ time, tables: { preferences: [{ _id: "test-user", openid: "test-user", dailyBrief: true }], subscriptions: [{ _id: "test-user:brief", openid: "test-user", templateId: templates.dailyBrief, remaining: 1 }] } });
   return { main: e.main, created: e.tables.sendTasks, reads: [] };
 }
 

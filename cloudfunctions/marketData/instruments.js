@@ -121,6 +121,9 @@ function catalogSearch(keyword) {
     .slice(0, 40)
     .map((r) => stockAsset(r.market, r.symbol, r.name));
 }
+function isAStockType(market, code, type) {
+  return type === "GP-A" || (type === "GP-A-KCB" && market === "SH" && /^68\d{4}$/.test(code));
+}
 function searchCandidates(value) {
   const results = [];
   for (const row of value.split("^")) {
@@ -128,9 +131,9 @@ function searchCandidates(value) {
     if (!name) continue;
     try {
       let a;
-      if (["sh", "sz"].includes(market) && ["GP-A", "ETF", "LOF", "QDII-LOF"].includes(type)) {
+      if (["sh", "sz"].includes(market) && (isAStockType(market.toUpperCase(), code, type) || ["ETF", "LOF", "QDII-LOF"].includes(type))) {
         a = stockAsset(market.toUpperCase(), code, name);
-        const expectedKind = { "GP-A": "stock", ETF: "etf", LOF: "lof", "QDII-LOF": "lof" }[type];
+        const expectedKind = { "GP-A": "stock", "GP-A-KCB": "stock", ETF: "etf", LOF: "lof", "QDII-LOF": "lof" }[type];
         if (a.kind !== expectedKind) continue;
       } else if (market === "hk" && type === "GP")
         a = stockAsset("HK", code, name);
@@ -176,7 +179,7 @@ function verifiedQuoteAsset(a, p) {
     a.kind === "stock" &&
     ["SH", "SZ"].includes(a.market) &&
     p[61] &&
-    p[61] !== "GP-A"
+    !isAStockType(a.market, a.code, p[61])
   )
     return null;
   return quotePrecision(

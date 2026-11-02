@@ -18,7 +18,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 const { planTasks, isTaskCurrent, withinLimit, freshPrice, isBrief, positive, TARGET_KEYS } = require("./rules");
-const { createAssetTasks } = require("./asset-tasks");
+const { createAssetTasks, quotaIndex } = require("./asset-tasks");
 
 const T = {
   VOL_AU: "volAu"
@@ -285,9 +285,21 @@ async function scan() {
       }
     }
   }
-  const needsQuotes = users.some(u => u.volatilityAu || u.volatilityXau || u.shortAu || u.shortXau || TARGET_KEYS.some(k => u[k]));
+  const quotas = quotaIndex(await readAll("subscriptions", { remaining: _.gt(0) }));
+  const eligibleUsers = users.map(user => {
+    const active = { ...user };
+    if (!quotas.has(user.openid + ":" + TEMPLATE.dailyBrief)) {
+      active.dailyBrief = false;
+      active.scheduledBrief = false;
+    }
+    if (!quotas.has(user.openid + ":" + TEMPLATE.volatility)) {
+      for (const key of ["volatilityAu", "volatilityXau", "shortAu", "shortXau", ...TARGET_KEYS]) active[key] = false;
+    }
+    return active;
+  });
+  const needsQuotes = eligibleUsers.some(u => u.volatilityAu || u.volatilityXau || u.shortAu || u.shortXau || TARGET_KEYS.some(k => u[k]));
   const quotes = needsQuotes ? await getQuotes() : {};
-  const needsHistory = users.some(u => u.shortAu || u.shortXau);
+  const needsHistory = eligibleUsers.some(u => u.shortAu || u.shortXau);
   let samples = [];
   if (needsHistory) {
     // 单个有界滚动文档，无需长期留存或清理不断增长的行情记录。
@@ -315,14 +327,14 @@ async function scan() {
     }
   }
   let created = 0;
-  for (const user of users) {
+  for (const user of eligibleUsers) {
     for (const task of planTasks(user, quotes, samples, now)) {
       if (await createTask(task)) created++;
     }
   }
   try {
-    const multi = await assetTasks.scan();
-    return { ok: true, created: created + multi.created, assetCreated: multi.created };
+    const multi = await assetTasks.scan({ quotas, warmWatchlists: true });
+    return { ok: true, created: created + multi.created, assetCreated: multi.created, scanStats: multi.scanStats };
   } catch (error) {
     console.error("asset-scan-error", error);
     return { ok: false, created, assetError: String(error.errMsg || error.message || "unknown") };
@@ -525,12 +537,18 @@ exports.main = async (event) => {
   if (event && event.action === "testNotification") return testNotification();
   // 云端定时器使用 TriggerName；保留小写字段以兼容已有手动测试入参。
   const triggerName = (event && (event.TriggerName || event.triggerName)) || "manual";
-  if (triggerName === "scanTimer") return scan();
+  if (triggerName === "scanTimer") {
+    if (event.Type === 'Timer' && !await require('./scan-lease').claim(db, Date.now())) return {ok:true,skipped:'duplicate-minute-scan'};
+    return scan();
+  }
   if (triggerName === "dispatchTimer") {
     // 在同一轮扫描后分发，不依赖两个独立定时器的先后顺序。
     // 扫描故障也要分发已有任务；返回错误便于云端日志排查。
     let scanned;
-    try { scanned = await scan(); }
+    try {
+      const claimed = event.Type !== 'Timer' || await require('./scan-lease').claim(db, Date.now());
+      scanned = claimed ? await scan() : {ok:true,skipped:'duplicate-minute-scan'};
+    }
     catch (error) {
       console.error("reminder-scan-error", error);
       scanned = { ok: false, scanError: String(error.errMsg || error.message || "unknown") };

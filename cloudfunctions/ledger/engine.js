@@ -56,7 +56,7 @@ function effective(entries){
 }
 function internal(entries,assets){
  const ps={},cs={};
- const currency=c=>cs[c]||(cs[c]={currency:c,cash:0n,tracked:false,income:0n,expense:0n});
+ const currency=c=>cs[c]||(cs[c]={currency:c,cash:0n,tracked:false,gap:false,income:0n,expense:0n});
  for(const e of entries){
   const c=currency(e.currency);let p;
   if(e.assetId){const a=assets[e.assetId];if(!a||a.currency!==e.currency)fail('unknown-asset','标的或币种不一致');p=ps[e.assetId]||(ps[e.assetId]={assetId:e.assetId,quantity:0n,cost:0n,realized:0n,realizedCost:0n,income:0n,expense:0n,invested:0n,opened:false});}
@@ -65,21 +65,22 @@ function internal(entries,assets){
    case 'deposit':c.cash+=decimal(e.amount);c.tracked=true;break;
    case 'withdrawal':c.cash-=decimal(e.amount);c.tracked=true;break;
    case 'openingPosition':if(p.opened)fail('bad-entry','期初持仓须为该标的首笔且只能录入一次');p.quantity=decimal(e.quantity);p.cost=decimal(e.cost);p.invested=p.cost;p.opened=true;break;
-   case 'buy':{const cost=decimal(e.grossAmount)+decimal(e.fee);p.quantity+=decimal(e.quantity);p.cost+=cost;p.invested+=cost;p.opened=true;c.cash-=cost;c.tracked=true;break;}
-   case 'sell':{const q=decimal(e.quantity);if(q>p.quantity)fail('oversell',`${e.date} 卖出数量超过当时持仓`);const cost=q===p.quantity?p.cost:rounded(p.cost*q,p.quantity);p.quantity-=q;p.cost-=cost;const net=decimal(e.grossAmount)-decimal(e.fee);p.realized+=net-cost;p.realizedCost+=cost;c.cash+=net;c.tracked=true;p.opened=true;break;}
+   case 'buy':{const cost=decimal(e.grossAmount)+decimal(e.fee);p.quantity+=decimal(e.quantity);p.cost+=cost;p.invested+=cost;p.opened=true;c.cash-=cost;break;}
+   case 'sell':{const q=decimal(e.quantity);if(q>p.quantity)fail('oversell',`${e.date} 卖出数量超过当时持仓`);const cost=q===p.quantity?p.cost:rounded(p.cost*q,p.quantity);p.quantity-=q;p.cost-=cost;const net=decimal(e.grossAmount)-decimal(e.fee);p.realized+=net-cost;p.realizedCost+=cost;c.cash+=net;p.opened=true;break;}
    case 'income':{const amount=decimal(e.amount);c.cash+=amount;c.income+=amount;if(p)p.income+=amount;break;}
    case 'expense':{const amount=decimal(e.amount);c.cash-=amount;c.expense+=amount;if(p)p.expense+=amount;break;}
    case 'split':if(!p.quantity)fail('bad-entry','没有持仓不能拆合股');p.quantity=rounded(p.quantity*decimal(e.numerator),decimal(e.denominator));if(!p.quantity)fail('bad-entry','拆合股后的数量低于支持精度');break;
    default:fail('bad-entry','未知流水');
   }
-  if(c.cash<0n)fail('insufficient-cash',`${e.date} ${e.currency} 现金不足，请先补充期初现金或入金`);
-  if(c.cash>MAX||(p&&(p.quantity>MAX||p.cost>MAX)))fail('bad-decimal','累计金额或数量超过上限');
+  // Funding is optional: a gap makes cash unknown, never blocks trade recording.
+  if(c.cash<0n)c.gap=true;
+  if(c.cash>MAX||c.cash< -MAX||(p&&(p.quantity>MAX||p.cost>MAX)))fail('bad-decimal','累计金额或数量超过上限');
  }
  return{ps,cs};
 }
 function replay(entries,assets){
  const active=effective(entries),{ps,cs}=internal(active,assets);
- return{entries:active,positions:Object.values(ps).map(p=>({...assets[p.assetId],assetId:p.assetId,quantity:number(p.quantity),cost:number(p.cost),realized:number(p.realized),realizedCost:number(p.realizedCost),realizedRate:p.realizedCost?Number(p.realized)/Number(p.realizedCost)*100:null,income:number(p.income),expense:number(p.expense),invested:number(p.invested),averageCost:p.quantity?Number(p.cost)/Number(p.quantity):null})),currencies:Object.values(cs).map(c=>({currency:c.currency,cash:number(c.cash),cashTracked:c.tracked,income:number(c.income),expense:number(c.expense)}))};
+ return{entries:active,positions:Object.values(ps).map(p=>({...assets[p.assetId],assetId:p.assetId,quantity:number(p.quantity),cost:number(p.cost),realized:number(p.realized),realizedCost:number(p.realizedCost),realizedRate:p.realizedCost?Number(p.realized)/Number(p.realizedCost)*100:null,income:number(p.income),expense:number(p.expense),invested:number(p.invested),averageCost:p.quantity?Number(p.cost)/Number(p.quantity):null})),currencies:Object.values(cs).map(c=>({currency:c.currency,cash:c.tracked&&!c.gap?number(c.cash):null,cashTracked:c.tracked,cashComplete:c.tracked&&!c.gap,income:number(c.income),expense:number(c.expense)}))};
 }
 function quoteDecimal(v,positive=true){try{return decimal(v,positive);}catch(_){return null;}}
 function evaluate(entries,assets,notes={},quotes=[]){
@@ -94,7 +95,7 @@ function evaluate(entries,assets,notes={},quotes=[]){
    if(own.some(e=>e.date>d))dailyReason='最新报价早于部分流水日期';
    else if(own.some(e=>e.date===d&&['openingPosition','split'].includes(e.type)))dailyReason='期初或拆合股日缺少可比基线';
    else{
-    // Replay the complete account prefix so cash validation retains its actual history.
+    // Replay the complete account prefix to retain actual quantity and cash history.
     const before=internal(active.filter(e=>e.date<d),assets).ps[p.assetId],q0=before?before.quantity:0n;
     let flow=0n;
     for(const e of own.filter(e=>e.date===d)){
@@ -109,7 +110,7 @@ function evaluate(entries,assets,notes={},quotes=[]){
   return{...p,note:notes[p.assetId]||'',price:price===null?null:number(price),marketValue,unrealized:unrealized===null?null:Number(unrealized.toFixed(6)),unrealizedRate:unrealized===null||p.cost===0?null:unrealized/p.cost*100,totalPnl:unrealized===null?null:Number((p.realized+unrealized+p.income-p.expense).toFixed(6)),totalPnlRate:unrealized===null||p.invested===0?null:(p.realized+unrealized+p.income-p.expense)/p.invested*100,daily,dailyReason,sessionDate:d||null,sourceTime:q.sourceTime||null,stale:!!q.stale,status:q.status||'unavailable',source:q.source||null};
  });
  const currencies=r.currencies.map(c=>{
-  const ps=positions.filter(p=>p.currency===c.currency),open=ps.filter(p=>p.quantity>0),complete=open.every(p=>p.marketValue!==null),knownValue=ps.reduce((s,p)=>s+(p.marketValue||0),0),equity=complete&&c.cashTracked?knownValue+c.cash:null;
+  const ps=positions.filter(p=>p.currency===c.currency),open=ps.filter(p=>p.quantity>0),complete=open.every(p=>p.marketValue!==null),knownValue=ps.reduce((s,p)=>s+(p.marketValue||0),0),equity=complete&&c.cashComplete?knownValue+c.cash:null;
   // Independent cash PnL belongs to the user-entered ledger date, never inferred from fetch time.
   const independent=active.filter(e=>e.currency===c.currency&&!e.assetId&&['income','expense'].includes(e.type));
   const dates=[...new Set([...ps.map(p=>p.sessionDate).filter(Boolean),...independent.map(e=>e.date)])].sort();

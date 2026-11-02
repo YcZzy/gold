@@ -27,6 +27,7 @@ const DEFAULT_ITEMS = [
   },
 ];
 function createClient(platform) {
+  const pool = require("./read-pool").forPlatform(platform);
   let lastGood = null;
   function getCached() {
     let saved = lastGood;
@@ -37,6 +38,7 @@ function createClient(platform) {
       ? JSON.parse(JSON.stringify({ ...saved, annotations: saved.annotations || {}, groups:saved.groups || [] })) : null;
   }
   async function call(action, payload) {
+    if (action !== "list") pool.invalidate("portfolio:list");
     try {
       if (!platform || !platform.cloud || !platform.cloud.callFunction)
         throw new Error("cloud unavailable");
@@ -95,7 +97,7 @@ function createClient(platform) {
           annotations: fallback.annotations || {},
           groups: fallback.groups || [],
           offline: true,
-          hint: "当前离线，显示上次保存的自选；联网后可修改",
+          hint: /^cloud-call-budget-/.test(error.code || "") ? error.message : "当前离线，显示上次保存的自选；联网后可修改",
         });
       }
       if (!error.hint)
@@ -105,7 +107,7 @@ function createClient(platform) {
   }
   return {
     getCached,
-    list: () => call("list"),
+    list: () => pool.run("portfolio:list", () => call("list")),
     add: (assetId) => call("add", { assetId }),
     remove: (assetId) => call("remove", { assetId }),
     reorder: (assetIds, revision) => call("reorder", { assetIds, revision }),

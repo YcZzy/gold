@@ -13,7 +13,6 @@ button::after { border: 0; }
 .heading-actions { flex-shrink: 0; gap: 12rpx; }
 .heading-row .text-button { width:auto; flex: 0 0 auto; }
 .holdings-page button.entry-trigger.ui-btn { width: auto; min-width: 136rpx; min-height: 72rpx; flex: 0 0 auto; padding: 12rpx 22rpx; }
-.holdings-page button.more-button.ui-btn { width: 64rpx; min-height: 72rpx; padding: 8rpx; font-size: 24rpx; letter-spacing: 2rpx; }
 .holdings-page button.back-button.ui-btn { width: 56rpx; min-height: 72rpx; margin-left: -12rpx; padding: 0; font-size: 48rpx; line-height: 1; }
 .section-row { justify-content: space-between; }
 .section-title { font-size: 28rpx; font-weight: 600; }
@@ -131,3 +130,9 @@ input[aria-invalid="true"] { border-color: var(--error-text); }
 
 .holding-hit-target { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; }
 .holding-hit-pressed { background: var(--chip-bg); opacity: .2; }
+
+.overview-toolbar, .overview-footer { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.overview-toolbar { min-height: 60rpx; margin: -12rpx 0 12rpx; }
+.overview-footer { min-height: 60rpx; border-top: 1rpx solid var(--card-border); margin-top: 24rpx; padding-top: 12rpx; }
+.holdings-page .overview-toolbar button.ui-btn, .holdings-page .overview-footer button.ui-btn { width: auto; min-height: 64rpx; margin: 0; padding: 8rpx 0; font-size: 23rpx; }
+.overview-footer button text { margin-left: 8rpx; }

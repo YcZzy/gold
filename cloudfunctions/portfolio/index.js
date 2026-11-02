@@ -225,19 +225,24 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
       )
         fail("bad-order", "自选顺序格式不正确");
       const metadata = { ...GOLD };
-      async function asset(id) {
+      async function asset(id, verify = false) {
         if (!metadata[id]) {
-          const found = await resolve(id);
-          const verified = securities.metadata(found, id);
+          // Instruments are server-written and access-controlled; listing does not
+          // need a separate marketData invocation per already verified security.
+          const saved = verify ? null : await read(db.collection("instruments").doc(id));
+          const age = saved && now() - saved.updatedAt;
+          const cached = saved && Number.isFinite(age) && age >= 0 && age < 86400000
+            ? securities.metadata(saved.asset, id) : null;
+          const verified = cached || securities.metadata(await resolve(id), id);
           if (!verified) fail("unknown-asset", "未找到可用的证券信息");
           metadata[id] = verified;
         }
         return metadata[id];
       }
       // Resolve remote metadata before entering the transaction: retries stay local.
-      if (action === "add") await asset(event.assetId);
-      if (action === 'batchAdd') await Promise.all(workspacePatch.assetIds.map(asset));
-      if (action === "saveRule") patch = conditions(event, await asset(event.assetId));
+      if (action === "add") await asset(event.assetId, true);
+      if (action === 'batchAdd') await Promise.all(workspacePatch.assetIds.map(id => asset(id, true)));
+      if (action === "saveRule") patch = conditions(event, await asset(event.assetId, true));
       const saved = await db.runTransaction(async (tx) => {
         const ref = tx.collection("portfolios").doc(openid),
           prefRef = tx.collection("preferences").doc(openid);
@@ -403,7 +408,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
         }
         return { ...doc, limits };
       });
-      const items = await Promise.all(saved.items.map(asset));
+      const items = await Promise.all(saved.items.map(id => asset(id)));
       return {
         ok: true,
         items,
@@ -427,10 +432,12 @@ exports.GOLD = GOLD;
 exports.main = async (event) => {
   const cloud = require("wx-server-sdk");
   cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
-  return createHandler({
+  let invocationCost = 1;
+  const result = await createHandler({
     db: cloud.database(),
     getOpenid: () => cloud.getWXContext().OPENID,
     resolve: async (assetId) => {
+      invocationCost++;
       const response = await cloud.callFunction({
         name: "marketData",
         data: { action: "resolve", assetId },
@@ -443,4 +450,5 @@ exports.main = async (event) => {
       return response.result.asset;
     },
   })(event);
+  return { ...result, invocationCost };
 };

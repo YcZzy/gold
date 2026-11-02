@@ -9,11 +9,11 @@ test('group sort is independent, missing quotes are last and source rows remain 
   assert.deepEqual(view.select(rows,groups,{minPrice:'2.5'}).map(r=>r.id),['c']);
   assert.deepEqual(rows.map(r=>r.id),['a','b','c']);
 });
-test('display preferences validate known toggles, persist and quiet charts have neutral up/down colors',()=>{
-  const storage=new Map();const wx={getStorageSync:k=>storage.get(k),setStorageSync:(k,v)=>storage.set(k,v)};
-  assert.equal(display.get(wx).quiet,false);
-  display.save({quiet:true,showTime:false},wx);
-  assert.equal(display.get(wx).quiet,true); assert.equal(display.get(wx).showTime,false);
-  assert.throws(()=>display.save({quiet:'yes'},wx));
-  assert.equal(display.colors({},display.get(wx)).up,display.colors({},display.get(wx)).down);
+test('removed device preferences ignore old overrides and preserve standard chart colors',()=>{
+  let reads=0,writes=0;
+  const wx={getStorageSync:()=>{reads++;return {quiet:true,compact:true,hideAmounts:true,showChange:false,showTime:false,showNotes:false};},setStorageSync:()=>{writes++;}};
+  assert.deepEqual(display.get(wx),{quiet:false,compact:false,hideAmounts:false,showChange:true,showTime:true,showNotes:true});
+  const colors={up:'#ff0000',down:'#00ff00'};assert.deepEqual(display.colors(colors,{quiet:true}),colors);
+  assert.equal(reads,0);assert.equal(writes,0);assert.equal(display.save,undefined);
+  const first=display.get();first.quiet=true;assert.equal(display.get().quiet,false);
 });

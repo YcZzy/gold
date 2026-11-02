@@ -5,9 +5,14 @@ const theme = require("../../utils/theme");
 const cache = require("../../utils/read-cache");
 const fmt = require("../../utils/asset-format");
 const { templates } = require("../../utils/app-config");
+const settings = require("../../utils/reminder-settings")({ market, portfolio, theme, fmt, wx, statusClient, templates });
 const TPL_IDS = [templates.dailyBrief, templates.volatility];
 Page({
+  ...settings,
   data: {
+    ...settings.data,
+    assets: [],
+    assetIndex: 0,
     theme: theme.getTheme(),
     hasStatus: false,
     hasPortfolio: false,
@@ -49,7 +54,10 @@ Page({
     this._alive = false;
   },
   applyPortfolio(s, removed = []) {
+    this._state = s;
+    const assets = [...s.items, ...removed];
     this.setData({
+      assets,
       hasPortfolio: true,
       groups: [...s.items, ...removed]
         .map(a => ({
@@ -64,10 +72,42 @@ Page({
       errorText: "",
       loading: false,
     });
+    if (!this.data.asset && assets.length) this.selectAsset(assets[0].id);
+    else if (this.data.asset && !this.data.editing) this.selectAsset(this.assetId);
+  },
+  applyState(s) {
+    const removed = this.data.assets.filter(a => !s.items.some(item => item.id === a.id));
+    this.applyPortfolio(s, removed);
+    if (this.data.asset) {
+      this.setData({ rules: (s.rules || []).filter(r => r.assetId === this.assetId).map(r => ({ ...r, summary: fmt.summary(r, this.data.asset) })), following: s.items.some(a => a.id === this.assetId) });
+    }
+  },
+  selectAsset(id) {
+    if (this.data.busy) return;
+    const asset = this.data.assets.find(a => a.id === id);
+    if (!asset) return;
+    this.assetId = id;
+    this.setData({
+      asset: { ...asset, ...fmt.identity(asset) },
+      assetIndex: this.data.assets.findIndex(a => a.id === id),
+      types: fmt.TYPES.filter(t => t.value !== 'close' || asset.supportsClose === true ||
+        (asset.supportsClose !== false && (asset.market === 'SH' || asset.market === 'SZ' || asset.id === 'gold-au9999'))),
+      rules: (this._state.rules || []).filter(r => r.assetId === id).map(r => ({ ...r, summary: fmt.summary(r, asset) })),
+      following: this._state.items.some(a => a.id === id),
+      editing: false,
+      errorText: '',
+      statusNote: '',
+    });
+  },
+  onAssetChange(e) {
+    const asset = this.data.assets[Number(e.detail.value)];
+    if (asset) this.selectAsset(asset.id);
   },
   applyStatus(r) {
+    this.syncDnd(r.prefs);
     this.setData({
       hasStatus: true,
+      authError: "",
       recent: (r.recentTasks || []).slice(0, 5).map(fmt.task),
       quota: {
         brief: Number((r.remaining || {})[templates.dailyBrief] || 0),
@@ -97,6 +137,7 @@ Page({
     } catch (e) {
       if (this._alive) this.setData({ loading: false });
     }
+    if (!this.data.asset && this.data.assets.length) this.selectAsset(this.data.assets[0].id);
     return this.refreshAuth();
   },
   async refreshAuth() {
@@ -105,72 +146,12 @@ Page({
       if (!r || !r.ok) throw Error("授权状态获取失败");
       if (this._alive) this.applyStatus(r);
     } catch (e) {
-      // Keep the previous quota and recent reminders.
+      if (this._alive) this.setData({ authError: "授权次数获取失败，请点击重试" });
     }
   },
   openAsset(e) {
-    wx.navigateTo({
-      url:
-        "/pages/asset-alert/asset-alert?assetId=" +
-        encodeURIComponent(e.currentTarget.dataset.id),
-    });
-  },
-  onAuthTap() {
-    if (this.data.authBusy) return;
-    this.setData({ authBusy: true, errorText: "" });
-    wx.requestSubscribeMessage({
-      tmplIds: TPL_IDS,
-      success: async (results) => {
-        const filtered = {};
-        TPL_IDS.forEach((id) => {
-          if (results[id]) filtered[id] = results[id];
-        });
-        try {
-          const requestId =
-            "auth-" +
-            Date.now().toString(36) +
-            "-" +
-            Math.random().toString(36).slice(2);
-          const out = (
-            await wx.cloud.callFunction({
-              name: "registerAuth",
-              data: { requestId, results: filtered },
-            })
-          ).result;
-          if (!out || !out.ok) throw Error("授权登记失败，请重试");
-          statusClient.updateStatus(wx, out);
-          if (this._alive) {
-            this.setData({
-              quota: {
-                brief: Number((out.remaining || {})[templates.dailyBrief] || 0),
-                vol: Number((out.remaining || {})[templates.volatility] || 0),
-              },
-              remaining: TPL_IDS.reduce(
-                (n, id) => n + Number((out.remaining || {})[id] || 0),
-                0,
-              ),
-            });
-            wx.showToast({
-              title: TPL_IDS.some((id) => filtered[id] === "accept")
-                ? "授权已增加"
-                : "本次未授权",
-              icon: "none",
-            });
-          }
-        } catch (e) {
-          if (this._alive) this.setData({ errorText: e.message });
-        } finally {
-          if (this._alive) this.setData({ authBusy: false });
-        }
-      },
-      fail: () => {
-        if (this._alive)
-          this.setData({
-            authBusy: false,
-            errorText: "订阅授权未完成，请重试",
-          });
-      },
-    });
+    this.selectAsset(e.currentTarget.dataset.id);
+    if (wx.pageScrollTo) wx.pageScrollTo({ selector: '#inline-settings', duration: 200 });
   },
   onPullDownRefresh() {
     return this.reload().finally(() => wx.stopPullDownRefresh());

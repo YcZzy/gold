@@ -19,7 +19,7 @@ function inspectDraft(draft) {
   const price=numeric('price','成交单价');fee=numeric('fee','费用',false,true);
   gross=d.grossAmount!==''&&d.grossAmount!=null&&d.grossAmountMode!=='auto'?numeric('grossAmount','实际成交金额'):quantity==null||price==null?null:Math.round(quantity*price*1e6)/1e6;
   if(gross!=null&&(gross<=0||gross>1e12))errors.grossAmount='成交金额须大于0且不超过1万亿';
-  cash=d.type==='buy'?-(gross+fee):gross-fee;
+  cash=d.type==='buy'?gross+fee:gross-fee;cashLabel=d.type==='buy'?'买入合计（含费用）':'卖出净收入';
  }
  if(['openingCash','deposit','withdrawal','income','expense'].includes(d.type)){
   gross=numeric('amount','金额',d.type!=='openingCash');cash=['withdrawal','expense'].includes(d.type)?-gross:gross;
@@ -28,6 +28,6 @@ function inspectDraft(draft) {
  if(d.type==='split'){numeric('numerator','新数量单位');numeric('denominator','原数量单位');}
  if(Object.keys(errors).length)return {errors,preview:null};
  const fmt=v=>v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:6});
- return {errors,preview:{grossText:gross==null?'—':fmt(gross),feeText:fmt(fee),cashLabel,cashText:cash==null?'不影响现金':(d.type==='openingCash'?'':cash<0?'−':'+')+fmt(Math.abs(cash))}};
+ return {errors,preview:{grossText:gross==null?'—':fmt(gross),feeText:fmt(fee),cashLabel,cashText:cash==null?'不影响现金':(['openingCash','buy','sell'].includes(d.type)?(cash<0?'−':''):cash<0?'−':'+')+fmt(Math.abs(cash))}};
 }
 module.exports={inspectDraft};

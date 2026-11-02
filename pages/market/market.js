@@ -56,7 +56,7 @@ Page({
   if(!this._alive || !this._visible)return;const n=this._listRequest=(this._listRequest||0)+1;
   const {section,selectedSector,page,sort,searchKeyword:keyword,sectorSort}=this.data;
   const isSector=!selectedSector && ['industry','concept'].includes(section),isFlow=section==='flowRanking';
-  const title=selectedSector?selectedSector.name+' · A 股成员':section==='ranking'?'A 股'+({gainers:'涨幅',losers:'跌幅',amount:'成交额'})[sort]+'榜':isFlow?'资金净流入榜':SECTIONS[section]+' · 新浪口径';
+  const title=selectedSector?selectedSector.name+' · A 股成员':section==='ranking'?'A 股'+({gainers:'涨幅',losers:'跌幅',amount:'成交额'})[sort]+'榜':isFlow?'资金净流入榜':SECTIONS[section]+'板块';
   const queryKey=JSON.stringify([section,selectedSector?.id,page,sort,keyword,sectorSort]);
   const changed=queryKey!==this._listQueryKey;this._listQueryKey=queryKey;
   this.setData({listLoading:true,listError:'',rowError:'',rowErrorId:'',isSector,isFlow,listTitle:title,
@@ -73,7 +73,7 @@ Page({
     amountText:amount(row.amount),flowText:amount(row.flow?.main),sourceTimeText:row.sourceTime?fmt.time(row.sourceTime):'',cls:(isFlow?row.flow?.main:row.changePct)>0?'up':(isFlow?row.flow?.main:row.changePct)<0?'down':'flat',
     canAdd:!!row.assetId && (row.price>0 || !!row.flow)}));
    this.setData({rows,isSector,isFlow,listPage:resultPage,hasMore:resultPage<10 && !!result.hasMore,listTitle:title,scope:result.scope||'',
-    listTime:fmt.sourceName(result.source)+' · '+(result.stale?'缓存快照 · ':'')+(result.sourceTime?'行情来源 '+fmt.time(result.sourceTime)+' · ':'')+'获取时间 '+fmt.time(result.fetchedAt),
+    listTime:fmt.sourceName(result.source)+' · '+(result.stale?'缓存快照 · ':'')+(result.delayed?'延迟线路 · ':'')+(result.sourceTime?'行情来源 '+fmt.time(result.sourceTime)+' · ':'')+'获取时间 '+fmt.time(result.fetchedAt),
     listError:result.stale?'数据源暂不可用，显示缓存快照；可重试':''});
   }catch(error){if(this.active(n,'_listRequest'))this.setData({listError:(error.message||'榜单暂不可用')+(this.data.rows.length?'；保留上次列表':'' )});}
   finally{if(this.active(n,'_listRequest'))this.setData({listLoading:false});}

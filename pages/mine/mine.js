@@ -1,6 +1,5 @@
 const statusClient = require("../../utils/status-client");
 const { templates } = require("../../utils/app-config");
-const TPL_IDS = [templates.dailyBrief, templates.volatility];
 const theme = require("../../utils/theme");
 const portfolio = require("../../utils/portfolio-client");
 const fmt = require("../../utils/asset-format");
@@ -13,8 +12,6 @@ Page({
     prefs: { dndStart: "23:00", dndEnd: "07:30" },
     limits: { watchlist: 5, activeRules: 30, tier: "free" },
     quota: { brief: 0, vol: 0 },
-    authBusy: false,
-    busy: false,
     errorText: "",
     loading: true,
     checkBusy: false,
@@ -98,91 +95,6 @@ Page({
     const target=e.currentTarget.dataset.target;
     if(['market','holdings','data'].includes(target))wx.navigateTo({url:'/pages/'+target+'/'+target});
   },
-  async saveDnd(e) {
-    if (this.data.busy) return;
-    const key = e.currentTarget.dataset.key;
-    const value = e.detail.value;
-    if (
-      !["dndStart", "dndEnd"].includes(key) ||
-      !/^([01]\d|2[0-3]):[0-5]\d$/.test(value)
-    )
-      return;
-    this.setData({ busy: true, errorText: "" });
-    try {
-      const r = (
-        await wx.cloud.callFunction({
-          name: "savePrefs",
-          data: { prefs: { [key]: value } },
-        })
-      ).result;
-      if (!r || !r.ok) throw Error((r && r.hint) || "免打扰保存失败");
-      statusClient.updateStatus(wx, { ...r, prefs: { ...r.prefs, [key]: value } });
-      if (this._alive)
-        this.setData({ prefs: { ...this.data.prefs, [key]: value } });
-    } catch (e) {
-      if (this._alive) this.setData({ errorText: e.message });
-    } finally {
-      if (this._alive) this.setData({ busy: false });
-    }
-  },
-  onAuthTap() {
-    if (this.data.authBusy) return;
-    this.setData({ authBusy: true, errorText: "" });
-    wx.requestSubscribeMessage({
-      tmplIds: TPL_IDS,
-      success: async (results) => {
-        const filtered = {};
-        TPL_IDS.forEach((id) => {
-          if (results[id]) filtered[id] = results[id];
-        });
-        try {
-          const requestId =
-            "auth-" +
-            Date.now().toString(36) +
-            "-" +
-            Math.random().toString(36).slice(2);
-          const out = (
-            await wx.cloud.callFunction({
-              name: "registerAuth",
-              data: { requestId, results: filtered },
-            })
-          ).result;
-          if (!out || !out.ok) throw Error("授权登记失败，请重试");
-          statusClient.updateStatus(wx, out);
-          if (this._alive) {
-            this.setData({
-              quota: {
-                brief: Number((out.remaining || {})[templates.dailyBrief] || 0),
-                vol: Number((out.remaining || {})[templates.volatility] || 0),
-              },
-              remaining: TPL_IDS.reduce(
-                (n, id) => n + Number((out.remaining || {})[id] || 0),
-                0,
-              ),
-            });
-            wx.showToast({
-              title: TPL_IDS.some((id) => filtered[id] === "accept")
-                ? "授权已增加"
-                : "本次未授权",
-              icon: "none",
-            });
-          }
-        } catch (e) {
-          if (this._alive) this.setData({ errorText: e.message });
-        } finally {
-          if (this._alive) this.setData({ authBusy: false });
-        }
-      },
-      fail: () => {
-        if (this._alive)
-          this.setData({
-            authBusy: false,
-            errorText: "订阅授权未完成，请重试",
-          });
-      },
-    });
-  },
-
   openAuth() {
     wx.switchTab({ url: "/pages/reminders/reminders" });
   },
@@ -217,7 +129,7 @@ Page({
       const result = response && response.result;
       if (!result || !result.ok) {
         const messages = {
-          "no-quota": "异动授权次数不足，请先增加授权。",
+          "no-quota": "异动授权次数不足，请到「提醒」页增加授权。",
           "send-failed": `发送失败${result && result.code != null ? "（错误码 " + result.code + "）" : ""}，请检查微信订阅设置。`,
           "send-uncertain": "发送结果暂无法确认，请查看最近提醒，避免重复测试。",
         };

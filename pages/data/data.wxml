@@ -1,6 +1,6 @@
 <page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
-<view class="page theme-{{theme}} {{display.quiet ? 'quiet-mode' : ''}}">
-  <view class="hero-title">自选与数据管理</view><view class="muted">分组、设备显示偏好与个人备份</view>
+<view class="page theme-{{theme}}">
+  <view class="hero-title">自选与数据管理</view><view class="muted">管理自选分组与个人备份</view>
   <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
   <view wx:if="{{notice}}" class="notice" role="status">{{notice}}</view>
   <view wx:if="{{offline}}" class="notice">当前离线，显示已有缓存；联网后可修改和导出。</view>
@@ -14,14 +14,6 @@
       <view class="setting"><text>降序排列</text><switch checked="{{groupDraft.sortDirection === 'desc'}}" bindchange="onGroupDirection" disabled="{{busy}}" aria-label="分组降序排列" /></view>
       <view class="actions"><button class="primary ui-btn ui-primary" bindtap="saveGroup" disabled="{{busy}}" loading="{{busy}}" hover-class="ui-pressed">保存分组</button><button class=" ui-btn ui-secondary" bindtap="cancelGroup" disabled="{{busy}}" hover-class="ui-pressed">取消</button></view>
     </view>
-  </view>
-  <view class="card"><view class="heading">设备显示偏好</view>
-    <view class="setting"><text>低调灰阶模式</text><switch data-key="quiet" checked="{{display.quiet}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="低调灰阶模式" /></view>
-    <view class="setting"><text>紧凑列表</text><switch data-key="compact" checked="{{display.compact}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="紧凑列表" /></view>
-    <view class="setting"><text>隐藏持仓金额</text><switch data-key="hideAmounts" checked="{{display.hideAmounts}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="隐藏持仓金额" /></view>
-    <view class="setting"><text>显示涨跌额</text><switch data-key="showChange" checked="{{display.showChange}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="显示涨跌额" /></view>
-    <view class="setting"><text>显示报价时间</text><switch data-key="showTime" checked="{{display.showTime}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="显示报价时间" /></view>
-    <view class="setting"><text>显示备注与标签</text><switch data-key="showNotes" checked="{{display.showNotes}}" bindchange="changeDisplay" color="{{theme === 'blackgold' ? '#d9b45b' : '#2c2c2a'}}" aria-label="显示备注与标签" /></view>
   </view>
   <view class="card"><view class="heading">批量导入自选</view><view class="muted">支持代码文本、版本化 JSON 备份或 CSV。一次最多 30 个，现有自选名额仍适用。</view>
     <label for="import-content">待导入内容</label><textarea id="import-content" value="{{raw}}" bindinput="onImportInput" maxlength="-1" disabled="{{busy}}" placeholder="例如 sh600519, sz159915, usAAPL" aria-label="待导入代码、JSON 或 CSV" />

@@ -2,14 +2,18 @@
 <view class="page holdings-page theme-{{theme}} {{preferences.compact ? 'compact' : ''}}">
   <view class="heading-row">
     <view class="page-heading"><button wx:if="{{view !== 'overview'}}" class="text-button ui-btn ui-text back-button" bindtap="{{editing ? 'cancelEntry' : noteEditing ? 'cancelNote' : 'backToHoldings'}}" disabled="{{busy}}" aria-label="返回持仓" hover-class="ui-pressed">‹</button><view class="hero-title">{{viewTitle}}</view></view>
-    <view wx:if="{{view === 'overview'}}" class="heading-actions"><button class="text-button ui-btn ui-text more-button" bindtap="showMore" disabled="{{busy}}" aria-label="更多持仓操作" hover-class="ui-pressed">•••</button><button class="ui-btn ui-primary entry-trigger" bindtap="startEntry" disabled="{{busy || !loaded}}" hover-class="ui-pressed">{{hasEntryDraft ? '继续记账' : '记一笔'}}</button></view>
+    <view wx:if="{{view === 'overview'}}" class="heading-actions"><button class="ui-btn ui-primary entry-trigger" bindtap="startEntry" disabled="{{busy || !loaded}}" hover-class="ui-pressed">{{hasEntryDraft ? '继续记账' : '记一笔'}}</button></view>
   </view>
   <view wx:if="{{errorText}}" class="error" role="alert" aria-live="assertive">{{errorText}}<button wx:if="{{offline}}" class="text-button ui-btn ui-text" bindtap="reload" loading="{{refreshing}}" disabled="{{refreshing}}" hover-class="ui-pressed">重新加载</button></view>
   <view wx:if="{{successText}}" class="success-message" role="status" aria-live="polite">{{successText}}</view>
-  <view wx:if="{{refreshing && loaded}}" class="refresh-status" role="status">正在更新…</view>
+  <view wx:if="{{refreshing && loaded && view !== 'overview'}}" class="refresh-status" role="status" aria-live="polite">正在更新…</view>
   <view wx:if="{{loading && !loaded}}" class="panel loading-panel" role="status" aria-label="正在读取持仓"><view class="skeleton skeleton-title"></view><view class="skeleton skeleton-value"></view><view class="skeleton skeleton-line"></view></view>
 
   <view wx:if="{{view === 'overview' && loaded}}">
+    <view class="overview-toolbar">
+      <button class="text-button ui-btn ui-text" bindtap="showHistory" disabled="{{busy}}" hover-class="ui-pressed">交易记录</button>
+      <button class="text-button ui-btn ui-text" bindtap="showMore" disabled="{{busy}}" aria-label="更多持仓操作" hover-class="ui-pressed">更多</button>
+    </view>
     <view class="overview">
       <view class="section-row"><text class="metric-label">{{summary.primaryLabel}}</text><picker range="{{currencyOptions}}" value="{{currency === 'USD' ? 2 : currency === 'HKD' ? 1 : 0}}" bindchange="chooseCurrency" aria-label="持仓币种"><view class="currency-control">{{currency}} <text aria-hidden="true">⌄</text></view></picker></view>
       <view class="hero-value">{{summary.primaryText}}</view>
@@ -17,9 +21,13 @@
       <view wx:if="{{!summary.complete}}" class="helper">部分报价缺失，已知市值 {{summary.knownValueText}}。</view>
       <view wx:elif="{{quoteWarning}}" class="helper">{{quoteWarning}}</view>
       <view wx:if="{{overviewExpanded}}" class="overview-details" id="overview-details">
-        <view class="metrics"><view><text class="metric-label">持仓市值</text><text>{{summary.valueText}}</text></view><view><text class="metric-label">现金</text><text>{{summary.cashText}}</text></view><view><text class="metric-label">已实现盈亏</text><text>{{summary.realizedText}}</text></view><view><text class="metric-label">累计盈亏</text><text>{{summary.totalText}}</text></view><view><text class="metric-label">证券仓位</text><text>{{summary.allocationText}}</text></view><view wx:if="{{preferences.showChange}}"><text class="metric-label">累计成本收益率</text><text>{{summary.rateText}}</text></view></view>
+        <view class="metrics"><view><text class="metric-label">持仓市值</text><text>{{summary.valueText}}</text></view><view wx:if="{{summary.cashTracked}}"><text class="metric-label">现金（可选）</text><text>{{summary.cashText}}</text></view><view><text class="metric-label">已实现盈亏</text><text>{{summary.realizedText}}</text></view><view><text class="metric-label">累计盈亏</text><text>{{summary.totalText}}</text></view><view wx:if="{{summary.cashComplete}}"><text class="metric-label">总资产（含现金）</text><text>{{summary.equityText}}</text></view><view wx:if="{{summary.cashComplete}}"><text class="metric-label">证券仓位</text><text>{{summary.allocationText}}</text></view><view wx:if="{{preferences.showChange}}"><text class="metric-label">累计成本收益率</text><text>{{summary.rateText}}</text></view></view>
         <view wx:for="{{summary.days}}" wx:key="date" class="day-row"><text>{{item.date}}</text><text>{{item.valueText}} {{item.complete ? '' : ' · 不完整'}}</text></view>
-        <view class="detail-actions"><button class="text-button ui-btn ui-text" bindtap="manageCash" disabled="{{busy}}" hover-class="ui-pressed">管理现金</button><button class="text-button ui-btn ui-text" bindtap="toggleOverview" hover-class="ui-pressed">收起</button></view>
+        <view wx:if="{{summary.cashTracked && !summary.cashComplete}}" class="helper">资金记录不完整，暂不估算现金和总资产；不影响持仓与盈亏。</view>
+      </view>
+      <view class="overview-footer">
+        <button class="text-button ui-btn ui-text" bindtap="toggleOverview" aria-expanded="{{overviewExpanded}}" aria-controls="overview-details" hover-class="ui-pressed">{{overviewExpanded ? '收起明细' : '资产明细'}} <text aria-hidden="true">{{overviewExpanded ? '⌃' : '⌄'}}</text></button>
+        <button class="text-button ui-btn ui-text" bindtap="refreshPrices" disabled="{{busy || refreshing || quoteRefreshing}}" aria-label="刷新持仓和行情" hover-class="ui-pressed">{{refreshing || quoteRefreshing ? '更新中…' : '刷新'}}</button>
       </view>
     </view>
     <view class="section-row list-heading"><text class="section-title">持仓 <text class="count">{{positionCount}}</text></text><button wx:if="{{hasCurrencyPositions}}" class="text-button ui-btn ui-text" bindtap="togglePositionFilters" aria-expanded="{{positionFiltersExpanded}}" aria-controls="position-filters" hover-class="ui-pressed">{{positionFiltersExpanded ? '收起筛选' : (positionQuery || showClosed || sortIndex) ? '筛选 · 已启用' : '筛选'}}</button></view>
@@ -30,8 +38,8 @@
     <view wx:if="{{positionQuery && !positionFiltersExpanded}}" class="active-filter"><text>搜索：{{positionQuery}}</text><button class="text-button ui-btn ui-text" bindtap="clearPositionQuery" hover-class="ui-pressed">清空</button></view>
     <view wx:if="{{!rows.length}}" class="empty">
       <view class="empty-mark" aria-hidden="true">—</view><view class="section-title">{{positionQuery ? '没有匹配的持仓' : hasCurrencyPositions ? '暂无在持持仓' : '还没有持仓'}}</view>
-      <view class="helper">{{positionQuery ? '试试其他名称或代码' : '登记已有数量和成本，开始查看盈亏'}}</view>
-      <button wx:if="{{positionQuery}}" class="ui-btn ui-secondary" bindtap="clearPositionQuery" hover-class="ui-pressed">清空搜索</button><button wx:else class="ui-btn ui-secondary" data-type="openingPosition" bindtap="openEntry" disabled="{{busy}}" hover-class="ui-pressed">添加已有持仓</button>
+      <view class="helper">{{positionQuery ? '试试其他名称或代码' : hasCurrencyPositions ? '可查看交易记录，或开启筛选中的「含已清仓」' : '登记已有数量和成本，开始查看盈亏'}}</view>
+      <button wx:if="{{positionQuery}}" class="ui-btn ui-secondary" bindtap="clearPositionFilters" hover-class="ui-pressed">清除筛选</button><button wx:else class="ui-btn ui-secondary" data-type="openingPosition" bindtap="openEntry" disabled="{{busy}}" hover-class="ui-pressed">添加已有持仓</button>
     </view>
     <view wx:else class="positions-table">
       <view class="table-head"><text>标的</text><text>市值</text><text>持仓盈亏</text></view>
@@ -72,7 +80,7 @@
       <view wx:if="{{isOpening}}"><label class="field-label" for="entry-cost">剩余成本总额</label><input id="entry-cost" type="digit" value="{{draft.cost}}" bindinput="inputDraft" data-key="cost" aria-label="期初剩余成本总额" aria-invalid="{{!!formErrors.cost}}" aria-describedby="error-cost" placeholder="填写总额" disabled="{{busy}}" /><view wx:if="{{formErrors.cost}}" id="error-cost" class="field-error" role="alert">{{formErrors.cost}}</view></view>
       <view wx:else><label class="field-label" for="entry-price">成交单价</label><input id="entry-price" type="digit" value="{{draft.price}}" bindinput="inputDraft" data-key="price" aria-label="成交单价" aria-invalid="{{!!formErrors.price}}" aria-describedby="error-price" placeholder="实际成交价" disabled="{{busy}}" /><view wx:if="{{formErrors.price}}" id="error-price" class="field-error" role="alert">{{formErrors.price}}</view></view>
     </view>
-    <view wx:if="{{isOpening}}" class="helper">登记已有持仓，不扣现金。</view>
+    <view wx:if="{{isOpening}}" class="helper">登记已有数量与成本，无需入金。</view><view wx:if="{{isTrade}}" class="helper">仅记录实际成交，无需入金；数量按股或份填写。</view><view wx:if="{{isCash && !requiresAsset}}" class="helper">现金管理为可选功能，不影响买卖记录。期初现金请记在首笔交易之前。</view>
     <view wx:if="{{isTrade}}"><label class="field-label" for="entry-fee">交易费用</label><input id="entry-fee" type="digit" value="{{draft.fee}}" bindinput="inputDraft" data-key="fee" aria-label="原币交易费用" aria-invalid="{{!!formErrors.fee}}" aria-describedby="error-fee" placeholder="默认0" disabled="{{busy}}" /><view wx:if="{{formErrors.fee}}" id="error-fee" class="field-error" role="alert">{{formErrors.fee}}</view></view>
     <view wx:if="{{isCash}}">
       <view wx:if="{{!requiresAsset}}" class="currency-field"><text>币种</text><picker range="{{currencyOptions}}" value="{{draft.currency === 'USD' ? 2 : draft.currency === 'HKD' ? 1 : 0}}" bindchange="changeDraftCurrency" disabled="{{busy}}" aria-label="现金币种"><view class="currency-control">{{draft.currency}} ⌄</view></picker></view>
@@ -111,6 +119,6 @@
     <view wx:if="{{importPreview}}" class="import-preview"><view class="section-title">恢复预览 · 尚未写入</view><view class="helper">当前有效流水 {{importPreview.previousCount}} 笔 → {{importPreview.entryCount}} 笔；{{importPreview.assetCount}} 个标的，{{importPreview.auditCount}} 条审计记录。全部标的已由服务端重新验证。</view><view wx:for="{{importPreview.currencies}}" wx:key="currency" class="preview-currency"><text>{{item.currency}}</text><text>现金 {{item.cashText}}</text><text>市值 {{item.valueText}}{{item.complete ? '' : '（缺价）'}}</text></view><view class="notice">恢复会替换当前台账。请先生成并保存当前备份；若台账期间更新，必须重新预览。</view><button class="primary ui-btn ui-primary" bindtap="confirmImport" disabled="{{busy}}" loading="{{busy}}" hover-class="ui-pressed">确认原子恢复这份备份</button></view>
   </view>
   <view wx:if="{{view === 'help'}}" class="panel explanations"><button class="disclosure ui-row" bindtap="toggleExplanations" aria-expanded="{{explanationsExpanded}}" aria-controls="calculation-details" hover-class="ui-pressed">计算口径与使用上限 <text aria-hidden="true">{{explanationsExpanded ? '−' : '+'}}</text></button><view wx:if="{{explanationsExpanded}}" id="calculation-details">
-<view class="footnote">移动加权平均成本，买入费用计成本、卖出费用扣收入；分红单记现金收入。浮动收益率分母为剩余成本，已实现收益率分母为卖出转出成本（无成本时不可算）。累计收益率按累计投入成本计算（重复投入重复计入分母），不代表年化或券商税务盈亏。独立现金收入/费用按用户录入日期归组，入出金不是收益；无对应证券交易日基线时该组不完整。不同币种不合计，各市场日期不混成统一“今日”。黄金交易日证据不足时不算当日盈亏。</view>
+<view class="footnote">移动加权平均成本，买入费用计成本、卖出费用扣收入；分红单记现金收入。浮动收益率分母为剩余成本，已实现收益率分母为卖出转出成本（无成本时不可算）。累计收益率按累计投入成本计算（重复投入重复计入分母），不代表年化或券商税务盈亏。独立现金收入/费用按用户录入日期归组，入出金不是收益；现金管理可选，买卖无需入金。资金历史存在缺口时不展示现金余额或总资产；无对应证券交易日基线时该组不完整。不同币种不合计，各市场日期不混成统一“今日”。黄金交易日证据不足时不算当日盈亏。</view>
 <view class="footnote">个人工具上限：30个标的、1000条含修订流水、1000次写操作、512KB台账。期初之前业绩未知；公司行为需手工登记。云端保存失败不会自动当作成功。</view>  </view></view>
 </view>

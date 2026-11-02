@@ -1,8 +1,9 @@
 const clone = value => structuredClone(value);
 function memoryDb(seed = {}) {
   const tables = clone(seed);
-  const command = Object.fromEntries(["gte", "lte", "gt", "inc"].map(op => [op, value => ({ op, value })]));
+  const command = Object.fromEntries(["gte", "lte", "gt", "inc", "in"].map(op => [op, value => ({ op, value })]));
   const matches = (row, filter) => Object.entries(filter || {}).every(([key, value]) => {
+    if (value && value.op === "in") return value.value.includes(row[key]);
     if (value && value.op === "gte") return row[key] >= value.value;
     if (value && value.op === "lte") return row[key] <= value.value;
     if (value && value.op === "gt") return row[key] > value.value;

@@ -17,3 +17,14 @@ test('business validation failures never return cached success',async()=>{
  let fail=false;const api=createClient({cloud:{callFunction:async()=>({result:fail?{ok:false,hint:'无效身份'}:{ok:true,items:[],fetchedAt:1}})}},()=>1);
  await api.indices();fail=true;await assert.rejects(()=>api.indices(),/无效身份/);
 });
+
+test('retryable provider failure uses only a matching unexpired device snapshot', async () => {
+ let fail=false,stamp=100000;
+ const api=createClient({cloud:{callFunction:async()=>({result:fail?{ok:false,retryable:true,hint:'数据源连接暂不可用'}:{ok:true,items:[{assetId:'sh600519'}],fetchedAt:stamp,sourceTime:90000}})}},()=>stamp);
+ await api.flowRanking(1);fail=true;stamp+=60000;
+ const result=await api.flowRanking(1);
+ assert.equal(result.stale,true);assert.equal(result.fetchedAt,100000);assert.equal(result.sourceTime,90000);
+ await assert.rejects(()=>api.flowRanking(2));
+ stamp+=86400000;await assert.rejects(()=>api.flowRanking(1));
+});
+test('operation quota errors remain explicit and cached discovery keeps the quota explanation',async()=>{let fail=false;const api=createClient({cloud:{callFunction:async()=>{if(fail)throw Object.assign(Error('本月云端操作额度不足'),{code:'cloud-call-budget-exceeded'});return{result:{ok:true,items:[],fetchedAt:100}};}}},()=>100);await api.indices();fail=true;const result=await api.indices();assert.match(result.hint,/本月/);await assert.rejects(api.ranking(),/本月/);});

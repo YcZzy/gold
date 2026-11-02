@@ -1,6 +1,7 @@
 /** Discovery snapshots are independent of quotes/watchlists and never create index assets. */
 const MAX_AGE=86400000;
 function createClient(platform,now=Date.now) {
+  const pool=require("./read-pool").forPlatform(platform);
   const memory=new Map();
   function keyFor(mode,params) {return 'discovery:v1:'+mode+':'+JSON.stringify(Object.keys(params).sort().map(key=>[key,params[key]]));}
   function read(key) {try {return memory.get(key) || platform?.getStorageSync?.(key);}catch(_){return memory.get(key);}}
@@ -9,14 +10,23 @@ function createClient(platform,now=Date.now) {
     let response;
     try {
       if (!platform?.cloud?.callFunction) throw Error('云开发尚未初始化');
-      response=await platform.cloud.callFunction({name:'marketData',data:{action:'discovery',mode,...params}});
+      response=await pool.run(key,()=>platform.cloud.callFunction({name:'marketData',data:{action:'discovery',mode,...params}}));
     } catch(cause) {
       const old=read(key),age=old && now()-old.fetchedAt;
-      if (old && age>=0 && age<MAX_AGE) return {...old,stale:true,cached:true,hint:'连接失败，显示本设备缓存快照'};
+      if (old && age>=0 && age<MAX_AGE) return {...old,stale:true,cached:true,hint:/^cloud-call-budget-/.test(cause?.code||'')?cause.message:'连接失败，显示本设备缓存快照'};
+      if (/^cloud-call-budget-/.test(cause?.code||'')) throw cause;
       const error=Error('市场发现连接失败，请稍后重试');error.cause=cause;throw error;
     }
     const result=response && response.result;
-    if (!result || result.ok!==true) throw Error(result?.hint || '市场发现暂不可用');
+    if (!result || result.ok!==true) {
+      // A structured provider outage can still use a valid device snapshot.
+      // Validation/business failures must remain errors, even if a snapshot exists.
+      if (result?.retryable===true) {
+        const old=read(key),age=old && now()-old.fetchedAt;
+        if (old && age>=0 && age<MAX_AGE) return {...old,stale:true,cached:true,hint:'数据源连接失败，显示本设备缓存快照'};
+      }
+      throw Error(result?.hint || '市场发现暂不可用');
+    }
     if (typeof result.fetchedAt==='number') {
       memory.set(key,result);try {platform.setStorageSync?.(key,result);}catch(_){}
     }

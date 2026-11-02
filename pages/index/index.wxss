@@ -494,9 +494,11 @@ button[disabled] {
 .home-page .shortcut-title { font-size: 24rpx; font-weight: 600; white-space: nowrap; }
 .home-page .shortcut-caption { margin-top: 6rpx; color: var(--text-mid); font-size: 18rpx; white-space: nowrap; }
 .home-page .shortcut-chevron { position: absolute; top: 28rpx; right: 20rpx; width: 8rpx; height: 8rpx; border-top: 2rpx solid var(--text-mid); border-right: 2rpx solid var(--text-mid); transform: rotate(45deg); }
-.home-page .group-scroll { width: 100%; margin-bottom: 16rpx; white-space: nowrap; }
-.home-page .group-chips { display: inline-flex; align-items: center; gap: 12rpx; padding: 4rpx 0 10rpx; }
-.home-page .group-chips button { display: inline-flex; align-items: center; flex-shrink: 0; gap: 12rpx; width: auto; margin: 0; }
+.home-page .group-scroll { flex: 1; width: 0; min-width: 0; white-space: nowrap; }
+.home-page .group-chips { display: inline-flex; align-items: center; gap: 28rpx; height: 88rpx; padding: 0 8rpx 0 0; }
+.home-page .group-chips button.ui-tab { display: inline-flex; align-items: center; flex-shrink: 0; width: auto; min-height: 88rpx; margin: 0; padding: 20rpx 0; font-size: 27rpx; }
+.home-page .group-chips button.ui-tab::after { bottom: 8rpx; }
+.home-page .watchlist-heading.has-group-tabs { min-height: 88rpx; }
 .home-page .watchlist-card { padding: 0 24rpx; border: 1rpx solid var(--card-border); border-radius: 28rpx; background: var(--card); }
 .home-page .watchlist-heading { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; min-height: 104rpx; border-bottom: 1rpx solid var(--card-border); }
 .home-page .watchlist-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12rpx; min-width: 0; font-size: 29rpx; font-weight: 600; line-height: 1.5; overflow-wrap: break-word; }
