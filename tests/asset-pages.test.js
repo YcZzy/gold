@@ -781,21 +781,25 @@ test("unfollowed detail asks before adding and opening reminder settings", async
   });
   page.assetId = a.id;
   page._alive = true;
+  page._visible = true;
   page.data.followingReady = true;
   wx.showModal = options => {
     assert.ok(Array.from(options.confirmText || "确定").length <= 4, "微信弹窗确认按钮最多 4 个字符");
     assert.ok(Array.from(options.cancelText || "取消").length <= 4, "微信弹窗取消按钮最多 4 个字符");
     modal = options;
   };
-  page.openAlert();
+  const opening = page.openAlert();
   assert.equal(modal.content, "加入自选后才可设置提醒");
   assert.equal(modal.confirmText, "加入自选");
   assert.equal(adds.length, 0);
   assert.equal(routes.length, 0);
-  await modal.success({ confirm: false });
+  modal.success({ confirm: false });
+  await opening;
   assert.equal(adds.length, 0);
   assert.equal(routes.length, 0);
-  await modal.success({ confirm: true });
+  const confirmed = page.openAlert();
+  modal.success({ confirm: true });
+  await confirmed;
   assert.deepEqual(adds, [a.id]);
   assert.equal(page.data.following, true);
   assert.match(routes[0], /asset-alert\/asset-alert\?assetId=sh600519/);
@@ -808,30 +812,33 @@ test("failed follow never opens reminders, followed asset opens directly", async
   });
   page.assetId = a.id;
   page._alive = true;
+  page._visible = true;
   page.data.followingReady = true;
   wx.showModal = options => {
     assert.ok(Array.from(options.confirmText || "确定").length <= 4, "微信弹窗确认按钮最多 4 个字符");
     assert.ok(Array.from(options.cancelText || "取消").length <= 4, "微信弹窗取消按钮最多 4 个字符");
     modal = options;
   };
-  page.openAlert();
-  await modal.success({ confirm: true });
+  const opening = page.openAlert();
+  modal.success({ confirm: true });
+  await opening;
   assert.equal(routes.length, 0);
   assert.equal(page.data.following, false);
   assert.equal(page.data.errorText, "自选已达上限");
   modal = null;
   page.data.following = true;
-  page.openAlert();
+  await page.openAlert();
   assert.equal(modal, null);
   assert.equal(routes.length, 1);
 });
 
-test("reminder prerequisite stays visible if native dialog fails", () => {
+test("reminder prerequisite stays visible if native dialog fails", async () => {
   const { page, wx, routes } = load("pages/detail/detail.js");
   page._alive = true;
+  page._visible = true;
   page.data.followingReady = true;
   wx.showModal = options => options.fail({ errMsg: "showModal:fail" });
-  page.openAlert();
+  await page.openAlert();
   assert.match(page.data.errorText, /加入自选后才可设置提醒/);
   assert.equal(routes.length, 0);
 });
@@ -1236,4 +1243,20 @@ test('Mine reminder settings entry switches to the reminders tab', () => {
   wx.switchTab = options => { target = options.url; };
   page.openAuth();
   assert.equal(target, '/pages/reminders/reminders');
+});
+
+test("Mine displays verified membership even when notification status fails", async () => {
+  const expiresAt = Date.now() + 86400000;
+  const { page, wx } = load("pages/mine/mine.js", {
+    portfolio: { list: async () => ({ limits: { tier: "vip", watchlist: 30, activeRules: 30, expiresAt } }) },
+  });
+  wx.cloud.callFunction = async ({ name }) => {
+    if (name === "getStatus") throw Error("offline");
+    return { result: { ok: true } };
+  };
+  await page.onShow();
+  assert.equal(page.data.hasPortfolio, true);
+  assert.equal(page.data.limits.tier, "vip");
+  assert.equal(page.data.limits.watchlist, 30);
+  assert.match(page.data.membershipExpiry, /北京时间/);
 });

@@ -1,3 +1,4 @@
+const share = require("../../utils/share");
 const market = require("../../utils/market-client");
 const portfolio = require("../../utils/portfolio-client");
 const theme = require("../../utils/theme");
@@ -7,6 +8,9 @@ const watchView = require('../../utils/watchlist-view');
 const display = require('../../utils/display-preferences');
 const SORTS=[['manual','asc'],['changePct','desc'],['changePct','asc'],['price','desc'],['price','asc'],['amount','desc']];
 Page({
+  onShareAppMessage() {
+    return share.card("watchlist", this.data.rows.map(row => row.id), "", theme.getTheme());
+  },
   data: {
     theme: theme.getTheme(),
     rows: [],

@@ -1,0 +1,7 @@
+{
+  "triggers": [{
+    "name": "reconcileMembership",
+    "type": "timer",
+    "config": "0 */5 * * * * *"
+  }]
+}

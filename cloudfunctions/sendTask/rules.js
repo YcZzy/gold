@@ -1,5 +1,8 @@
 // 纯规则：不读数据库、不发消息，金额单位随品种固定。
 const MINUTE = 60000;
+const calendar = require('./market-calendar');
+const GOLD = {au:{id:'gold-au9999',kind:'gold'},intl:{id:'gold-xauusd',kind:'gold'}};
+function marketOpen(market, now) { return calendar.session(GOLD[market], now).phase === 'regular'; }
 const TARGET_KEYS = ["targetAuLow", "targetAuHigh", "targetXauLow", "targetXauHigh"];
 const REGULAR_TYPES = ["dailyBrief", "scheduledBrief", "volAu", "volXau", "shortAu", "shortXau"];
 const TITLES = {
@@ -25,7 +28,9 @@ function freshPrice(quote, market, now) {
   const price = quote && quote[market === "au" ? "price" : "usd"];
   if (!positive(price) || !positive(quote.sourceAt)) return null;
   const age = now - quote.sourceAt;
-  return age >= -MINUTE && age <= 10 * MINUTE ? price : null;
+  if (age < -MINUTE || age > 10 * MINUTE) return null;
+  const current=calendar.session(GOLD[market],now), source=calendar.session(GOLD[market],quote.sourceAt);
+  return current.phase==='regular' && source.phase==='regular' && current.date===source.date && current.segment===source.segment ? price : null;
 }
 function threshold(value, fallback) {
   return [0.5, 1, 1.5, 2, 3, 5].includes(value) ? value : fallback;
@@ -63,7 +68,7 @@ function planTasks(prefs, quotes = {}, samples = [], now) {
     });
   };
   const weekday = p.weekday >= 1 && p.weekday <= 5;
-  if (prefs.dailyBrief && weekday && p.minutes >= 15 * 60 + 30 && p.minutes <= 15 * 60 + 55) {
+  if (prefs.dailyBrief && weekday && calendar.session(GOLD.au,now).closeTime && p.minutes >= 15 * 60 + 30 && p.minutes <= 15 * 60 + 55) {
     add("dailyBrief", "brief", {}, Math.max(dayStart + (15 * 60 + 40) * MINUTE, now), dayStart + 24 * 60 * MINUTE - 1);
   }
   const time = prefs.scheduledTime || "09:00";
@@ -127,4 +132,4 @@ function withinLimit(type, counts) {
   return (counts[type] || 0) < 1 && REGULAR_TYPES.reduce((sum, key) => sum + (counts[key] || 0), 0) < 6;
 }
 
-module.exports = { planTasks, isTaskCurrent, withinLimit, freshPrice, isBrief, positive, TARGET_KEYS, REGULAR_TYPES };
+module.exports = { planTasks, isTaskCurrent, withinLimit, freshPrice, marketOpen, isBrief, positive, TARGET_KEYS, REGULAR_TYPES };

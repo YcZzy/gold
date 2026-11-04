@@ -2,8 +2,14 @@ const statusClient = require("../../utils/status-client");
 const { templates } = require("../../utils/app-config");
 const theme = require("../../utils/theme");
 const portfolio = require("../../utils/portfolio-client");
+const membership = require("../../utils/membership-client");
 const fmt = require("../../utils/asset-format");
 const cache = require("../../utils/read-cache");
+function fmtMembershipExpiry(timestamp) {
+  const date = new Date(timestamp + 8 * 3600000);
+  return date.toISOString().slice(0, 16).replace("T", " ") + "（北京时间）";
+}
+
 Page({
   data: {
     theme: theme.getTheme(),
@@ -18,6 +24,10 @@ Page({
     testBusy: false,
     check: null,
     testResult: "",
+    membershipBusy: false,
+    membershipPending: false,
+    membershipMessage: "",
+    membershipExpiry: "",
   },
   onLoad() {
     this.setData({ theme: theme.getTheme() });
@@ -36,6 +46,9 @@ Page({
       const saved = cache.forPlatform(wx).read("status");
       if (saved && saved.ok) this.applyStatus(saved);
     }
+    const membershipPending = !!membership.pendingOrder(wx);
+    this.setData({ membershipPending });
+    this.confirmMembership();
     return this.reload();
   },
   onHide() {
@@ -64,24 +77,67 @@ Page({
   async reload() {
     const request = this._reloadRequest = (this._reloadRequest || 0) + 1;
     try {
-      const [s, response] = await Promise.all([
-        portfolio.list(),
-        statusClient.getStatus(wx),
+      await Promise.allSettled([
+        portfolio.list().then(s => {
+          if (!this._alive || !this._visible || request !== this._reloadRequest) return;
+          if (s.offline && this.data.hasPortfolio) return;
+          this.setData({
+            hasPortfolio: true,
+            limits: s.limits,
+            membershipExpiry: s.limits.expiresAt ? fmtMembershipExpiry(s.limits.expiresAt) : "",
+          });
+        }),
+        statusClient.getStatus(wx).then(r => {
+          if (!r || !r.ok || !this._alive || !this._visible || request !== this._reloadRequest) return;
+          this.applyStatus(r, { theme: theme.syncFromPrefs(r.prefs), errorText: "" });
+        }),
       ]);
-      const r = response;
-      if (!r || !r.ok) throw Error("设置获取失败");
-      if (this._alive && this._visible && request === this._reloadRequest) {
-        this.applyStatus(r, {
-          theme: theme.syncFromPrefs(r.prefs),
-          hasPortfolio: true,
-          limits: s.limits,
-          loading: false,
-          errorText: "",
-        });
-      }
-    } catch (e) {
+    } finally {
       if (this._alive && this._visible && request === this._reloadRequest)
         this.setData({ loading: false });
+    }
+  },
+  async confirmMembership() {
+    if (this.data.membershipBusy) return;
+    this.setData({ membershipBusy: true });
+    try {
+      if (await membership.recoverOrder(wx)) await this.refreshMembershipOrder();
+    } catch (_) {
+      if (this._alive && membership.pendingOrder(wx)) this.setData({ membershipMessage: "订单确认中，请勿重复付款" });
+    } finally {
+      if (this._alive) this.setData({ membershipBusy: false, membershipPending: !!membership.pendingOrder(wx) });
+    }
+  },
+  async buyMembership() {
+    if (this.data.membershipBusy || membership.pendingOrder(wx)) return;
+    this.setData({ membershipBusy: true, membershipMessage: "" });
+    try {
+      if (await membership.recoverOrder(wx) || await membership.purchase(wx)) {
+        await this.refreshMembershipOrder();
+      } else if (this._alive) this.setData({ membershipMessage: "已取消支付" });
+    } catch (error) {
+      if (membership.pendingOrder(wx)) await this.refreshMembershipOrder();
+      else if (this._alive) this.setData({ membershipMessage: error.message || "暂时无法发起购买，请稍后再试" });
+    } finally {
+      if (this._alive) this.setData({ membershipBusy: false, membershipPending: !!membership.pendingOrder(wx) });
+    }
+  },
+  async refreshMembershipOrder() {
+    if (this._alive) this.setData({ membershipPending: true, membershipMessage: "正在确认订单，请勿重复付款" });
+    const result = await membership.confirmUntilSettled(wx, { isActive: () => this._alive && this._visible });
+    if (!result || !this._alive) return;
+    if (result.status === "delivered") {
+      require("../../utils/read-pool").forPlatform(wx).invalidate("portfolio:list");
+      const expiresAt = Math.max(result.expiresAt || 0, this.data.limits.expiresAt || 0);
+      this.setData({
+        hasPortfolio: true,
+        limits: { ...this.data.limits, watchlist: 30, tier: "vip", expiresAt },
+        membershipExpiry: fmtMembershipExpiry(expiresAt),
+        membershipMessage: "会员权益已生效",
+      });
+      await this.reload();
+    } else {
+      this.setData({ membershipMessage: result.status === "closed" ? "该订单已结束" : "订单确认中，请勿重复付款。可稍后查询订单。" });
     }
   },
   onThemeTap() {
@@ -147,6 +203,6 @@ Page({
     }
   },
   onPullDownRefresh() {
-    return this.reload().finally(() => wx.stopPullDownRefresh());
+    return Promise.all([this.reload(), this.confirmMembership()]).finally(() => wx.stopPullDownRefresh());
   },
 });

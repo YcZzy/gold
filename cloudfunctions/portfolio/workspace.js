@@ -67,7 +67,7 @@ function apply(doc, input, limits, now) {
     return previous!==doc.groups.length;
   }
   const newIds=input.assetIds.filter(id=>!doc.items.includes(id));
-  if (doc.items.length + newIds.length > limits.watchlist) fail('watchlist-limit','导入后超出自选数量上限，请减少条目');
+  if (newIds.length && doc.items.length + newIds.length > limits.watchlist) fail('watchlist-limit', limits.tier === 'free' ? '免费版最多关注 5 个标的，请减少导入条目' : '导入后超出自选数量上限，请减少条目');
   doc.items.push(...newIds);
   let changed=!!newIds.length;
   for(const settings of input.groupSettings) {

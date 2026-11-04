@@ -1,23 +1,82 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');
-const {install,LIMIT}=require('../utils/cloud-call-budget');
-const {createHandler}=require('../cloudfunctions/callBudget');const{memoryDb}=require('./helpers/asset-db');
-function setup(){let time=Date.parse('2026-11-02T00:00Z'),calls=0,leases=0,fail=false;const stored=new Map();const{db}=memoryDb({});const grant=createHandler({db,getOpenid:()=> 'user',now:()=>time});const transport=async o=>{if(o.name==='callBudget'){leases++;return{result:await grant()};}calls++;if(fail)throw Error('timeout');return{result:{ok:true,invocationCost:o.name==='portfolio'?2:1}};};const p={getStorageSync:k=>stored.get(k),setStorageSync:(k,v)=>stored.set(k,structuredClone(v)),cloud:{callFunction:transport}};install(p,()=>time);return{p,transport,stored,get calls(){return calls;},get leases(){return leases;},fail(){fail=true;},advance:ms=>time+=ms};}
-test('monthly budget counts failed requests and lease calls; refuses before business transport then resets next month',async()=>{const f=setup();f.fail();for(let i=0;i<LIMIT;i++){try{await f.p.cloud.callFunction({name:'savePrefs'});}catch(e){if(e.code==='cloud-call-budget-exceeded')break;assert.match(e.message,/timeout/);}}assert.equal(f.calls+f.leases,LIMIT);await assert.rejects(f.p.cloud.callFunction({name:'savePrefs'}),/本月/);assert.equal(f.calls+f.leases,LIMIT);f.advance(31*86400000);await assert.rejects(f.p.cloud.callFunction({name:'savePrefs'}),/timeout/);assert.equal(f.calls+f.leases,LIMIT+2);});
-test('successful read TTL coalesces concurrent requests and expires; writes are independent',async()=>{const f=setup(),q={name:'marketData',data:{action:'chart',assetId:'sh600519',period:'1y'}};await Promise.all([f.p.cloud.callFunction(q),f.p.cloud.callFunction(q)]);assert.equal(f.calls,1);await f.p.cloud.callFunction(q);assert.equal(f.calls,1);f.advance(900001);await f.p.cloud.callFunction(q);assert.equal(f.calls,2);await Promise.all([f.p.cloud.callFunction({name:'savePrefs'}),f.p.cloud.callFunction({name:'savePrefs'})]);assert.equal(f.calls,4);});
-test('nested calls are prepaid and refunded to actual reported cost',async()=>{const f=setup();await f.p.cloud.callFunction({name:'portfolio',data:{action:'list'}});const state=[...f.stored.values()].find(v=>v&&v.used);assert.equal(state.used,3);assert.equal(state.credits,97);});
-test('server allocation survives clearing device storage and changing devices',async()=>{const f=setup();for(let i=0;i<2;i++){const device={getStorageSync:()=>null,setStorageSync(){},cloud:{callFunction:f.transport}};install(device);await device.cloud.callFunction({name:'savePrefs'});}const p={getStorageSync:()=>null,setStorageSync(){},cloud:{callFunction:f.transport}};install(p);await assert.rejects(p.cloud.callFunction({name:'savePrefs'}),/本月/);const before=f.leases;await assert.rejects(p.cloud.callFunction({name:'savePrefs'}),/本月/);assert.equal(f.leases,before);assert.equal(f.calls,2);});
-test('concurrent requests cannot overdraw remaining credits; error is delivered through callbacks',async()=>{const f=setup();for(let i=0;i<197;i++)await f.p.cloud.callFunction({name:'savePrefs'});let failure;const r=await Promise.allSettled([f.p.cloud.callFunction({name:'savePrefs'}),f.p.cloud.callFunction({name:'savePrefs',fail:e=>failure=e})]);assert.equal(r.filter(x=>x.status==='fulfilled').length,1);assert.equal(f.calls+f.leases,200);assert.equal(failure.code,'cloud-call-budget-exceeded');});
-test('storage debit failure blocks transport and restarting cannot reuse spent credits',async()=>{let saved={month:'2026-11',used:1,credits:99},broken=true,calls=0;const make=()=>{const p={getStorageSync:()=>structuredClone(saved),setStorageSync:(_k,v)=>{if(broken)throw Error('storage full');saved=structuredClone(v);},cloud:{callFunction:async()=>{calls++;return{result:{ok:true,invocationCost:1}};}}};install(p,()=>Date.parse('2026-11-02T00:00Z'));return p;};await assert.rejects(make().cloud.callFunction({name:'savePrefs'}),/存储/);assert.equal(calls,0);assert.equal(saved.credits,99);broken=false;await make().cloud.callFunction({name:'savePrefs'});assert.equal(calls,1);assert.equal(saved.credits,98);});
-test('exhausted lease supply does not strand already allocated credits on another device',async()=>{let saved={month:'2026-11',used:60,credits:39},calls=0;const p={getStorageSync:()=>saved,setStorageSync:(_k,v)=>saved=structuredClone(v),cloud:{callFunction:async o=>{calls++;return{result:o.name==='callBudget'?{ok:false,err:'cloud-call-budget-exceeded'}:{ok:true,invocationCost:1}};}}};install(p,()=>Date.parse('2026-11-02T00:00Z'));await assert.rejects(p.cloud.callFunction({name:'portfolio',data:{action:'list'}}),/本月/);const r=await p.cloud.callFunction({name:'getStatus'});assert.equal(r.result.ok,true);assert.equal(calls,2);assert.equal(saved.credits,38);});
-test('refund persistence failure cannot turn an already completed write into a reported failure',async()=>{let saved={month:'2026-11',used:1,credits:99},broken=false;const p={getStorageSync:()=>saved,setStorageSync:(_k,v)=>{if(broken)throw Error('storage full');saved=structuredClone(v);},cloud:{callFunction:async()=>{broken=true;return{result:{ok:true,invocationCost:2}};}}};install(p,()=>Date.parse('2026-11-02T00:00Z'));assert.equal((await p.cloud.callFunction({name:'portfolio',data:{action:'add'}})).result.ok,true);assert.equal(saved.credits,38);});
-test('temporary lease failure does not block requests covered by existing credits',async()=>{let saved={month:'2026-11',used:60,credits:39},calls=0;const p={getStorageSync:()=>structuredClone(saved),setStorageSync:(_k,v)=>saved=structuredClone(v),cloud:{callFunction:async o=>{calls++;if(o.name==='callBudget')throw Error('lease timeout');return{result:{ok:true,invocationCost:1}};}}};install(p,()=>Date.parse('2026-11-02T00:00Z'));await assert.rejects(p.cloud.callFunction({name:'portfolio'}),/lease timeout/);assert.equal((await p.cloud.callFunction({name:'ledger',data:{action:'list'}})).result.ok,true);assert.equal(calls,2);});
-test('cache-only ledger reads require just one credit and never acquire a larger lease',async()=>{let saved={month:'2026-11',used:199,credits:1};const names=[];const p={getStorageSync:()=>structuredClone(saved),setStorageSync:(_k,v)=>saved=structuredClone(v),cloud:{callFunction:async o=>{names.push(o.name);if(o.name==='callBudget')throw Error('lease offline');return{result:{ok:true,invocationCost:1}};}}};install(p,()=>Date.parse('2026-11-02T00:00Z'));assert.equal((await p.cloud.callFunction({name:'ledger',data:{action:'list'}})).result.ok,true);assert.deepEqual(names,['ledger']);assert.equal(saved.credits,0);});
+const {test} = require('node:test');
+const assert = require('node:assert/strict');
+const {install} = require('../utils/cloud-call-budget');
 
-test('client refuses legacy local balances already above the new 200-unit limit', async () => {
-  assert.equal(LIMIT, 200);
-  let calls = 0;
-  const p = {getStorageSync:() => ({month:'2026-11', used:201, credits:599}), setStorageSync() {}, cloud:{callFunction:async () => {calls++;}}};
-  install(p, () => Date.parse('2026-11-02T00:00Z'));
-  await assert.rejects(p.cloud.callFunction({name:'savePrefs'}), /本月/);
-  assert.equal(calls, 0);
+function setup({saved, storageFails = false} = {}) {
+  let time = Date.parse('2026-11-03T00:00Z');
+  let failure;
+  const calls = [];
+  const platform = {
+    getStorageSync() { if (storageFails) throw Error('storage unavailable'); return saved; },
+    setStorageSync() { if (storageFails) throw Error('storage unavailable'); },
+    cloud: {callFunction: async options => {
+      calls.push(options);
+      if (options.name === 'callBudget') throw Error('retired budget service');
+      if (failure) throw failure;
+      return {result: {ok: true, chart: {points: [1, 2]}, invocationCost: 1}};
+    }}
+  };
+  install(platform, () => time);
+  return {platform, calls, advance(ms) { time += ms; }, fail(error) { failure = error; }};
+}
+
+test('exhausted legacy balances do not block reads, writes or imports', async () => {
+  const f = setup({saved: {month: '2026-11', used: 800, credits: 0, exhausted: true}});
+  for (const request of [
+    {name: 'portfolio', data: {action: 'list'}},
+    {name: 'portfolio', data: {action: 'add'}},
+    {name: 'ledger', data: {action: 'import'}},
+    {name: 'savePrefs'}
+  ]) assert.equal((await f.platform.cloud.callFunction(request)).result.ok, true);
+  assert.deepEqual(f.calls.map(call => call.name), ['portfolio', 'portfolio', 'ledger', 'savePrefs']);
+});
+
+test('more than 200 concurrent operations succeed without leasing credits', async () => {
+  const f = setup();
+  const results = await Promise.all(Array.from({length: 250}, () => f.platform.cloud.callFunction({name: 'savePrefs'})));
+  assert.equal(results.length, 250);
+  assert.equal(f.calls.length, 250);
+});
+
+test('unavailable device storage does not prevent cloud operations', async () => {
+  const f = setup({storageFails: true});
+  assert.equal((await f.platform.cloud.callFunction({name: 'portfolio'})).result.ok, true);
+  assert.equal(f.calls.length, 1);
+});
+
+test('successful chart requests share in-flight work and reuse isolated cached data until expiry', async () => {
+  const f = setup();
+  const request = {name: 'marketData', data: {action: 'chart', assetId: 'sh600519', period: '1y'}};
+  const [first, second] = await Promise.all([f.platform.cloud.callFunction(request), f.platform.cloud.callFunction(request)]);
+  first.result.chart.points.push(3);
+  assert.deepEqual(second.result.chart.points, [1, 2]);
+  const cached = await f.platform.cloud.callFunction(request);
+  assert.equal(cached.result.chart.cached, true);
+  assert.deepEqual(cached.result.chart.points, [1, 2]);
+  assert.equal(f.calls.length, 1);
+  f.advance(900001);
+  await f.platform.cloud.callFunction(request);
+  assert.equal(f.calls.length, 2);
+});
+
+test('business failures reach fail and complete callbacks without blocking subsequent retries', async () => {
+  const f = setup();
+  const error = Error('network timeout');
+  const seen = [];
+  f.fail(error);
+  const request = {name: 'marketData', data: {action: 'search', query: '黄金'}};
+  await assert.rejects(f.platform.cloud.callFunction({...request, fail: e => seen.push(e), complete: e => seen.push(e)}), /network timeout/);
+  assert.deepEqual(seen, [error, error]);
+  f.fail(null);
+  const success = [];
+  const result = await f.platform.cloud.callFunction({...request, success: value => success.push(value), complete: value => success.push(value)});
+  assert.deepEqual(success, [result, result]);
+  assert.equal(f.calls.length, 2);
+});
+
+test('installing the wrapper twice does not duplicate business requests', async () => {
+  const f = setup();
+  install(f.platform);
+  await f.platform.cloud.callFunction({name: 'savePrefs'});
+  assert.equal(f.calls.length, 1);
 });

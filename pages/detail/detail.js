@@ -1,3 +1,5 @@
+const openAssetAlert = require("../../utils/open-asset-alert");
+const share = require("../../utils/share");
 const cache = require("../../utils/read-cache");
 const gold = require("../../utils/gold-api");
 const market = require("../../utils/market-client");
@@ -9,6 +11,9 @@ const features = require("../../utils/chart-features");
 const discovery = require('../../utils/discovery-client');
 const display = require("../../utils/display-preferences");
 Page({
+  onShareAppMessage() {
+    return share.card("quote", [this.assetId], this.data.asset && this.data.asset.name, theme.getTheme());
+  },
   data: {
     theme: theme.getTheme(),
     quiet: false,
@@ -582,7 +587,10 @@ Page({
       if (this._alive) this.applyPortfolio(s);
       return true;
     } catch (e) {
-      if (this._alive) this.setData({ errorText: e.message });
+      if (this._alive) {
+        this.setData({ errorText: e.message });
+        require("../../utils/membership-client").offerUpgrade(wx, e);
+      }
       return false;
     } finally {
       if (this._alive) this.setData({ busy: false });
@@ -613,33 +621,20 @@ Page({
   },
   async openAlert() {
     if (this.data.busy || this._openingAlert) return;
-    if (!this.data.followingReady) {
-      this._openingAlert = true;
-      const ready = await this.ensureFollowing();
-      this._openingAlert = false;
-      if (!ready || this.data.busy) return;
-    }
-    const go = () =>
-      wx.navigateTo({
-        url:
-          "/pages/asset-alert/asset-alert?assetId=" +
-          encodeURIComponent(this.assetId),
+    this._openingAlert = true;
+    try {
+      if (!this.data.followingReady && !(await this.ensureFollowing())) return;
+      if (this.data.busy) return;
+      await openAssetAlert(wx, {
+        assetId: this.assetId,
+        following: this.data.following,
+        follow: () => this.follow(),
+        active: () => this._alive && this._visible,
+        onError: errorText => this.setData({ errorText }),
       });
-    if (this.data.following) return go();
-    wx.showModal({
-      title: "先加入自选",
-      content: "加入自选后才可设置提醒",
-      confirmText: "加入自选",
-      cancelText: "暂不加入",
-      success: async (r) => {
-        if (r.confirm && (await this.follow())) go();
-      },
-      fail: () => {
-        if (this._alive) this.setData({
-          errorText: "加入自选后才可设置提醒，请先点击右上角「自选」",
-        });
-      },
-    });
+    } finally {
+      this._openingAlert = false;
+    }
   },
   onPullDownRefresh() {
     return this.reload().finally(() => wx.stopPullDownRefresh());

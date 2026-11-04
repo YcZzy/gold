@@ -95,7 +95,12 @@ Page({
   const n=this._addRequest=(this._addRequest||0)+1;this._followingRequest=(this._followingRequest||0)+1;
   this.setData({rowBusy:id,rowError:'',rowErrorId:''});
   try{const state=await portfolio.add(id);if(!this.active(n,'_addRequest'))return;this.setData({followingIds:(state.items||[]).map(i=>i.id),followingMap:Object.fromEntries((state.items||[]).map(i=>[i.id,true]))});}
-  catch(error){if(this.active(n,'_addRequest'))this.setData({rowErrorId:id,rowError:error.message||'加入自选失败，请重试'});}
+  catch(error){
+    if(this.active(n,'_addRequest')){
+      this.setData({rowErrorId:id,rowError:error.message||'加入自选失败，请重试'});
+      if (error.code === 'watchlist-limit') require('../../utils/membership-client').offerUpgrade(wx, error);
+    }
+  }
   finally{if(this.active(n,'_addRequest'))this.setData({rowBusy:''});}
  },
  onPullDownRefresh(){return Promise.all([this.loadIndices(),this.loadList(),this.loadFollowing()]).finally(()=>wx.stopPullDownRefresh());},

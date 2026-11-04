@@ -64,7 +64,7 @@
 1. 在微信开发者工具确认 `utils/app-config.js` 中的环境和两个现有订阅模板 ID。
 2. 上传并部署 **initDb**，选择「云端安装依赖」，云端执行一次 `{}`。它只幂等增加所需集合（含 `investmentLedgers`、`publicQuotes` 和 `cloudCallBudgets`），保留所有旧数据。
 3. **设置数据库权限**：云开发控制台中，本项目现有15个集合中，只有公共行情投影 `publicQuotes` 设为 `{ "read": true, "write": false }`；其余14个集合（包括 `cloudCallBudgets`）全部设为 `{ "read": false, "write": false }`，仅由云函数访问；完整清单见 [database-permissions.json](docs/database-permissions.json)。此清单是人工配置参考，不会随函数上传自动生效。尤其 `entitlements`、`portfolios`、`subscriptions` 不能允许客户端自行创建或修改，否则会绕过会员、自选或次数校验。
-4. 上传并部署 **callBudget**、**marketData**、**portfolio**、**ledger**、**sendTask**、**getStatus**、**savePrefs** 和 **registerAuth**，选择云端安装依赖。`ledger` 需上传整个目录（含 `engine.js`、`securities.js`）；`portfolio` 需包含 `workspace.js`，`marketData` 需包含 `discovery.js`。`marketData` 依赖 `iconv-lite`；`sendTask` 包含 `rules.js` 与 `asset-tasks.js`。建议采用支持现代 JS 的 Node.js 运行环境。
+4. 上传并部署 **marketData**、**portfolio**、**ledger**、**sendTask**、**getStatus**、**savePrefs** 和 **registerAuth**，选择云端安装依赖。`ledger` 需上传整个目录（含 `engine.js`、`securities.js`）；`portfolio` 需包含 `workspace.js`，`marketData` 需包含 `discovery.js`。`marketData` 依赖 `iconv-lite`；`sendTask` 包含 `rules.js` 与 `asset-tasks.js`。建议采用支持现代 JS 的 Node.js 运行环境。
 5. `sendTask`、`marketData` 与 `ledger` 建议配置 60 秒超时并监控批量行情执行时长；`portfolio` 建议至少30秒。`marketData` 需一并上传目录、市场时间和日历文件；`sendTask` 需一并上传日历文件。先等待部署完成，再右键 **sendTask → 上传触发器**，确认仅保留 `dispatchTimer` 每分钟（`0 * * * * * *`）；若控制台仍有旧 `scanTimer`，手动删除。每轮先扫描行情再立即分发，不再依赖两个定时器的先后顺序。函数仍处于 Updating 时不要重复上传触发器。
 6. 查询如提示缺少索引，按控制台提示建立 `sendTasks` 的 `(status, triggerTime)`、`(openid, status, sentAt)` 等索引。缓存过期清理需要按控制台提示建立对应过期时间索引。
 7. 上述函数和权限均准备完成后再编译/预览新前端。第一次成功获取自选时，portfolio 将旧黄金偏好迁移为内嵌规则，并原子写入迁移标记。旧已发送或结果不明的到价任务不会自动重新开启。
@@ -113,8 +113,22 @@
 
 若无法查询云端日志，更新后的 `ledger` 在未预期异常响应中附带 `diagnostic: {stage, code, version: 1}`，可直接从开发工具 Network 的 Response 复制该对象定位；其中不包含原始异常消息、身份或流水内容。旧版响应不带此字段，需要先重新部署云函数。
 
-### 云函数月调用预算（2026-11-02）
+### 云端调用与缓存（2026-11-03）
 
-500人每人5只股票（最多2500个不同标的）的新版本预算按31天约189,280次（分钟调度44,640＋每轮最多1次批量行情44,640＋账户操作额度100,000），预留10,720次。前台报价优先读专用公共快照，账户每月200调用单位由服务端跨设备分配，含领取和嵌套调用，不能等同于200次用户操作；搜索/图表等受TTL和额度限制，分钟提醒保留。此为正常负载预算，不是平台计费硬上限；旧版、额外触发器、失败调用和部署测试仍需统计，数据库费用另计。此前当月已分配超过200的额度账本不会重置，切换期实际用量需单独观察。
+2026-11-03 已取消应用内每账户每月 200 调用单位限制，以及额度领取、预扣和余额持久化。旧设备记录或云端已分配额度不会再拦截新前端的自选、持仓、搜索等操作。保留公共行情快照、图表 15 分钟、证券资料 24 小时、搜索/发现 5 分钟缓存和相同只读请求合并；后台分钟提醒继续运行。前台调用量不再有应用内月上限，原 189,280 次/月预算估算不再适用。
 
-**上线必须先创建publicQuotes/cloudCallBudgets并设置权限，部署新增callBudget及marketData/portfolio/ledger/sendTask，再发布前端。** 仅publicQuotes允许客户端读、禁止写；所有私密集合继续禁止客户端直读写。详见[预算、测试与部署清单](docs/cloud-call-budget-2026-11-02.md)。
+仅取消月额度这部分需要重新编译/预览前端，并上传体验版或正式发布供手机更新，无需重置额度或清缓存。下面的后台按订阅查询改动还需部署对应云函数。新前端不再调用 `callBudget`；旧函数可保留兼容旧版本，但旧版前端仍有本地限制，需要更新。`cloudCallBudgets` 集合继续用于后台分钟扫描锁，不能删除。私密数据库权限保持关闭。此前的 [预算与部署记录](docs/cloud-call-budget-2026-11-02.md) 仅作历史参考。
+
+### 后台只查询已订阅提醒（2026-11-03）
+
+后台不再预热全部自选。仅查询已开启提醒、仍有适用模板授权且当前到检查窗口的标的，保留股票交易时段、定时/收盘窗口和每日发送限额过滤；默认黄金自选或单纯增加授权都不会单独触发查询。新账户黄金收盘简报默认关闭，已有明确保存的开启状态保留。旧黄金监控只抓启用的品种；旧版双黄金简报仍保留其既有内容。
+
+500 用户各订阅 5 个不同标的时，一轮最多 2500 个标的去重后仍只调用一次 `marketData/batchQuotes`。内部最多 84 个行情批次、10 路并行，外部请求、数据库读写与执行耗时随标的数增加；云函数调用次数不按用户或内部批次相乘。无有效提醒时不调用行情服务，分钟定时器仍执行。没有提醒的自选在前台查看时按需获取行情，公共快照可能更旧，客户端仍需按时间判断和回源。
+
+上线需部署整个 **sendTask、portfolio、getStatus、savePrefs** 目录；`marketData` 必须已是支持 `batchQuotes` 的版本，否则一并部署。更新前端以应用旧提醒页默认关闭及前述月额度移除。本次不清空数据或删除历史已启用提醒；已启用的黄金提醒若不再需要，应手动关闭。此次尚未部署，完整说明见 [按订阅查询](docs/demand-driven-reminder-scan-2026-11-03.md)。
+
+### 黄金休市过滤（2026-11-03）
+
+已移除黄金跳过交易时段的例外。新版及旧版黄金到价、日内波动、短时急变均要求对应市场处于有效交易时段，并验证行情来源时间也在同一交易日/盘段；跨休市的短时基准不使用。沪金按上金所日市/夜市及 2026 休市日历；伦敦金采用有来源说明的 XAU/USD 参考窗口，包含周末、每日停盘与夏令时。定时播报仍按设定时刻执行，沪金收盘播报保留收盘后窗口并过滤节假日。
+
+本次只需部署完整 **sendTask** 目录，包含新增 `gold-calendar-data.json` 和已修改的 `market-calendar.js`、`rules.js`、`asset-tasks.js`、`index.js`，无需额外前端变更或清空数据。黄金日历当前覆盖 2026 年；XAU 11 月 26/27 日、12 月 24 日特殊时段尚未核实，先保守暂停这些交易日的价格扫描，发布前应更新经核实的时段。来源、边界及部署说明见 [黄金交易时段](docs/gold-session-filter-2026-11-03.md)。尚未部署线上。

@@ -132,7 +132,7 @@ input[aria-invalid="true"] { border-color: var(--error-text); }
 .holding-hit-pressed { background: var(--chip-bg); opacity: .2; }
 
 .overview-toolbar, .overview-footer { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
-.overview-toolbar { min-height: 60rpx; margin: -12rpx 0 12rpx; }
+.overview-toolbar { justify-content: flex-end; min-height: 60rpx; margin: -12rpx 0 12rpx; }
 .overview-footer { min-height: 60rpx; border-top: 1rpx solid var(--card-border); margin-top: 24rpx; padding-top: 12rpx; }
 .holdings-page .overview-toolbar button.ui-btn, .holdings-page .overview-footer button.ui-btn { width: auto; min-height: 64rpx; margin: 0; padding: 8rpx 0; font-size: 23rpx; }
 .overview-footer button text { margin-left: 8rpx; }

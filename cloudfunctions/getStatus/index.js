@@ -8,12 +8,12 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 
 const DEFAULT_PREFS = {
-  dailyBrief: true,
+  dailyBrief: false,
   volatilityAu: false,
   volatilityXau: false,
   dndStart: "23:00",
   dndEnd: "07:30",
-  theme: "paper",
+  theme: "blackgold",
   scheduledBrief: false,
   scheduledTime: "09:00",
   scheduledWeekdaysOnly: true,

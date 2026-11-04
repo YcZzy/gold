@@ -130,7 +130,10 @@ Page({
         wx.showToast({ title: "已加入自选", icon: "success" });
       }
     } catch (e) {
-      if (this._alive) this.setData({ errorText: e.message });
+      if (this._alive) {
+        this.setData({ errorText: e.message });
+        require("../../utils/membership-client").offerUpgrade(wx, e);
+      }
     } finally {
       if (this._alive) this.setData({ adding: "" });
     }

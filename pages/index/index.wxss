@@ -586,3 +586,10 @@ button[disabled] {
   .home-page button { transition: none; }
   .home-page .loading-mark { animation: none; }
 }
+
+.home-share-actions {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+}

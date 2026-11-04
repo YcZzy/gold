@@ -108,6 +108,7 @@ module.exports = function createSettings({ market, portfolio, theme, fmt, wx, st
         this.applyState(await portfolio.add(this.assetId));
       } catch (e) {
         this.setData({ errorText: e.message });
+        if (e.code === "watchlist-limit") require("./membership-client").offerUpgrade(wx, e);
       } finally {
         this.setData({ busy: false });
       }

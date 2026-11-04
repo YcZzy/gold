@@ -63,13 +63,15 @@ test("daily volatility uses selected threshold, each market once a day", () => {
 });
 
 test("short moves need a fresh 15-minute baseline and honor chosen threshold", () => {
+  const at = Date.parse("2026-10-27T09:20:00+08:00");
+  const currentQuotes = {au:{...quotes.au,sourceAt:at},intl:{...quotes.intl,sourceAt:at}};
   const prefs = { ...user, shortAu: true, shortXau: true, shortPct: 1 };
-  const sample = { at: now - 15 * 60000, au: { price: 920, sourceAt: now - 15 * 60000 }, intl: { usd: 3900, sourceAt: now - 15 * 60000 } };
-  assert.deepEqual(planTasks(prefs, quotes, [sample], now).map(t => t.type), ["shortAu", "shortXau"]);
-  assert.equal(planTasks(prefs, quotes, [], now).length, 0);
-  assert.equal(planTasks(prefs, quotes, [{ ...sample, at: now - 60 * 60000 }], now).length, 0);
-  assert.equal(planTasks({ ...prefs, shortPct: 5 }, quotes, [sample], now).length, 0);
-  assert.equal(planTasks(prefs, quotes, [{ ...sample, au: { price: 920, sourceAt: now } , intl: null }], now).length, 0);
+  const sample = { at: at - 15 * 60000, au: { price: 920, sourceAt: at - 15 * 60000 }, intl: { usd: 3900, sourceAt: at - 15 * 60000 } };
+  assert.deepEqual(planTasks(prefs, currentQuotes, [sample], at).map(t => t.type), ["shortAu", "shortXau"]);
+  assert.equal(planTasks(prefs, currentQuotes, [], at).length, 0);
+  assert.equal(planTasks(prefs, currentQuotes, [{ ...sample, at: at - 60 * 60000 }], at).length, 0);
+  assert.equal(planTasks({ ...prefs, shortPct: 5 }, currentQuotes, [sample], at).length, 0);
+  assert.equal(planTasks(prefs, currentQuotes, [{ ...sample, au: { price: 920, sourceAt: at } , intl: null }], at).length, 0);
 });
 
 test("editing, closing or rearming a target invalidates previous task", () => {
@@ -94,4 +96,13 @@ test("target budgets remain available after all six ordinary categories were sen
   assert.equal(withinLimit("targetAuLow", { ...counts, targetAuLow: 1 }), false);
   assert.equal(withinLimit("shortAu", counts), false);
   assert.equal(withinLimit("unknown", {}), false);
+});
+
+test('legacy gold price and volatility rules reject fresh-looking off-session quotes', () => {
+  for (const time of ['2026-11-03T16:00+08:00','2026-11-08T10:00+08:00']) {
+    const at = Date.parse(time);
+    const current = {au:{...quotes.au,sourceAt:at},intl:{...quotes.intl,sourceAt:at}};
+    const prefs = {...target,volatilityAu:true,shortAu:true};
+    assert.equal(planTasks(prefs,current,[],at).length,0);
+  }
 });

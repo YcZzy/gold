@@ -15,7 +15,9 @@ function setup(initial) {
     setStorageSync: (key, value) => storage.set(key, value),
     setNavigationBarColor: value => navigation.push(value),
     setBackgroundColor() {}, setTabBarStyle() {}, setTabBarItem() {},
-    cloud: { callFunction: request => new Promise((resolve, reject) => calls.push({ ...request, resolve, reject })) },
+    cloud: { callFunction: request => request.name === "membership"
+      ? Promise.resolve({ result: { ok: true } })
+      : new Promise((resolve, reject) => calls.push({ ...request, resolve, reject })) },
   };
   const module = { exports: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../utils/theme.js"), "utf8"), {
@@ -88,20 +90,20 @@ test("a hidden Mine page cannot initialize the theme from cloud preferences", as
   if (mine.onHide) mine.onHide();
   const home = f.page("index");
   await home.onShow();
-  f.calls[0].resolve({ result: { ok: true, prefs: { theme: "blackgold" } } });
+  f.calls[0].resolve({ result: { ok: true, prefs: { theme: "paper" } } });
   await showing;
   assert.equal(f.theme.getTheme(), home.data.theme);
-  assert.equal(f.chrome.at(-1), "#FAF8F3");
+  assert.equal(f.chrome.at(-1), "#14120b");
 });
 
 test("a first installation can restore cloud theme while Mine remains visible", async () => {
   const f = setup();
   const mine = f.page("mine");
   const showing = mine.onShow();
-  f.calls[0].resolve({ result: { ok: true, prefs: { theme: "blackgold" } } });
+  f.calls[0].resolve({ result: { ok: true, prefs: { theme: "paper" } } });
   await showing;
-  assert.equal(mine.data.theme, "blackgold");
-  assert.equal(f.theme.getTheme(), "blackgold");
+  assert.equal(mine.data.theme, "paper");
+  assert.equal(f.theme.getTheme(), "paper");
 });
 
 test("all pages initialize and resume using the current local theme", async () => {
@@ -145,10 +147,10 @@ test("tab pages read the current theme on load even when registered before a the
 
 test("native page containers have a non-white fallback before WXML is rendered", () => {
   const app = require("../app.json");
-  assert.equal(app.window.backgroundColorContent, "#F4F1EA");
+  assert.equal(app.window.backgroundColorContent, "#14120b");
   for (const route of app.pages) {
     const config = require(path.join("..", route + ".json"));
-    assert.equal(config.backgroundColorContent || app.window.backgroundColorContent, "#F4F1EA", route);
+    assert.equal(config.backgroundColorContent || app.window.backgroundColorContent, "#14120b", route);
   }
 });
 
@@ -245,8 +247,8 @@ test("a hidden legacy reminder page cannot initialize the global theme", async (
   if (alert.onHide) alert.onHide();
   const home = f.page("index");
   await home.onShow();
-  f.calls[0].resolve({ result: { ok: true, prefs: { theme: "blackgold" } } });
+  f.calls[0].resolve({ result: { ok: true, prefs: { theme: "paper" } } });
   await showing;
   assert.equal(f.theme.getTheme(), home.data.theme);
-  assert.equal(f.chrome.at(-1), "#FAF8F3");
+  assert.equal(f.chrome.at(-1), "#14120b");
 });

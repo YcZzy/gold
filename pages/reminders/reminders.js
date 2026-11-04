@@ -1,3 +1,4 @@
+const share = require("../../utils/share");
 const statusClient = require("../../utils/status-client");
 const market = require("../../utils/market-client");
 const portfolio = require("../../utils/portfolio-client");
@@ -8,6 +9,9 @@ const { templates } = require("../../utils/app-config");
 const settings = require("../../utils/reminder-settings")({ market, portfolio, theme, fmt, wx, statusClient, templates });
 const TPL_IDS = [templates.dailyBrief, templates.volatility];
 Page({
+  onShareAppMessage() {
+    return share.card("reminders", [], "", theme.getTheme());
+  },
   ...settings,
   data: {
     ...settings.data,

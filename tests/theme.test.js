@@ -63,9 +63,9 @@ test("cloud preferences initialize custom navigation when no local theme exists"
   assert.deepEqual(synced, ["blackgold"]);
 });
 
-test("default tab configuration provides paper icons before page initialization", () => {
+test("default tab configuration provides blackgold icons before page initialization", () => {
   const app = require("../app.json");
-  checkItems(app.tabBar.list.map((item, index) => ({ ...item, index })), "paper");
+  checkItems(app.tabBar.list.map((item, index) => ({ ...item, index })), "blackgold");
 });
 
 test("custom navigation does not depend on native tab-bar APIs", () => {
@@ -74,4 +74,10 @@ test("custom navigation does not depend on native tab-bar APIs", () => {
   assert.doesNotThrow(() => theme.applyChrome("blackgold"));
   assert.equal(styles.length, 0);
   assert.deepEqual(synced, ["blackgold"]);
+});
+
+test("the first launch defaults to blackgold and can restore explicit paper", () => {
+  const { theme } = load("");
+  assert.equal(theme.getTheme(), "blackgold");
+  assert.equal(theme.syncFromPrefs({ theme: "paper" }), "paper");
 });

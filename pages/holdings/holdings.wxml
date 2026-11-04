@@ -2,7 +2,10 @@
 <view class="page holdings-page theme-{{theme}} {{preferences.compact ? 'compact' : ''}}">
   <view class="heading-row">
     <view class="page-heading"><button wx:if="{{view !== 'overview'}}" class="text-button ui-btn ui-text back-button" bindtap="{{editing ? 'cancelEntry' : noteEditing ? 'cancelNote' : 'backToHoldings'}}" disabled="{{busy}}" aria-label="返回持仓" hover-class="ui-pressed">‹</button><view class="hero-title">{{viewTitle}}</view></view>
-    <view wx:if="{{view === 'overview'}}" class="heading-actions"><button class="ui-btn ui-primary entry-trigger" bindtap="startEntry" disabled="{{busy || !loaded}}" hover-class="ui-pressed">{{hasEntryDraft ? '继续记账' : '记一笔'}}</button></view>
+    <view wx:if="{{view === 'overview'}}" class="heading-actions">
+      <button class="ui-btn ui-primary entry-trigger" bindtap="startEntry" disabled="{{busy || !loaded}}" hover-class="ui-pressed">{{hasEntryDraft ? '继续记账' : '记一笔'}}</button>
+      <button wx:if="{{loaded}}" class="ui-icon share-icon-button" open-type="share" aria-label="分享持仓" hover-class="ui-pressed" disabled="{{busy}}"><image class="svg-action-icon" src="{{theme === 'blackgold' ? '/assets/icons/share-blackgold.svg' : '/assets/icons/share.svg'}}" mode="aspectFit" aria-hidden="true" /></button>
+    </view>
   </view>
   <view wx:if="{{errorText}}" class="error" role="alert" aria-live="assertive">{{errorText}}<button wx:if="{{offline}}" class="text-button ui-btn ui-text" bindtap="reload" loading="{{refreshing}}" disabled="{{refreshing}}" hover-class="ui-pressed">重新加载</button></view>
   <view wx:if="{{successText}}" class="success-message" role="status" aria-live="polite">{{successText}}</view>

@@ -314,10 +314,10 @@ test('500 users sharing five stocks still need only one deduplicated quote reque
   assert.equal(result.scanStats.eligible, 2500);
 });
 
-test('2500 watchlist stocks are warmed without notification authorization or creating tasks', async () => {
+test('2500 watched stocks without notification authorization never request quotes', async () => {
   const {calls, result} = await scaleScan(false, now, {users:500, authorized:false, warmWatchlists:true});
-  assert.equal(calls.length, 1);
-  assert.equal(result.scanStats.quotedAssets, 2500);
+  assert.equal(calls.length, 0);
+  assert.equal(result.scanStats.quotedAssets, 0);
   assert.equal(result.scanStats.eligible, 0);
   assert.equal(result.created, 0);
 });
@@ -325,7 +325,7 @@ test('2500 watchlist stocks are warmed without notification authorization or cre
 test('scan rejects capacity overflow explicitly before requesting quotes instead of dropping users', async () => {
   const f = fixture();
   f.tables.portfolios[0].items = Array.from({length:2501}, (_, i) => 'sh' + (600000+i));
-  f.tables.portfolios[0].rules = [];
+  f.tables.portfolios[0].rules = f.tables.portfolios[0].items.map((assetId, i) => ({...rule, id: "r" + i, assetId}));
   await assert.rejects(f.engine.scan({warmWatchlists:true}), /超过2500/);
   assert.equal(f.calls.length, 0);
 });
@@ -349,9 +349,57 @@ test('known instrument currency and exchange calendars preserve HK and US regula
   }
 });
 
- test('watchlist warming updates public feed without enabling reminders or consuming authorization', async()=>{
- const p={_id:'u',openid:'u',migrationVersion:1,items:[asset.id],rules:[]};
- const {db}=memoryDb({portfolios:[p]});const calls=[];
- const engine=createAssetTasks({db,templates,now:()=>now,cloud:{callFunction:async r=>{calls.push(r);return{result:{ok:true,assets:[asset],quotes:[quote]}};}}});
- const result=await engine.scan({warmWatchlists:true});assert.equal(calls.length,1);assert.equal(result.created,0);
- });
+test('default gold and stock watchlists without enabled reminders never request quotes', async () => {
+  const f = fixture();
+  f.tables.portfolios[0].items.push('gold-au9999', 'gold-xauusd');
+  f.tables.portfolios[0].rules = [];
+  const result = await f.engine.scan({warmWatchlists: true});
+  assert.equal(f.calls.length, 0);
+  assert.equal(result.created, 0);
+});
+
+test('mixed watchlists request only enabled and authorized reminder targets', async () => {
+  const f = fixture();
+  f.tables.portfolios[0].items.push('gold-au9999', 'gold-xauusd', 'sz000001');
+  f.tables.portfolios[0].rules.push({...rule, id:'off', assetId:'gold-au9999', enabled:false});
+  await f.engine.scan({warmWatchlists:true});
+  assert.equal(f.calls.length, 1);
+  assert.deepEqual(f.calls[0].data.assetIds, [asset.id]);
+});
+
+test('gold reminders need authorization and stop querying after being disabled or removed', async () => {
+  const f = fixture();
+  const p = f.tables.portfolios[0];
+  p.items = ['gold-au9999', 'gold-xauusd'];
+  p.rules = [{...rule, assetId:'gold-xauusd'}];
+  f.tables.subscriptions[0].remaining = 0;
+  await f.engine.scan({warmWatchlists:true});
+  assert.equal(f.calls.length, 0);
+  f.tables.subscriptions[0].remaining = 1;
+  await f.engine.scan({warmWatchlists:true});
+  assert.deepEqual(f.calls[0].data.assetIds, ['gold-xauusd']);
+  p.rules[0].enabled = false;
+  await f.engine.scan({warmWatchlists:true});
+  p.rules[0].enabled = true;
+  p.items = ['gold-au9999'];
+  await f.engine.scan({warmWatchlists:true});
+  assert.equal(f.calls.length, 1);
+});
+
+test('gold scans skip closed sessions before calling the quote service and resume at open', async () => {
+  for (const [id,closed,open] of [
+    ['gold-au9999','2026-11-03T19:59+08:00','2026-11-03T20:00+08:00'],
+    ['gold-xauusd','2026-11-03T07:04+08:00','2026-11-03T07:05+08:00']
+  ]) {
+    const f = fixture();
+    f.tables.portfolios[0].items = [id];
+    f.tables.portfolios[0].rules = [{...rule,assetId:id}];
+    f.advance(Date.parse(closed)-now);
+    await f.engine.scan();
+    assert.equal(f.calls.length,0,id+' closed');
+    f.advance(Date.parse(open)-Date.parse(closed));
+    await f.engine.scan();
+    assert.equal(f.calls.length,1,id+' open');
+    assert.deepEqual(f.calls[0].data.assetIds,[id]);
+  }
+});

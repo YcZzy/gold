@@ -281,3 +281,47 @@ test("pending tasks still dispatch when no new rules are eligible to scan", asyn
   assert.equal(task.status, "sent");
   assert.equal(e.sent.length, 1);
 });
+
+test('minute dispatcher does not warm default gold watchlists without reminder subscriptions', async () => {
+  const {memoryDb} = require('./helpers/asset-db');
+  const {db, tables} = memoryDb({
+    preferences:[{_id:'u',openid:'u',multiAssetVersion:1}],
+    portfolios:[{_id:'u',openid:'u',migrationVersion:1,items:['gold-au9999','gold-xauusd'],rules:[]}],
+    subscriptions:subs
+  });
+  const calls = [];
+  const e = loadEngine({db, tables, callFunction:async request => {
+    calls.push(request);
+    return {result:{ok:true, assets:[], quotes:[]}};
+  }});
+  const result = await e.main({TriggerName:'dispatchTimer'});
+  assert.equal(result.ok, true);
+  assert.equal(calls.length, 0);
+  assert.equal(e.quoteRequests.length, 0);
+});
+
+test('legacy gold monitoring only requests the subscribed gold market', async () => {
+  for (const [patch, expected] of [
+    [{targetAuLow:true}, ['118.AU9999']],
+    [{targetAuLow:false, targetXauHigh:true, targetXauHighPrice:5000, targetXauHighRuleId:'x'}, ['122.XAU','133.USDCNH']]
+  ]) {
+    const e = engine({tables:{preferences:[{...prefs,...patch}],subscriptions:subs}});
+    await e.main({TriggerName:'scanTimer'});
+    const secids = e.quoteRequests.map(url => new URL(url).searchParams.get('secid')).sort();
+    assert.deepEqual(secids, expected.sort());
+  }
+});
+
+test('legacy gold monitoring makes no HTTP calls outside each market session', async () => {
+  for (const [time,patch] of [
+    ['2026-11-03T16:00+08:00',{targetAuLow:true}],
+    ['2026-11-03T06:30+08:00',{targetAuLow:false,volatilityXau:true}],
+    ['2026-11-08T10:00+08:00',{targetAuLow:true,shortXau:true}],
+    ['2026-10-01T10:00+08:00',{targetAuLow:true}]
+  ]) {
+    const e = engine({time,tables:{preferences:[{...prefs,...patch}],subscriptions:subs}});
+    await e.main({TriggerName:'scanTimer'});
+    assert.equal(e.quoteRequests.length,0,time);
+    assert.equal(e.tables.sendTasks.length,0,time);
+  }
+});

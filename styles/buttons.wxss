@@ -148,6 +148,18 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+.page button.ui-icon.share-icon-button {
+  width: 72rpx;
+  height: 72rpx;
+  min-height: 72rpx;
+  margin: 0;
+  padding: 0;
+}
+.share-icon-button .svg-action-icon {
+  flex-shrink: 0;
+  width: 38rpx;
+  height: 38rpx;
+}
 .page button.ui-icon.ui-icon-label {
   flex-direction: column;
   gap: 4rpx;

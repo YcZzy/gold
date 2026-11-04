@@ -77,7 +77,7 @@ function getTheme() {
   } catch (e) {
     /* 缓存读取失败用默认 */
   }
-  return "paper";
+  return "blackgold";
 }
 
 function cacheTheme(theme) {
@@ -90,7 +90,7 @@ function cacheTheme(theme) {
 }
 
 function applyChrome(theme) {
-  if (!isValid(theme)) theme = "paper";
+  if (!isValid(theme)) theme = "blackgold";
   // The native navigation bar lives outside the page's rendered content.
   // Use one explicit update path on theme changes and page show; page-meta
   // only owns window backgrounds so it cannot overwrite this navigation color.
@@ -132,7 +132,7 @@ async function saveTheme() {
 
 /** 切换主题：会话状态 / 本地缓存 / 顶部导航和自定义底栏即时生效，异步串行保存云端。 */
 function setTheme(theme) {
-  if (!isValid(theme)) theme = "paper";
+  if (!isValid(theme)) theme = "blackgold";
   cacheTheme(theme);
   applyChrome(theme);
   queuedTheme = theme;

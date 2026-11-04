@@ -117,7 +117,12 @@ Page({
     try{
       const s=await portfolio.batchAdd(entries.map(e=>e.assetId),this._importRevision,entries,groupSettings);
       if(this.isCurrent(request)){this.apply(s);this.setData({preview:[],pendingGroupCount:0,raw:'',notice:'导入完成，重复标的已跳过；已有备注保留。'});}
-    }catch(e){if(this.isCurrent(request))this.setData({errorText:e.message||'导入失败，尚未写入'});}
+    }catch(e){
+      if(this.isCurrent(request)){
+        this.setData({errorText:e.message||'导入失败，尚未写入'});
+        if(e.code==='watchlist-limit')require('../../utils/membership-client').offerUpgrade(wx,e);
+      }
+    }
     finally{if(this.isCurrent(request))this.setData({busy:false});}
   },
   makeExport(e){

@@ -89,7 +89,7 @@ function migrate(prefs, now, legacyStates = {}) {
       updatedAt: now,
     });
   };
-  add("gold-au9999", "close", prefs.dailyBrief !== false);
+  add("gold-au9999", "close", prefs.dailyBrief === true);
   if (prefs.scheduledBrief)
     add("gold-au9999", "scheduled", true, {
       time: TIME.test(prefs.scheduledTime) ? prefs.scheduledTime : "09:00",
@@ -302,7 +302,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
         }
         if (action === "add" && !doc.items.includes(event.assetId)) {
           if (doc.items.length >= limits.watchlist)
-            fail("watchlist-limit", "自选数量已达上限，请先移除一项");
+            fail("watchlist-limit", limits.tier === "free" ? "免费版最多关注 5 个标的" : "自选数量已达上限，请先移除一项");
           doc.items.push(event.assetId);
           changed = true;
         }

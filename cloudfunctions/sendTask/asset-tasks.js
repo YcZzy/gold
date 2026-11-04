@@ -38,7 +38,6 @@ function validQuote(quote, asset, now) {
 }
 function fresh(quote, asset, now) {
   if (!validQuote(quote, asset, now) || (quote.status != null && quote.status !== 'fresh') || quote.isDelayed || now - quote.sourceTime > 10 * MINUTE) return false;
-  if (asset.kind === 'gold') return true;
   const current = calendar.session(asset, now), source = calendar.session(asset, quote.sourceTime);
   return current.phase === 'regular' && source.phase === 'regular' && current.date === source.date && current.segment === source.segment;
 }
@@ -60,13 +59,9 @@ function scheduledDue(rule, now) {
 }
 function ruleDue(rule, asset, now) {
   if (rule.type === "scheduled") return scheduledDue(rule, now) !== null;
-  if (rule.type !== "close") return !asset || asset.kind === "gold" || calendar.session(asset, now).phase === "regular";
+  if (rule.type !== "close") return !asset || calendar.session(asset, now).phase === "regular";
   if (!asset) return true; // Missing metadata must not silently disable a rule.
   if (asset.id === "gold-xauusd" || asset.supportsClose === false) return false;
-  if (asset.id === "gold-au9999") {
-    const p = parts(now);
-    return ![0, 6].includes(p.weekday) && p.minutes >= 15*60+40 && p.minutes <= 16*60+25;
-  }
   const current = calendar.session(asset, now);
   return current.known && !!current.closeTime && now >= current.closeTime + 10*MINUTE && now <= current.closeTime + 55*MINUTE;
 }
@@ -82,7 +77,7 @@ function planRuleTask(rule, asset, quote, samples, now, openid) {
   if (!rule || !rule.enabled || !TYPES.includes(rule.type) || rule.assetId !== asset.id || !validQuote(quote, asset, now)) return null;
   const p = parts(now);
   let date = p.ymd, reason = "", expiry = now + 30 * MINUTE;
-  if (asset.kind !== 'gold') date = calendar.session(asset, now).date.replace(/-/g, '');
+  if (rule.type !== 'scheduled') date = calendar.session(asset, now).date.replace(/-/g, '');
   const pct = value => `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
   if (target(rule.type)) {
     if (!positive(rule.value) || !fresh(quote, asset, now)) return null;
@@ -98,10 +93,8 @@ function planRuleTask(rule, asset, quote, samples, now, openid) {
       quote.sourceTime - s.sourceTime >= 12 * MINUTE && quote.sourceTime - s.sourceTime <= 18 * MINUTE)
       .sort((a, b) => Math.abs(now - a.at - 15 * MINUTE) - Math.abs(now - b.at - 15 * MINUTE))[0];
     if (!previous) return null;
-    if (asset.kind !== 'gold') {
-      const current = calendar.session(asset, now), baseline = calendar.session(asset, previous.sourceTime);
-      if (baseline.phase !== 'regular' || baseline.date !== current.date || baseline.segment !== current.segment || previous.status === 'delayed' || previous.isDelayed) return null;
-    }
+    const current = calendar.session(asset, now), baseline = calendar.session(asset, previous.sourceTime);
+    if (baseline.phase !== 'regular' || baseline.date !== current.date || baseline.segment !== current.segment || previous.status === 'delayed' || previous.isDelayed) return null;
     const change = (quote.price / previous.price - 1) * 100;
     if (Math.abs(change) < rule.value) return null;
     reason = `约15分钟${pct(change)}`;
@@ -114,17 +107,11 @@ function planRuleTask(rule, asset, quote, samples, now, openid) {
     reason = "定时行情播报";
   } else {
     if (asset.id === "gold-xauusd" || asset.supportsClose === false || quote.session === 'post' || quote.session === 'pre') return null;
-    const gold = asset.id === "gold-au9999";
-    if (gold) {
-      const source = parts(quote.sourceTime);
-      if ([0,6].includes(p.weekday) || p.minutes < 15*60+40 || p.minutes > 16*60+25 || source.ymd !== p.ymd || source.minutes < 15*60+30) return null;
-    } else {
-      const current = calendar.session(asset, now), source = calendar.session(asset, quote.sourceTime);
-      const close = current.closeTime, auctionWindow = asset.market === 'HK' ? 2*MINUTE : 0;
-      if (!current.known || !close || now < close + 10*MINUTE || now > close + 55*MINUTE ||
-          source.date !== current.date || quote.sourceTime < close - auctionWindow ||
-          (quote.sessionDate && quote.sessionDate !== current.date)) return null;
-    }
+    const current = calendar.session(asset, now), source = calendar.session(asset, quote.sourceTime);
+    const close = current.closeTime, auctionWindow = asset.market === 'HK' ? 2*MINUTE : 0;
+    if (!current.known || !close || now < close + 10*MINUTE || now > close + 55*MINUTE ||
+        source.date !== current.date || quote.sourceTime < close - auctionWindow ||
+        (quote.sessionDate && quote.sessionDate !== current.date)) return null;
     reason = "收盘行情简报";
   }
   return {
@@ -223,7 +210,7 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
       return !!(result.stats && result.stats.updated);
     }
   }
-  async function scan({ quotas, warmWatchlists = false } = {}) {
+  async function scan({ quotas } = {}) {
     const time = now();
     if (!quotas) quotas = quotaIndex(await all("subscriptions", { remaining: _.gt(0) }));
     const portfolios = (await all("portfolios", { migrationVersion: 1 }));
@@ -260,11 +247,8 @@ function createAssetTasks({ db, cloud, templates, now = Date.now }) {
         enabled.push({ portfolio: p, rule });
       }
     }
-    const watched = warmWatchlists ? portfolios.flatMap(p => p.items || []).filter(id => {
-      const asset = scanAsset(id);
-      return asset && (asset.kind === 'gold' || calendar.session(asset, time).phase === 'regular');
-    }) : [];
-    const ids = [...new Set([...enabled.map(item => item.rule.assetId), ...watched])];
+    // Watchlist membership alone is not a subscription to background monitoring.
+    const ids = [...new Set(enabled.map(item => item.rule.assetId))];
     if (ids.length > 2500) throw Error('分钟行情容量超过2500个标的，请扩容后再启用更多自选');
     const assets = new Map(), quotes = new Map();
     // One invocation; marketData batches provider I/O internally with bounded concurrency.

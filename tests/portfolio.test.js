@@ -78,7 +78,7 @@ test("migration atomic, preserves prefs, carries old revision and is idempotent"
   assert.equal(a.ok, true);
   assert.equal(a.items.length, 2);
   assert.equal(a.rules.find((r) => r.type === "priceAbove").version, "legacy");
-  assert.equal(a.rules.find((r) => r.type === "close").enabled, true);
+  assert.equal(a.rules.find((r) => r.type === "close").enabled, false);
   assert.equal(f.data().preferences.caller.theme, "blackgold");
   assert.equal(f.data().preferences.caller.remaining, 8);
   assert.equal(f.data().preferences.caller.multiAssetVersion, 1);
@@ -534,4 +534,11 @@ test('late portfolio list cannot overwrite cache after a newer mutation', async 
   await listing;
   assert.equal(client.getCached().revision, 3);
   assert.equal(client.getCached().items.length, 1);
+});
+
+test('new accounts have no enabled reminders and explicit legacy close subscriptions are preserved', async () => {
+  const fresh = setup();
+  assert.equal((await fresh.main({action:'list'})).rules.some(r => r.enabled), false);
+  const existing = setup({preferences:{caller:{dailyBrief:true}}});
+  assert.equal((await existing.main({action:'list'})).rules.find(r => r.type === 'close').enabled, true);
 });

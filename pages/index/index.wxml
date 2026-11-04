@@ -6,9 +6,12 @@
       <view class="hero-title">我的自选</view>
       <view class="hero-sub">让每一次关注，都有迹可循</view>
     </view>
-    <button class="home-add ui-btn ui-primary" hover-class="ui-pressed" bindtap="openSearch" aria-label="搜索并添加自选">
-      <view class="icon-plus" aria-hidden="true"></view><text>添加自选</text>
-    </button>
+    <view class="home-share-actions">
+      <button class="home-add ui-btn ui-primary" hover-class="ui-pressed" bindtap="openSearch" aria-label="搜索并添加自选">
+        <view class="icon-plus" aria-hidden="true"></view><text>添加自选</text>
+      </button>
+      <button class="ui-icon share-icon-button" open-type="share" aria-label="分享自选" hover-class="ui-pressed" disabled="{{loading || busy}}"><image class="svg-action-icon" src="{{theme === 'blackgold' ? '/assets/icons/share-blackgold.svg' : '/assets/icons/share.svg'}}" mode="aspectFit" aria-hidden="true" /></button>
+    </view>
   </view>
 
   <view class="workspace-shortcuts">

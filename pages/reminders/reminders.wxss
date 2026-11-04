@@ -78,3 +78,6 @@
   color: var(--text);
   opacity: 1;
 }
+
+.reminders-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.reminders-heading-row button { flex-shrink: 0; }

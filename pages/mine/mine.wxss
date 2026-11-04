@@ -153,3 +153,96 @@
 .mine-page .page-footer { padding: 0 8rpx; margin-top: 28rpx; font-size: 21rpx; line-height: 1.85; color: var(--text-mid); }
 .mine-page .disclaimer { margin-top: 12rpx; }
 .mine-page .error-bar { margin-bottom: 24rpx; padding: 22rpx 24rpx; border-radius: 16rpx; background: var(--error-bg); color: var(--error-text); font-size: 24rpx; line-height: 1.7; }
+
+/* Membership accents follow the active theme. */
+.mine-page .benefits-card {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 26rpx;
+}
+.mine-page.theme-paper .benefits-vip {
+  --member-face: linear-gradient(118deg, #fffdf7, #f3ead6);
+  --member-gold: #795820;
+  --member-line: rgba(121, 88, 32, 0.30);
+  --member-engraving: rgba(121, 88, 32, 0.07);
+  --member-badge: rgba(255, 255, 255, 0.64);
+  --member-shadow: 0 6rpx 22rpx rgba(121, 88, 32, 0.10);
+}
+.mine-page.theme-blackgold .benefits-vip {
+  --member-face: linear-gradient(118deg, var(--card), #342811);
+  --member-gold: var(--accent);
+  --member-line: var(--accent-border);
+  --member-engraving: rgba(217, 180, 91, 0.08);
+  --member-badge: var(--chip-bg);
+  --member-shadow: var(--card-main-shadow);
+}
+.mine-page .benefits-vip {
+  border-color: var(--member-line);
+  background: var(--member-face);
+  color: var(--text);
+  box-shadow: var(--member-shadow);
+}
+.mine-page .benefits-content { position: relative; z-index: 1; }
+.mine-page .member-engraving {
+  position: absolute;
+  top: -118rpx;
+  right: -88rpx;
+  width: 332rpx;
+  height: 332rpx;
+  border: 1rpx solid var(--member-line);
+  border-radius: 50%;
+  box-shadow: 0 0 0 22rpx var(--member-engraving);
+  pointer-events: none;
+}
+.mine-page .member-eyebrow {
+  color: var(--member-gold);
+  font-size: 18rpx;
+  font-weight: 600;
+  letter-spacing: 5rpx;
+  line-height: 1.6;
+}
+.mine-page .benefits-vip .section-title {
+  margin-top: 4rpx;
+  font-size: 43rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+.mine-page .benefits-vip .tier-badge {
+  color: var(--member-gold);
+  background: var(--member-badge);
+  border-color: var(--member-line);
+  border-radius: 999rpx;
+}
+.mine-page .benefits-vip .benefit-value {
+  color: var(--member-gold);
+  font-size: 52rpx;
+  line-height: 1.1;
+}
+.mine-page .benefits-vip .metric-label,
+.mine-page .benefits-vip .metric-unit,
+.mine-page .benefits-vip .membership-terms,
+.mine-page .benefits-vip .membership-feedback { color: var(--text-mid); }
+.mine-page .member-validity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4rpx 16rpx;
+  padding: 18rpx 0;
+  border-top: 1rpx solid var(--member-line);
+  border-bottom: 1rpx solid var(--member-line);
+  font-size: 22rpx;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+.mine-page .validity-label { color: var(--text-mid); }
+.mine-page .membership-checkout { margin-top: 18rpx; }
+.mine-page .membership-terms,
+.mine-page .membership-feedback {
+  color: var(--text-mid);
+  font-size: 22rpx;
+  line-height: 1.65;
+}
+.mine-page .membership-feedback { margin-top: 12rpx; }
+.mine-page .benefits-card button.membership-action {
+  width: 100%;
+  margin: 16rpx 0 0;
+}

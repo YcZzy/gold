@@ -3,7 +3,10 @@
 <import src="../../templates/reminder-authorization.wxml" />
 <view class="page reminders-page tab-page theme-{{theme}}">
   <view class="reminders-header">
-    <view class="hero-title">行情提醒</view>
+    <view class="reminders-heading-row">
+      <view class="hero-title">行情提醒</view>
+      <button class="ui-icon share-icon-button" open-type="share" aria-label="分享提醒功能" hover-class="ui-pressed"><image class="svg-action-icon" src="{{theme === 'blackgold' ? '/assets/icons/share-blackgold.svg' : '/assets/icons/share.svg'}}" mode="aspectFit" aria-hidden="true" /></button>
+    </view>
     <view class="hero-sub">增加授权、设置条件、管理提醒，在这里完成。</view>
   </view>
 

@@ -9,40 +9,41 @@
     "pages/alert/alert",
     "pages/data/data",
     "pages/holdings/holdings",
-    "pages/market/market"
+    "pages/market/market",
+    "pages/share/share"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#FAF8F3",
+    "navigationBarBackgroundColor": "#14120b",
     "navigationBarTitleText": "自选行情",
-    "navigationBarTextStyle": "black",
-    "backgroundColor": "#F4F1EA",
-    "backgroundColorContent": "#F4F1EA",
-    "backgroundTextStyle": "dark"
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#14120b",
+    "backgroundColorContent": "#14120b",
+    "backgroundTextStyle": "light"
   },
   "tabBar": {
     "custom": true,
-    "color": "#8a857b",
-    "selectedColor": "#2c2c2a",
-    "backgroundColor": "#FAF8F3",
-    "borderStyle": "white",
+    "color": "#a69b83",
+    "selectedColor": "#d9b45b",
+    "backgroundColor": "#14120b",
+    "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/index/index",
         "text": "自选",
-        "iconPath": "assets/icons/tabbar/watchlist-paper-normal.png",
-        "selectedIconPath": "assets/icons/tabbar/watchlist-paper-selected.png"
+        "iconPath": "assets/icons/tabbar/watchlist-blackgold-normal.png",
+        "selectedIconPath": "assets/icons/tabbar/watchlist-blackgold-selected.png"
       },
       {
         "pagePath": "pages/reminders/reminders",
         "text": "提醒",
-        "iconPath": "assets/icons/tabbar/reminders-paper-normal.png",
-        "selectedIconPath": "assets/icons/tabbar/reminders-paper-selected.png"
+        "iconPath": "assets/icons/tabbar/reminders-blackgold-normal.png",
+        "selectedIconPath": "assets/icons/tabbar/reminders-blackgold-selected.png"
       },
       {
         "pagePath": "pages/mine/mine",
         "text": "我的",
-        "iconPath": "assets/icons/tabbar/mine-paper-normal.png",
-        "selectedIconPath": "assets/icons/tabbar/mine-paper-selected.png"
+        "iconPath": "assets/icons/tabbar/mine-blackgold-normal.png",
+        "selectedIconPath": "assets/icons/tabbar/mine-blackgold-selected.png"
       }
     ]
   },

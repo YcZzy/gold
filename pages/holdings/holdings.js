@@ -1,3 +1,4 @@
+const share = require("../../utils/share");
 const {inspectDraft}=require('../../utils/holdings-form');
 const ledger=require('../../utils/ledger-client');
 const portfolio=require('../../utils/portfolio-client');
@@ -14,6 +15,10 @@ function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMon
 function assetToday(asset){try{return asset&&asset.timezone?new Intl.DateTimeFormat('en-CA',{timeZone:asset.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()):today();}catch(_){return today();}}
 function modal(options){return new Promise(resolve=>wx.showModal({...options,success:r=>resolve(!!r.confirm),fail:()=>resolve(false)}));}
 Page({
+  onShareAppMessage() {
+    const positions = (this._snapshot && this._snapshot.positions) || [];
+    return share.card("holdings", positions.filter(position => position.quantity > 0).map(position => position.assetId), "", theme.getTheme());
+  },
  data:{view:'overview',viewTitle:'我的持仓',hasEntryDraft:false,advancedExpanded:false,assetSearchOpen:true,formTypes:[],availableQuantityText:'',canFillAll:false,positionFiltersExpanded:false,historyFiltersExpanded:false,refreshing:false,successText:'',positionQuery:'',historyQuery:'',historyTypeIndex:0,historyTypes:[{value:'',label:'全部类型'},...TYPES],expandedAssetId:'',overviewExpanded:false,positionCount:0,historyCount:0,formErrors:{},entryPreview:null,formSubmitted:false,searchDone:false,theme:theme.getTheme(),preferences:display.get(),loading:true,busy:false,loaded:false,errorText:'',offline:false,conflict:false,explanationsExpanded:false,quoteRefreshing:false,currency:'CNY',currencyOptions:['CNY','HKD','USD'],sortIndex:0,sortOptions:['市值从高到低','浮动盈亏从高到低','浮动收益率从高到低','已实现收益率从高到低','名称'],showClosed:false,rows:[],historyRows:[],summary:{},revision:0,auditCount:0,operationCount:0,editing:false,grossWarning:'',draft:{},editId:'',types:TYPES,typeIndex:0,requiresAsset:true,isTrade:false,isOpening:true,isCash:false,isSplit:false,selectedAsset:null,keyword:'',searchResults:[],watchlist:[],quickAssets:[],searchBusy:false,noteEditing:false,noteConflict:false,noteAssetId:'',noteDraft:'',backupText:'',importPreview:null,exportReady:false},
  onLoad(){this._alive=true;this._request=0;this.setData({theme:theme.getTheme()});theme.applyChrome(this.data.theme);},
  async onShow(){const previousPreferences=JSON.stringify(this.data.preferences);this._visible=true;this._alive=true;this.setData({theme:theme.getTheme(),preferences:display.get(),searchBusy:false});this.render();theme.applyChrome(this.data.theme);if(this._snapshot&&!this.data.offline&&previousPreferences===JSON.stringify(this.data.preferences)&&Date.now()-this._loadedAt<15000)return;return this.reload();},
@@ -153,7 +158,7 @@ Page({
  cancelNote(){if(!this.data.busy)this.setView('overview');},
  async saveNote(){if(this.data.busy)return;this.setData({busy:true,errorText:''});try{const r=await ledger.saveNote(this.data.noteAssetId,this.data.noteDraft,this._noteRevision);if(this._alive){this.applySnapshot(r);this.setView('overview',{successText:'持仓备注已保存'});wx.showToast({title:'备注已保存',icon:'success'});}}catch(e){if(this._alive)this.setData({errorText:e.hint||e.message,noteConflict:e.code==='revision-conflict'});}finally{if(this._alive)this.setData({busy:false});}},
  openDetail(e){wx.navigateTo({url:'/pages/detail/detail?assetId='+encodeURIComponent(e.currentTarget.dataset.id)});},
- async follow(e){if(this.data.busy)return;this.setData({busy:true,errorText:''});try{await portfolio.add(e.currentTarget.dataset.id);wx.showToast({title:'已加入自选',icon:'success'});}catch(e){this.setData({errorText:e.hint||e.message});}finally{if(this._alive)this.setData({busy:false});}},
+ async follow(e){if(this.data.busy)return;this.setData({busy:true,errorText:''});try{await portfolio.add(e.currentTarget.dataset.id);wx.showToast({title:'已加入自选',icon:'success'});}catch(e){if(this._alive){this.setData({errorText:e.hint||e.message});if(e.code==='watchlist-limit')require('../../utils/membership-client').offerUpgrade(wx,e);}}finally{if(this._alive)this.setData({busy:false});}},
  inputBackup(e){this._importBackup=null;this.setData({backupText:e.detail.value,importPreview:null,exportReady:false});},
  async generateBackup(){if(this.data.busy)return;this.setData({busy:true,errorText:''});try{const r=await ledger.exportBackup();if(this._alive)this.setData({backupText:JSON.stringify(r.backup,null,2),exportReady:true,importPreview:null});}catch(e){if(this._alive)this.setData({errorText:e.hint||e.message});}finally{if(this._alive)this.setData({busy:false});}},
  copyBackup(){if(!this.data.backupText)return;wx.setClipboardData({data:this.data.backupText,success:()=>wx.showToast({title:'备份已复制',icon:'success'})});},

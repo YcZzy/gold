@@ -121,3 +121,74 @@ test('two US trade dates within one Beijing date have independent per-security r
   assert.equal(tables.sendBudgets[0]._id,'u:20261028');
   assert.equal(tables.sendBudgets[0].regular,2);
 });
+
+const au = {id:'gold-au9999',kind:'gold',market:'SGE',currency:'CNY'};
+const xau = {id:'gold-xauusd',kind:'gold',market:'GLOBAL',currency:'USD'};
+test('SGE day and night sessions close at boundaries and preserve the next trade date', () => {
+  for (const [at, phase] of [
+    ['2026-11-03T08:59+08:00','closed'],['2026-11-03T09:00+08:00','regular'],
+    ['2026-11-03T12:00+08:00','regular'],['2026-11-03T15:30+08:00','closed'],
+    ['2026-11-03T19:59+08:00','closed'],['2026-11-03T20:00+08:00','regular'],
+    ['2026-11-04T02:29+08:00','regular'],['2026-11-04T02:30+08:00','closed'],
+    ['2026-11-07T01:00+08:00','regular'],['2026-11-07T10:00+08:00','closed'],
+    ['2026-11-08T20:00+08:00','closed'],['2026-11-09T01:00+08:00','closed']
+  ]) assert.equal(calendar.session(au,ts(at)).phase,phase,at);
+  assert.equal(calendar.session(au,ts('2026-11-03T23:59+08:00')).date,'2026-11-04');
+  assert.equal(calendar.session(au,ts('2026-11-04T00:01+08:00')).date,'2026-11-04');
+  assert.equal(calendar.session(au,ts('2026-11-06T21:00+08:00')).date,'2026-11-09');
+});
+
+test('SGE holiday days, cancelled holiday-eve nights and first-day early mornings stay closed', () => {
+  for (const at of ['2026-09-30T21:00+08:00','2026-10-01T01:00+08:00','2026-10-01T10:00+08:00',
+    '2026-10-08T01:00+08:00','2026-04-03T21:00+08:00','2026-04-04T01:00+08:00'])
+    assert.equal(calendar.session(au,ts(at)).phase,'closed',at);
+  assert.equal(calendar.session(au,ts('2026-10-08T09:00+08:00')).phase,'regular');
+  assert.equal(calendar.session(au,ts('2027-01-04T10:00+08:00')).known,false);
+});
+
+test('XAU reference sessions honor weekend, daily breaks, DST and gold-specific holidays', () => {
+  for (const [at,phase] of [
+    ['2026-10-26T06:04+08:00','closed'],['2026-10-26T06:05+08:00','regular'],
+    ['2026-11-02T07:04+08:00','closed'],['2026-11-02T07:05+08:00','regular'],
+    ['2026-11-03T05:58+08:00','regular'],['2026-11-03T05:59+08:00','closed'],
+    ['2026-11-03T07:05+08:00','regular'],['2026-11-07T05:59+08:00','closed'],
+    ['2026-11-08T10:00+08:00','closed'],['2026-04-03T12:00-04:00','closed'],
+    ['2026-09-07T14:28-04:00','regular'],['2026-09-07T14:29-04:00','closed'],
+    ['2026-09-07T18:05-04:00','regular']
+  ]) assert.equal(calendar.session(xau,ts(at)).phase,phase,at);
+  assert.equal(calendar.session(xau,ts('2026-11-03T08:00+08:00')).date,'2026-11-03');
+});
+
+test('gold price alerts reject off-session and pre-break source timestamps', () => {
+  for (const [asset,at] of [[au,'2026-11-03T16:00+08:00'],[xau,'2026-11-03T06:30+08:00']])
+    for (const type of ['priceAbove','dailyMove','rapidMove'])
+      assert.equal(planRuleTask(rule(asset,type),asset,quote(asset,ts(at)),[],ts(at),'u'),null);
+  const at = ts('2026-11-03T07:05+08:00');
+  assert.equal(planRuleTask(rule(xau,'dailyMove'),xau,quote(xau,at,{sourceTime:at-60000}),[],at,'u'),null);
+  const open = ts('2026-11-03T09:00+08:00');
+  assert.ok(planRuleTask(rule(au,'priceAbove'),au,quote(au,open),[],open,'u'));
+});
+
+test('gold scheduled broadcasts retain explicit time windows while SGE holiday close alerts stop', () => {
+  const at = ts('2026-11-03T16:00+08:00');
+  assert.ok(planRuleTask(rule(au,'scheduled',{time:'16:00'}),au,quote(au,at),[],at,'u'));
+  const holiday = ts('2026-10-01T15:40+08:00');
+  assert.equal(planRuleTask(rule(au,'close'),au,quote(au,holiday),[],holiday,'u'),null);
+});
+
+test('SGE short baselines remain continuous across midnight and cannot start before day open', () => {
+  const at = ts('2026-11-04T00:05+08:00');
+  const sample = {...quote(au,at-15*60000),at:at-15*60000,price:90};
+  assert.ok(planRuleTask(rule(au,'rapidMove'),au,quote(au,at),[sample],at,'u'));
+  const open = ts('2026-11-03T09:02+08:00');
+  const offSession = {...quote(au,open-15*60000),at:open-15*60000,price:90};
+  assert.equal(planRuleTask(rule(au,'rapidMove'),au,quote(au,open),[offSession],open,'u'),null);
+});
+
+test('gold unknown years and unverified special-day reference hours do not scan as open', () => {
+  for (const [asset,at] of [[au,'2027-01-04T10:00+08:00'],[xau,'2027-01-04T10:00+08:00'],
+    [xau,'2026-11-26T10:00-05:00'],[xau,'2026-11-27T10:00-05:00'],[xau,'2026-12-24T10:00-05:00']]) {
+    assert.equal(calendar.session(asset,ts(at)).known,false);
+    assert.equal(planRuleTask(rule(asset,'dailyMove'),asset,quote(asset,ts(at)),[],ts(at),'u'),null);
+  }
+});

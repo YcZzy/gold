@@ -8,8 +8,8 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const PERCENTAGES = [0.5, 1, 1.5, 2, 3, 5];
 const TARGETS = ["targetAuLow", "targetAuHigh", "targetXauLow", "targetXauHigh"];
 const DEFAULT_PREFS = {
-  dailyBrief: true, volatilityAu: false, volatilityXau: false,
-  dndStart: "23:00", dndEnd: "07:30", theme: "paper",
+  dailyBrief: false, volatilityAu: false, volatilityXau: false,
+  dndStart: "23:00", dndEnd: "07:30", theme: "blackgold",
   scheduledBrief: false, scheduledTime: "09:00", scheduledWeekdaysOnly: true,
   volatilityPct: 1.5, shortAu: false, shortXau: false, shortPct: 1
 };

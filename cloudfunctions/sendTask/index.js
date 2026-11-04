@@ -17,7 +17,7 @@ const cloud = require("wx-server-sdk");
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
-const { planTasks, isTaskCurrent, withinLimit, freshPrice, isBrief, positive, TARGET_KEYS } = require("./rules");
+const { planTasks, isTaskCurrent, withinLimit, freshPrice, marketOpen, isBrief, positive, TARGET_KEYS } = require("./rules");
 const { createAssetTasks, quotaIndex } = require("./asset-tasks");
 
 const T = {
@@ -137,7 +137,7 @@ const OZ_TO_GRAM = 31.1034768;
  * 行情快照（主品种沪金，国际金用于异动监测与简报参考）
  * 返回 { au: {price, prevClose, pct}, intl: {usd, cnyPerGram, pct} }
  */
-async function getQuotes() {
+async function getQuotes({ au: needsAu = false, intl: needsIntl = false } = {}) {
   const fetch = async (secid, fields) => {
     try {
       const result = await httpsGet(`https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=${fields}`);
@@ -149,9 +149,9 @@ async function getQuotes() {
   };
   // 并行请求，行情提供方超时时整批最多等待 5 秒。
   const [au, intl, fx] = await Promise.all([
-    fetch("118.AU9999", "f43,f60,f170,f124"),
-    fetch("122.XAU", "f43,f60,f170,f124"),
-    fetch("133.USDCNH", "f43")
+    needsAu ? fetch("118.AU9999", "f43,f60,f170,f124") : null,
+    needsIntl ? fetch("122.XAU", "f43,f60,f170,f124") : null,
+    needsIntl ? fetch("133.USDCNH", "f43") : null
   ]);
   const out = { au: null, intl: null };
   const sourceAt = q => positive(q.f124) ? q.f124 * 1000 : null;
@@ -297,9 +297,14 @@ async function scan() {
     }
     return active;
   });
-  const needsQuotes = eligibleUsers.some(u => u.volatilityAu || u.volatilityXau || u.shortAu || u.shortXau || TARGET_KEYS.some(k => u[k]));
-  const quotes = needsQuotes ? await getQuotes() : {};
-  const needsHistory = eligibleUsers.some(u => u.shortAu || u.shortXau);
+  const openMarkets = {Au:marketOpen('au',now), Xau:marketOpen('intl',now)};
+  const needsMarket = (user, suffix) => openMarkets[suffix] && (user['volatility' + suffix] || user['short' + suffix] ||
+    TARGET_KEYS.some(key => key.startsWith('target' + suffix) && user[key] &&
+      positive(user[key + 'Price']) && user[key + 'RuleId']));
+  const needsAu = eligibleUsers.some(u => needsMarket(u, 'Au'));
+  const needsIntl = eligibleUsers.some(u => needsMarket(u, 'Xau'));
+  const quotes = needsAu || needsIntl ? await getQuotes({au:needsAu, intl:needsIntl}) : {};
+  const needsHistory = eligibleUsers.some(u => (u.shortAu && openMarkets.Au) || (u.shortXau && openMarkets.Xau));
   let samples = [];
   if (needsHistory) {
     // 单个有界滚动文档，无需长期留存或清理不断增长的行情记录。
@@ -333,7 +338,7 @@ async function scan() {
     }
   }
   try {
-    const multi = await assetTasks.scan({ quotas, warmWatchlists: true });
+    const multi = await assetTasks.scan({ quotas });
     return { ok: true, created: created + multi.created, assetCreated: multi.created, scanStats: multi.scanStats };
   } catch (error) {
     console.error("asset-scan-error", error);
@@ -353,7 +358,9 @@ async function dispatch() {
     .orderBy("triggerTime", "asc").limit(100).get();
   if (!pending.data.length) return { ok: true, processed: 0 };
   const tasks = pending.data.sort((a, b) => (b.priority || 0) - (a.priority || 0)).slice(0, 20);
-  const quotes = tasks.some(t => isBrief(t.type)) ? await getQuotes() : {};
+  // Existing legacy briefs contain both gold markets; asset reminders carry their own quote.
+  const quotes = tasks.some(t => t.schemaVersion !== 2 && isBrief(t.type))
+    ? await getQuotes({au:true, intl:true}) : {};
   let processed = 0;
   for (const task of tasks) {
     // 预占任务本身，重叠的定时调用不能发送同一条消息两次。

@@ -42,6 +42,7 @@ test("new preferences include every reminder default and existing theme", async 
   const result = await save(fn, { theme: "blackgold", scheduledBrief: true });
   assert.equal(result.ok, true);
   assert.equal(result.prefs.scheduledBrief, true);
+  assert.equal(result.prefs.dailyBrief, false);
   assert.equal(result.prefs.scheduledTime, "09:00");
   assert.equal(result.prefs.scheduledWeekdaysOnly, true);
   assert.equal(result.prefs.volatilityPct, 1.5);
@@ -165,5 +166,13 @@ test("getStatus returns defaults when the preference document explicitly does no
   const result = await load("getStatus").main();
   assert.equal(result.ok, true);
   assert.equal(result.prefs.targetAuLow, false);
-  assert.equal(result.prefs.dailyBrief, true);
+  assert.equal(result.prefs.dailyBrief, false);
+});
+
+test('explicit existing daily brief subscription survives reading and unrelated preference changes', async () => {
+  for (const name of ['getStatus', 'savePrefs']) {
+    const fn = load(name, {dailyBrief:true});
+    const result = name === 'getStatus' ? await fn.main() : await save(fn, {theme:'paper'});
+    assert.equal(result.prefs.dailyBrief, true);
+  }
 });

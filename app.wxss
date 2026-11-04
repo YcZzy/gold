@@ -1,5 +1,6 @@
 @import "styles/glass.wxss";
 @import "styles/buttons.wxss";
+@import "styles/reminder-entry.wxss";
 
 /* 全局样式：双主题变量（paper 纸感浅色 / blackgold 黑金深色）+ 涨红跌绿 */
 /* 变量绑定在各页面根节点 theme-paper / theme-blackgold 类上，向后代级联 */
@@ -7,8 +8,8 @@
 page {
   font-size: 28rpx;
   font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
-  background: #f4f1ea;
-  color: #2c2c2a;
+  background: #14120b;
+  color: #f1e6cd;
 }
 
 .page .svg-icon-button {

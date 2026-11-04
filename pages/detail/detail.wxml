@@ -6,7 +6,7 @@
       ><view class="hero-sub"
         >{{asset.code}} · {{asset.marketText}} · {{asset.kindText}} · {{asset.unit}}</view
       ></view
-    ><button
+    ><view class="detail-heading-actions"><button
       class="follow-button {{following ? 'is-following' : ''}} ui-btn ui-secondary {{following ? 'ui-complete' : ''}}"
       bindtap="toggleFollow"
       hover-class="ui-pressed"
@@ -16,7 +16,9 @@
       disabled="{{busy}}"
     >
       <view wx:if="{{!busy && followingReady}}" class="follow-symbol {{following ? 'follow-check' : 'follow-plus'}}" aria-hidden="true"></view><text>{{busy ? '处理中' : !followingReady ? '确认中' : following ? '已自选' : '自选'}}</text>
-    </button></view
+    </button>
+    <button class="ui-icon share-icon-button" open-type="share" aria-label="分享行情" hover-class="ui-pressed"><image class="svg-action-icon" src="{{theme === 'blackgold' ? '/assets/icons/share-blackgold.svg' : '/assets/icons/share.svg'}}" mode="aspectFit" aria-hidden="true" /></button>
+    </view></view
   >
   <view wx:else class="detail-loading" role="status"><view class="detail-eyebrow">MARKET · 标的详情</view><view class="hero-title">正在识别标的…</view><view class="feature-help">稍候，即将呈现行情</view></view>
   <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
@@ -68,7 +70,7 @@
   <button wx:if="{{asset}}" class="notice-bar reminder-entry ui-row" hover-class="ui-pressed" bindtap="openAlert" disabled="{{busy}}">
     <view class="reminder-icon-wrap"><image class="notice-img" src="{{reminderIcon}}" mode="aspectFit" aria-hidden="true" /></view>
     <view class="reminder-copy"><view class="reminder-title">设置行情提醒</view><view class="notice-text">关注的价格变化，让提醒替你盯盘</view></view>
-    <view class="detail-chevron" aria-hidden="true"></view>
+    <view class="reminder-chevron" aria-hidden="true"></view>
   </button>
   <view wx:if="{{asset}}" class="panel chart-panel"
     ><view class="chart-panel-heading"><view><view class="detail-eyebrow">PRICE &amp; TREND</view><view class="feature-heading">行情走势</view></view><text class="chart-auto-note">每分钟更新</text></view><view class="tabs" role="group" aria-label="图表历史范围"

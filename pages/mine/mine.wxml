@@ -13,6 +13,35 @@
 
   <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
 
+  <view wx:if="{{hasPortfolio}}" class="mine-card benefits-card {{limits.tier === 'vip' ? 'benefits-vip' : 'benefits-free'}}">
+    <view wx:if="{{limits.tier === 'vip'}}" class="member-engraving" aria-hidden="true"></view>
+    <view class="benefits-content">
+      <view class="section-heading">
+        <view>
+          <view wx:if="{{limits.tier === 'vip'}}" class="member-eyebrow">GOLD MEMBER</view>
+          <view class="section-title">{{limits.tier === 'vip' ? '黄金会员' : '账户权益'}}</view>
+        </view>
+        <text class="tier-badge">{{limits.tier === 'vip' ? '会员生效中' : '免费版'}}</text>
+      </view>
+      <view class="benefits-grid">
+        <view><view class="benefit-value">{{limits.watchlist}}<text class="metric-unit">个</text></view><view class="metric-label">自选标的上限</view></view>
+        <view><view class="benefit-value">{{limits.activeRules}}<text class="metric-unit">条</text></view><view class="metric-label">启用提醒上限</view></view>
+      </view>
+      <view wx:if="{{membershipExpiry}}" class="member-validity">
+        <text class="validity-label">会员有效期至</text>
+        <text>{{membershipExpiry}}</text>
+      </view>
+      <view class="membership-checkout">
+        <view class="membership-terms">{{limits.tier === 'vip' ? '手动续费 · 提前续费顺延' : '升级解锁 30 个自选名额 · 手动续费'}}</view>
+        <button wx:if="{{!membershipPending}}" class="ui-btn ui-primary membership-action" bindtap="buyMembership" loading="{{membershipBusy}}" disabled="{{membershipBusy}}" hover-class="ui-pressed">
+          {{limits.tier === 'vip' ? '¥9.90 续费 30 天' : '¥9.90 开通 30 天'}}
+        </button>
+        <button wx:if="{{membershipPending}}" class="ui-btn ui-secondary membership-action" bindtap="confirmMembership" loading="{{membershipBusy}}" disabled="{{membershipBusy}}">{{membershipBusy ? '正在确认订单' : '查询订单'}}</button>
+        <view wx:if="{{membershipMessage}}" class="membership-feedback" role="status">{{membershipMessage}}</view>
+      </view>
+    </view>
+  </view>
+
   <view class="mine-card reminder-entry-card">
     <button class="service-action ui-row" bindtap="openAuth" hover-class="ui-pressed" aria-label="前往提醒页设置通知与提醒">
       <view class="action-copy"><view class="action-title">通知与提醒设置</view><view class="action-description">授权次数、提醒条件和免打扰，统一在「提醒」页管理</view></view>
@@ -56,18 +85,6 @@
     </button>
     <view class="helper">消耗 1 次异动授权；测试不受规则条件和免打扰限制。</view>
     <view wx:if="{{testResult}}" class="test-result" role="status">{{testResult}}</view>
-  </view>
-
-  <view wx:if="{{hasPortfolio}}" class="mine-card benefits-card">
-    <view class="section-heading">
-      <view class="section-title">账户权益</view>
-      <text class="tier-badge">{{limits.tier === 'free' ? '免费版' : '会员权益'}}</text>
-    </view>
-    <view class="benefits-grid">
-      <view><view class="benefit-value">{{limits.watchlist}}<text class="metric-unit">个</text></view><view class="metric-label">自选标的上限</view></view>
-      <view><view class="benefit-value">{{limits.activeRules}}<text class="metric-unit">条</text></view><view class="metric-label">启用提醒上限</view></view>
-    </view>
-    <view wx:if="{{limits.expiresAt}}" class="helper">有效期以账户为准</view>
   </view>
 
   <view class="mine-card faq-card">

@@ -66,7 +66,7 @@ Page({
   data: {
     quota: { brief: 0, vol: 0 },
     prefs: {
-      dailyBrief: true,
+      dailyBrief: false,
       scheduledBrief: false,
       scheduledTime: "09:00",
       scheduledWeekdaysOnly: true,
