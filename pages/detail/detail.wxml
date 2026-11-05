@@ -154,6 +154,7 @@
     ><view wx:if="{{partialHint}}" class="feature-help" role="status">{{partialHint}}</view
     ><view wx:if="{{hasChart}}" class="foot">{{chartSource}} · {{chartHint}}</view></view
   >
+  <ad-custom wx:if="{{showAd && hasChart && !adFailed}}" unit-id="adunit-5fae2b11bbb92149" binderror="hideAd" bindclose="hideAd"></ad-custom>
   <view wx:if="{{asset.kind === 'stock' && (asset.market === 'SH' || asset.market === 'SZ')}}" class="feature-card">
     <view class="feature-heading">盘口与资金</view>
     <view class="feature-actions"><button class="feature-option {{extraMode === 'orderbook' ? 'is-selected' : ''}} ui-btn ui-choice {{extraMode === 'orderbook' ? 'ui-selected' : ''}}" data-mode="orderbook" hover-class="ui-pressed" bindtap="chooseExtra" aria-pressed="{{extraMode === 'orderbook'}}">五档盘口</button><button class="feature-option {{extraMode === 'flow' ? 'is-selected' : ''}} ui-btn ui-choice {{extraMode === 'flow' ? 'ui-selected' : ''}}" data-mode="flow" hover-class="ui-pressed" bindtap="chooseExtra" aria-pressed="{{extraMode === 'flow'}}">资金流向</button></view>

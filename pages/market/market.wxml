@@ -66,5 +66,6 @@
     </view>
     <view wx:if="{{listTime || scope}}" class="provenance"><view wx:if="{{listTime}}">{{listTime}}</view><view wx:if="{{scope}}">{{scope}}</view></view>
   </view>
+  <ad-custom wx:if="{{showAd && section === 'ranking' && rows.length && !listError && !adFailed}}" unit-id="adunit-1cb934b32e1ae5f9" binderror="hideAd" bindclose="hideAd"></ad-custom>
   <view class="disclaimer"><view class="disclaimer-title">关于这些行情</view><view>板块为新浪供应商分类，可能包含非 A 股；行业与概念并非互斥，不可加总。资金为东方财富按成交单大小估算，不代表机构身份或北向资金。榜单时刻未附日期时仅标获取时间。</view><view class="disclaimer-end">公开行情可能延迟，仅供个人观察。</view></view>
 </view>

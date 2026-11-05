@@ -2,6 +2,7 @@ const cloud = require('wx-server-sdk');
 const { randomBytes } = require('crypto');
 const { signPurchase, read, isPaid, deliver } = require('./payment');
 const wechat = require('./wechat');
+const { reward } = require('./reward');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -69,6 +70,14 @@ exports.main = async (event = {}) => {
 
     if (!context.OPENID && event.Type === 'Timer' && event.TriggerName === 'reconcileMembership') return await sweep();
     if (!context.OPENID || context.APPID !== wechat.APP_ID) return { ok: false, err: 'unauthorized' };
+
+    if (event.action === 'startAdReward') return await reward(db, context.OPENID, 'start', null, Date.now());
+    if (event.action === 'claimAdReward') {
+      if (typeof event.ticket !== 'string' || !/^[a-f0-9]{32}$/.test(event.ticket)) {
+        return { ok: false, err: 'reward-ticket-invalid' };
+      }
+      return await reward(db, context.OPENID, 'claim', event.ticket, Date.now());
+    }
 
     if (event.action === 'create') {
       const configuredEnv = process.env.XPAY_ENV;

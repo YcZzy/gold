@@ -115,3 +115,20 @@ test('recovers an existing pending order when local storage is empty', async () 
   assert.equal(await recoverOrder(wx), order._id);
   assert.equal(pendingOrder(wx), order._id);
 });
+
+test('ad reward requires an account ticket and grants one non-stacking day', async () => {
+  const { reward, REWARD_TERM } = require('../cloudfunctions/membership/reward');
+  const accounts = {};
+  const db = { runTransaction: fn => fn({ collection: () => ({ doc: id => ({
+    get: async () => ({ data: accounts[id] && { ...accounts[id] } }),
+    set: async ({ data }) => { accounts[id] = data; },
+    update: async ({ data }) => Object.assign(accounts[id], data),
+  }) }) }) };
+  const now = 100000;
+  const { ticket } = await reward(db, 'buyer', 'start', null, now);
+  assert.equal((await reward(db, 'other', 'claim', ticket, now + 1000)).err, 'reward-ticket-invalid');
+  const granted = await reward(db, 'buyer', 'claim', ticket, now + 1000);
+  assert.equal(granted.expiresAt, now + 1000 + REWARD_TERM);
+  assert.deepEqual(await reward(db, 'buyer', 'claim', ticket, now + 2000), granted);
+  assert.equal((await reward(db, 'buyer', 'start', null, now + 2000)).err, 'membership-active');
+});

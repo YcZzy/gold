@@ -90,3 +90,20 @@ test('reaching the bottom keeps the current page until the next-page action is t
  assert.equal(calls.length,count);assert.equal(page.data.listPage,1);
  await page.nextPage();assert.equal(calls.length,count+1);assert.equal(page.data.listPage,2);
 });
+
+test('market ads wait for live free-tier confirmation and stay hidden for members or offline users', async () => {
+ let state={items:[],limits:{tier:'free'}};
+ const {page}=fixture({portfolio:{list:async()=>state}});
+ page.onLoad();
+ assert.equal(page.data.showAd,false);
+ await page.onShow();
+ assert.equal(page.data.showAd,true);
+ page.hideAd();
+ assert.equal(page.data.adFailed,true);
+ state={items:[],limits:{tier:'vip'}};
+ await page.onShow();
+ assert.equal(page.data.showAd,false);
+ state={items:[],limits:{tier:'free'},offline:true};
+ await page.onShow();
+ assert.equal(page.data.showAd,false);
+});

@@ -86,7 +86,7 @@ function createClient(platform) {
                 rules: [],
                 limits: {
                   watchlist: 5,
-                  activeRules: 30,
+                  activeRules: 5,
                   tier: "free",
                   expiresAt: null,
                 },

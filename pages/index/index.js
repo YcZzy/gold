@@ -12,6 +12,8 @@ Page({
     return share.card("watchlist", this.data.rows.map(row => row.id), "", theme.getTheme());
   },
   data: {
+    showAd: false,
+    adFailed: false,
     theme: theme.getTheme(),
     rows: [],
     visibleRows: [],
@@ -45,6 +47,7 @@ Page({
   async onShow() {
     this._alive = true;
     this._visible = true;
+    this.setData({ showAd: false, adFailed: false });
     let saved;try{saved=wx.getStorageSync('watchlist-view-v1');}catch(_){}
     this.setData({ theme: theme.getTheme(), display:display.get(wx), ...(saved && typeof saved==='object' && !Array.isArray(saved) ? {view:{...this.data.view,...saved}} : {}) });
     theme.applyChrome(this.data.theme);
@@ -55,6 +58,9 @@ Page({
     }
     await this.reload();
     if (this._visible) this.timer = setInterval(() => this.loadQuotes(), 60000);
+  },
+  hideAd() {
+    this.setData({ adFailed: true });
   },
   onHide() {
     this.cancelDrag();
@@ -77,10 +83,11 @@ Page({
     try {
       const state = await portfolio.list();
       if (!this._alive || request !== this._request || this._drag || this.data.busy) return;
+      this.setData({ showAd: !state.offline && state.limits?.tier === "free" });
       this.applyState(state);
       await this.loadQuotes();
     } catch (e) {
-      if (this._alive) this.setData({ loading: false });
+      if (this._alive && request === this._request) this.setData({ loading: false, showAd: false });
     }
   },
   applyState(s) {

@@ -15,6 +15,8 @@ Page({
     return share.card("quote", [this.assetId], this.data.asset && this.data.asset.name, theme.getTheme());
   },
   data: {
+    showAd: false,
+    adFailed: false,
     theme: theme.getTheme(),
     quiet: false,
     chartInteraction: "inspect",
@@ -95,6 +97,7 @@ Page({
   },
   async onShow() {
     this._visible = true;
+    this.setData({ showAd: false, adFailed: false });
     this.restoreIndicators();
     this.setData({ theme: theme.getTheme(), quiet: display.get().quiet });
     theme.applyChrome(this.data.theme);
@@ -106,6 +109,9 @@ Page({
   },
   onReady() {
     this.queueChartRender();
+  },
+  hideAd() {
+    this.setData({ adFailed: true });
   },
   onHide() {
     this._extraRequest = (this._extraRequest || 0) + 1;
@@ -324,11 +330,12 @@ Page({
       try {
         const s = await portfolio.list();
         if (!this._alive || !this._visible || request !== this._portfolioRequest || this.data.busy) return;
+        this.setData({ showAd: !s.offline && s.limits?.tier === "free" });
         // Offline defaults are not evidence of the user's actual watchlist.
         if (s.offline && !(portfolio.getCached && portfolio.getCached())) return;
         this.applyPortfolio(s);
       } catch (e) {
-        // Keep the previous successful data.
+        if (this._alive && this._visible && request === this._portfolioRequest) this.setData({ showAd: false });
       }
     })().finally(() => {
       if (this._portfolioPending === pending) this._portfolioPending = null;

@@ -234,6 +234,33 @@
   font-variant-numeric: tabular-nums;
 }
 .mine-page .validity-label { color: var(--text-mid); }
+.mine-page .member-preview {
+  padding: 18rpx 22rpx;
+  border: 1rpx solid var(--chip-border);
+  border-radius: 18rpx;
+  background: var(--ohlc-bg);
+}
+.mine-page .member-preview-title {
+  margin-bottom: 10rpx;
+  font-size: 25rpx;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.mine-page .member-preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12rpx;
+  padding: 7rpx 0;
+  font-size: 23rpx;
+  line-height: 1.5;
+  color: var(--text-mid);
+}
+.mine-page .member-preview-row > text:last-child {
+  flex-shrink: 0;
+  color: var(--text);
+  font-weight: 600;
+}
 .mine-page .membership-checkout { margin-top: 18rpx; }
 .mine-page .membership-terms,
 .mine-page .membership-feedback {

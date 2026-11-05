@@ -22,7 +22,7 @@ Page({
     hasPortfolio: false,
     groups: [],
     recent: [],
-    limits: { activeRules: 30 },
+    limits: { activeRules: 5 },
     activeCount: 0,
     remaining: 0,
     quota: { brief: 0, vol: 0 },

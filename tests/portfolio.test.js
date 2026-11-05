@@ -542,3 +542,19 @@ test('new accounts have no enabled reminders and explicit legacy close subscript
   const existing = setup({preferences:{caller:{dailyBrief:true}}});
   assert.equal((await existing.main({action:'list'})).rules.find(r => r.type === 'close').enabled, true);
 });
+
+test("free reminder cap blocks new enables and lets existing users reduce over-limit rules", async () => {
+  const f = setup({ entitlements: { caller: { tier: "vip", expiresAt: Date.now() + 60000 } } });
+  const assetId = "gold-au9999";
+  const types = ["priceAbove", "priceBelow", "dailyMove", "rapidMove", "scheduled", "close"];
+  const save = (type, enabled) => f.main({
+    action: "saveRule", assetId, type, enabled, value: 1, time: "09:00",
+  });
+  for (const type of types) assert.equal((await save(type, true)).ok, true);
+  await f.transaction(tx => tx.collection("entitlements").doc("caller").update({ data: { expiresAt: 1 } }));
+  assert.equal((await f.main({ action: "list" })).limits.activeRules, 5);
+  assert.equal((await save("close", false)).ok, true);
+  assert.equal((await save("close", true)).err, "rule-limit");
+  assert.equal((await save("scheduled", false)).ok, true);
+  assert.equal((await save("close", true)).ok, true);
+});

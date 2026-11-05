@@ -9,7 +9,7 @@ const DEFAULT_INDICES=INDEX_OPTIONS.slice(0,5).map(i=>i.id);
 function amount(value){if(value==null || !Number.isFinite(Number(value)))return '--';const n=Number(value);return Math.abs(n)>=1e8?fmt.number(n/1e8)+' 亿元':Math.abs(n)>=1e4?fmt.number(n/1e4)+' 万元':fmt.number(n)+' 元';}
 const SECTIONS={ranking:'A 股榜单',industry:'行业',concept:'概念',flowRanking:'资金净流入'};
 Page({
- data:{theme:theme.getTheme(),quiet:false,section:'ranking',sections:Object.entries(SECTIONS).map(([value,label])=>({value,label})),
+ data:{showAd:false,adFailed:false,theme:theme.getTheme(),quiet:false,section:'ranking',sections:Object.entries(SECTIONS).map(([value,label])=>({value,label})),
   indices:[],allIndices:[],indexError:'',indexLoading:false,indexNotice:'',indexEditing:false,indexOptions:[],indexDraft:[],indexIds:[],
   rows:[],listLoading:false,listError:'',listTime:'',listTitle:'A 股涨幅榜',scope:'',listPage:1,page:1,hasMore:false,
   sort:'gainers',rankSorts:[{value:'gainers',label:'涨幅'},{value:'losers',label:'跌幅'},{value:'amount',label:'成交额'}],
@@ -22,7 +22,7 @@ Page({
   this.setData({indexIds:[...new Set(ids)]});this.updateIndexOptions();this.updateIndices();
  },
  async onShow(){
-  this._visible=true;this.setData({theme:theme.getTheme(),quiet:display.get().quiet});theme.applyChrome(this.data.theme);
+  this._visible=true;this.setData({showAd:false,adFailed:false,theme:theme.getTheme(),quiet:display.get().quiet});theme.applyChrome(this.data.theme);
   await Promise.all([this.loadIndices(),this.loadList(),this.loadFollowing()]);
  },
  onHide(){this._visible=false;this._indexRequest=(this._indexRequest||0)+1;this._listRequest=(this._listRequest||0)+1;this._followingRequest=(this._followingRequest||0)+1;this._addRequest=(this._addRequest||0)+1;this.setData({indexLoading:false,listLoading:false,rowBusy:''});},
@@ -48,9 +48,20 @@ Page({
   }catch(error){if(this.active(n,'_indexRequest'))this.setData({indexError:error.message||'指数暂不可用'});}
   finally{if(this.active(n,'_indexRequest'))this.setData({indexLoading:false});}
  },
+ hideAd(){this.setData({adFailed:true});},
  async loadFollowing(){
-  const n=this._followingRequest=(this._followingRequest||0)+1;
-  try{const state=await portfolio.list();if(this.active(n,'_followingRequest') && !state.offline)this.setData({followingIds:(state.items||[]).map(i=>i.id),followingMap:Object.fromEntries((state.items||[]).map(i=>[i.id,true]))});}catch(_){}
+  const request=this._followingRequest=(this._followingRequest||0)+1;
+  try{
+   const state=await portfolio.list();
+   if(!this.active(request,'_followingRequest'))return;
+   this.setData({showAd:!state.offline && state.limits?.tier==='free'});
+   if(!state.offline){
+    const ids=(state.items||[]).map(item=>item.id);
+    this.setData({followingIds:ids,followingMap:Object.fromEntries(ids.map(id=>[id,true]))});
+   }
+  }catch(_){
+   if(this.active(request,'_followingRequest'))this.setData({showAd:false});
+  }
  },
  async loadList(){
   if(!this._alive || !this._visible)return;const n=this._listRequest=(this._listRequest||0)+1;

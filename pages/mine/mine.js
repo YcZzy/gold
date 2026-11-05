@@ -3,6 +3,7 @@ const { templates } = require("../../utils/app-config");
 const theme = require("../../utils/theme");
 const portfolio = require("../../utils/portfolio-client");
 const membership = require("../../utils/membership-client");
+const adReward = require("../../utils/membership-reward");
 const fmt = require("../../utils/asset-format");
 const cache = require("../../utils/read-cache");
 function fmtMembershipExpiry(timestamp) {
@@ -16,7 +17,7 @@ Page({
     hasStatus: false,
     hasPortfolio: false,
     prefs: { dndStart: "23:00", dndEnd: "07:30" },
-    limits: { watchlist: 5, activeRules: 30, tier: "free" },
+    limits: { watchlist: 5, activeRules: 5, tier: "free" },
     quota: { brief: 0, vol: 0 },
     errorText: "",
     loading: true,
@@ -28,6 +29,9 @@ Page({
     membershipPending: false,
     membershipMessage: "",
     membershipExpiry: "",
+    rewardBusy: false,
+    rewardPending: false,
+    rewardMessage: "",
   },
   onLoad() {
     this.setData({ theme: theme.getTheme() });
@@ -47,7 +51,7 @@ Page({
       if (saved && saved.ok) this.applyStatus(saved);
     }
     const membershipPending = !!membership.pendingOrder(wx);
-    this.setData({ membershipPending });
+    this.setData({ membershipPending, rewardPending: adReward.hasPending(wx) });
     this.confirmMembership();
     return this.reload();
   },
@@ -109,7 +113,7 @@ Page({
     }
   },
   async buyMembership() {
-    if (this.data.membershipBusy || membership.pendingOrder(wx)) return;
+    if (this.data.membershipBusy || this.data.rewardBusy || membership.pendingOrder(wx)) return;
     this.setData({ membershipBusy: true, membershipMessage: "" });
     try {
       if (await membership.recoverOrder(wx) || await membership.purchase(wx)) {
@@ -122,6 +126,37 @@ Page({
       if (this._alive) this.setData({ membershipBusy: false, membershipPending: !!membership.pendingOrder(wx) });
     }
   },
+  async claimAdMembership() {
+    if (this.data.rewardBusy || this.data.membershipBusy || this.data.membershipPending) return;
+    this.setData({ rewardBusy: true, rewardMessage: "" });
+    try {
+      const result = await adReward.claim(wx, this);
+      if (!this._alive) return;
+      if (result.ok && result.expiresAt > Date.now()) {
+        require("../../utils/read-pool").forPlatform(wx).invalidate("portfolio:list");
+        this.setData({
+          limits: { ...this.data.limits, tier: "vip", watchlist: 30, activeRules: 30, expiresAt: result.expiresAt },
+          membershipExpiry: fmtMembershipExpiry(result.expiresAt),
+          rewardMessage: "1 天会员已生效",
+        });
+        await this.reload();
+      } else {
+        const messages = {
+          "ad-unsupported": "当前微信版本不支持激励广告",
+          "ad-incomplete": "完整看完广告后可领取会员",
+          "membership-active": "当前会员仍在有效期内",
+          "reward-cooldown": "每 24 小时最多领取一次",
+          "reward-ticket-invalid": "领取已过期，请重新观看广告",
+        };
+        this.setData({ rewardMessage: messages[result.err] || "暂时无法领取，请稍后重试" });
+      }
+    } catch (_) {
+      if (this._alive) this.setData({ rewardMessage: adReward.hasPending(wx)
+        ? "领取暂未确认，请重试领取" : "广告暂不可用，请稍后再试" });
+    } finally {
+      if (this._alive) this.setData({ rewardBusy: false, rewardPending: adReward.hasPending(wx) });
+    }
+  },
   async refreshMembershipOrder() {
     if (this._alive) this.setData({ membershipPending: true, membershipMessage: "正在确认订单，请勿重复付款" });
     const result = await membership.confirmUntilSettled(wx, { isActive: () => this._alive && this._visible });
@@ -131,7 +166,7 @@ Page({
       const expiresAt = Math.max(result.expiresAt || 0, this.data.limits.expiresAt || 0);
       this.setData({
         hasPortfolio: true,
-        limits: { ...this.data.limits, watchlist: 30, tier: "vip", expiresAt },
+        limits: { ...this.data.limits, watchlist: 30, activeRules: 30, tier: "vip", expiresAt },
         membershipExpiry: fmtMembershipExpiry(expiresAt),
         membershipMessage: "会员权益已生效",
       });

@@ -69,7 +69,7 @@ function limitsFor(ent, now) {
   );
   return {
     watchlist: vip ? 30 : 5,
-    activeRules: 30,
+    activeRules: vip ? 30 : 5,
     tier: vip ? "vip" : "free",
     expiresAt: vip ? ent.expiresAt : null,
   };
@@ -365,6 +365,9 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
               (r) => r.assetId === event.assetId && r.type === event.type,
             ),
             old = doc.rules[index];
+          if (patch.enabled && !old?.enabled &&
+              doc.rules.filter((rule) => rule.enabled).length >= limits.activeRules)
+            fail("rule-limit", `当前最多启用 ${limits.activeRules} 条提醒，请先关闭一条`);
           if (!old || Object.keys(patch).some((k) => old[k] !== patch[k])) {
             const rotate =
               !old ||
@@ -385,8 +388,6 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
             else doc.rules[index] = rule;
             changed = true;
           }
-          if (doc.rules.filter((r) => r.enabled).length > limits.activeRules)
-            fail("rule-limit", "启用的提醒数量已达上限");
         }
         if (action === "deleteRule") {
           const rules = doc.rules.filter((r) => r.id !== event.ruleId);

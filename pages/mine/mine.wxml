@@ -31,12 +31,22 @@
         <text class="validity-label">会员有效期至</text>
         <text>{{membershipExpiry}}</text>
       </view>
+      <view wx:if="{{limits.tier === 'free'}}" class="member-preview">
+        <view class="member-preview-title">开通后享黄金会员权益</view>
+        <view class="member-preview-row"><text>自选标的</text><text>最多 30 个</text></view>
+        <view class="member-preview-row"><text>同时启用提醒</text><text>最多 30 条</text></view>
+        <view class="member-preview-row"><text>自选、行情详情和行情发现</text><text>免广告</text></view>
+      </view>
       <view class="membership-checkout">
-        <view class="membership-terms">{{limits.tier === 'vip' ? '手动续费 · 提前续费顺延' : '升级解锁 30 个自选名额 · 手动续费'}}</view>
-        <button wx:if="{{!membershipPending}}" class="ui-btn ui-primary membership-action" bindtap="buyMembership" loading="{{membershipBusy}}" disabled="{{membershipBusy}}" hover-class="ui-pressed">
+        <view class="membership-terms">{{limits.tier === 'vip' ? '手动续费 · 提前续费顺延' : '到期手动续费'}}</view>
+        <button wx:if="{{!membershipPending}}" class="ui-btn ui-primary membership-action" bindtap="buyMembership" loading="{{membershipBusy}}" disabled="{{membershipBusy || rewardBusy}}" hover-class="ui-pressed">
           {{limits.tier === 'vip' ? '¥9.90 续费 30 天' : '¥9.90 开通 30 天'}}
         </button>
         <button wx:if="{{membershipPending}}" class="ui-btn ui-secondary membership-action" bindtap="confirmMembership" loading="{{membershipBusy}}" disabled="{{membershipBusy}}">{{membershipBusy ? '正在确认订单' : '查询订单'}}</button>
+        <button wx:if="{{limits.tier === 'free' && !membershipPending}}" class="ui-btn ui-secondary membership-action" bindtap="claimAdMembership" loading="{{rewardBusy}}" disabled="{{rewardBusy || membershipBusy}}" hover-class="ui-pressed">
+          {{rewardPending ? '重试领取会员' : '看广告领 1 天会员'}}
+        </button>
+        <view wx:if="{{rewardMessage}}" class="membership-feedback" role="status">{{rewardMessage}}</view>
         <view wx:if="{{membershipMessage}}" class="membership-feedback" role="status">{{membershipMessage}}</view>
       </view>
     </view>

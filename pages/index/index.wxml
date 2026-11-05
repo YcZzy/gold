@@ -85,5 +85,6 @@
     </view>
     <view wx:if="{{rows.length}}" class="list-capacity"><text>已关注 {{rows.length}} / {{limits.watchlist}} 个标的</text><text>{{manage ? (busy ? '正在保存…' : '调整后自动保存') : '点击标的查看详情'}}</text></view>
   </view>
+  <ad-custom wx:if="{{showAd && rows.length && !manage && !adFailed}}" unit-id="adunit-5fae2b11bbb92149" binderror="hideAd" bindclose="hideAd"></ad-custom>
   <view class="home-footer"><view class="update-note"><view class="update-dot" aria-hidden="true"></view><text>每分钟自动刷新 · 下拉可手动更新</text></view><view class="home-disclaimer">行情可能延迟，请留意各标的报价时间。</view><view class="home-disclaimer disclaimer">公开行情仅供参考，不构成投资建议。</view></view>
 </view>
