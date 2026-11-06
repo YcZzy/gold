@@ -4,7 +4,7 @@
 <view class="page reminders-page tab-page theme-{{theme}}">
   <view class="reminders-header">
     <view class="reminders-heading-row">
-      <view class="hero-title">行情提醒</view>
+      <view class="hero-title">条件提醒</view>
       <button class="ui-icon share-icon-button" open-type="share" aria-label="分享提醒功能" hover-class="ui-pressed"><image class="svg-action-icon" src="{{theme === 'blackgold' ? '/assets/icons/share-blackgold.svg' : '/assets/icons/share.svg'}}" mode="aspectFit" aria-hidden="true" /></button>
     </view>
     <view class="hero-sub">增加授权、设置条件、管理提醒，在这里完成。</view>
@@ -14,25 +14,25 @@
   <template is="reminder-authorization" data="{{hasStatus, quota, authBusy, authError, authNote}}" />
   <view id="inline-settings" class="inline-settings asset-alert-page">
     <view class="section-heading list-heading"><view class="section-title">在这里设置提醒</view><text class="section-caption">{{activeCount}} / {{limits.activeRules}} 条启用</text></view>
-    <picker wx:if="{{assets.length}}" range="{{assets}}" range-key="name" value="{{assetIndex}}" bindchange="onAssetChange" disabled="{{busy || editing}}" aria-label="选择设置提醒的标的">
-      <view class="asset-selector"><view><view class="section-caption">选择标的{{editing ? ' · 完成或取消编辑后可切换' : ''}}</view><view class="asset-title">{{asset.name}}</view><view class="asset-code">{{asset.code}} · {{asset.marketText}} · {{asset.unit}}</view></view><text>切换</text></view>
+    <picker wx:if="{{assets.length}}" range="{{assets}}" range-key="name" value="{{assetIndex}}" bindchange="onAssetChange" disabled="{{busy || editing}}" aria-label="选择设置提醒的项目">
+      <view class="asset-selector"><view><view class="section-caption">选择关注项目{{editing ? ' · 完成或取消编辑后可切换' : ''}}</view><view class="asset-title">{{asset.name}}</view><view class="asset-code">{{asset.code}} · {{asset.marketText}} · {{asset.unit}}</view></view><text>切换</text></view>
     </picker>
     <view wx:if="{{asset && following}}" class="inline-editor"><template is="reminder-settings" data="{{asset, rules, types, editing, draft, pctOptions, pctIndex, busy, errorText, editLabel, theme, statusNote, prefs, dndBusy, dndError, dndNote}}" /></view>
-    <view wx:if="{{asset && !following}}" class="reminder-card"><view class="muted">该标的已移出自选，重新加入后可设置提醒。</view><button class="ui-btn ui-primary" bindtap="follow" disabled="{{busy}}" loading="{{busy}}">重新加入自选</button></view>
+    <view wx:if="{{asset && !following}}" class="reminder-card"><view class="muted">该项目已移出关注，重新加入后可设置提醒。</view><button class="ui-btn ui-primary" bindtap="follow" disabled="{{busy}}" loading="{{busy}}">重新添加关注</button></view>
   </view>
 
   <view class="section-heading list-heading">
     <view class="section-title">我的提醒</view>
-    <text wx:if="{{hasPortfolio}}" class="section-caption">{{groups.length}} 个标的</text>
+    <text wx:if="{{hasPortfolio}}" class="section-caption">{{groups.length}} 个项目</text>
   </view>
   <view wx:if="{{loading}}" class="reminder-card empty" role="status">
     <view class="empty-title">正在加载提醒…</view>
-    <view class="muted">正在整理你关注的标的和规则</view>
+    <view class="muted">正在加载关注项目与提醒条件</view>
   </view>
   <view wx:elif="{{hasPortfolio && !groups.length}}" class="reminder-card empty">
     <view class="empty-mark" aria-hidden="true"><view class="empty-line"></view><view class="empty-line short"></view></view>
     <view class="empty-title">还没有设置提醒</view>
-    <view class="muted">选择上方标的和提醒类型，即可在当前页设置。</view>
+    <view class="muted">选择上方项目和提醒类型，即可在当前页设置。</view>
   </view>
 
   <button wx:for="{{groups}}" wx:key="id" class="reminder-card asset-card ui-row" data-id="{{item.id}}" bindtap="openAsset" disabled="{{busy || editing}}" hover-class="ui-pressed" aria-label="管理{{item.name}}提醒">
@@ -65,7 +65,7 @@
   <view class="reminder-guide">
     <view class="guide-heading"><view class="monitor-mark" aria-hidden="true"></view><text>提醒说明</text></view>
     <view class="guide-copy">后台约每 1 分钟监测，行情和推送均可能延迟。</view>
-    <view class="guide-copy">每标的每类每日最多 1 条；每天常规最多 6 条、到价最多 4 条，共享微信授权次数。</view>
+    <view class="guide-copy">每个项目每类每日最多 1 条；每天常规最多 6 条、到价最多 4 条，共享微信授权次数。</view>
     <view class="guide-copy">免打扰时间可在上方直接修改，适用于全部提醒。</view>
   </view>
 </view>

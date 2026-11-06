@@ -479,7 +479,7 @@ button[disabled] {
 .home-page .home-pressed { opacity: .65; }
 .home-page button { transition: opacity 120ms ease, background-color 120ms ease; }
 .home-page button:focus-visible, .home-page input:focus-visible { outline: 3rpx solid var(--accent); outline-offset: 4rpx; }
-.home-page .workspace-shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12rpx; margin-bottom: 28rpx; }
+.home-page .workspace-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12rpx; margin-bottom: 28rpx; }
 .home-page .workspace-shortcuts button { position: relative; box-sizing: border-box; width: 100%; min-width: 0; margin: 0; padding: 24rpx 16rpx 20rpx; border: 1rpx solid var(--card-border); border-radius: 22rpx; color: var(--text); background: var(--card); text-align: left; line-height: 1.5; }
 .home-page .shortcut-icon { position: relative; box-sizing: border-box; width: 32rpx; height: 32rpx; margin-bottom: 18rpx; color: var(--text-mid); }
 .home-page .shortcut-market { display: flex; align-items: flex-end; gap: 5rpx; padding: 3rpx 2rpx; }

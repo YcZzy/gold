@@ -60,7 +60,7 @@ function targets(rules, asset, price, range) {
       id: rule.id,
       type: rule.type,
       value: rule.value,
-      label: rule.type === 'priceAbove' ? '涨到价' : '跌到价',
+      label: rule.type === 'priceAbove' ? '价格达到上限' : '价格达到下限',
       priceText: fmt.number(rule.value, precision),
       differenceText: validPrice ? fmt.signed(rule.value - price, precision) : '--',
       distanceText: validPrice ? fmt.signed((rule.value - price) / price * 100) + '%' : '--',

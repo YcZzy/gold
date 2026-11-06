@@ -1,7 +1,7 @@
 const PENDING_KEY = 'membership-pending-v1';
 const DISMISSED_KEY = 'membership-dismissed-v1';
 const CHECK_DELAYS = [0, 1000, 2000, 4000];
-const FREE_LIMIT_MESSAGE = '免费版最多关注 5 个标的';
+const FREE_LIMIT_MESSAGE = '免费版最多关注 5 个项目';
 
 async function call(wx, action, data) {
   const response = await wx.cloud.callFunction({ name: 'membership', data: { action, ...data } });
@@ -95,10 +95,10 @@ async function confirmUntilSettled(wx, { delays = CHECK_DELAYS, isActive = () =>
 }
 
 function offerUpgrade(wx, error) {
-  if (error.code !== 'watchlist-limit' || !String(error.message).startsWith(FREE_LIMIT_MESSAGE)) return;
+  if (error.code !== 'watchlist-limit' || (!String(error.message).startsWith(FREE_LIMIT_MESSAGE) && !String(error.message).startsWith('免费版最多关注 5 个标的'))) return;
   wx.showModal({
-    title: '自选数量已达上限',
-    content: '免费版最多关注 5 个标的，会员最多关注 30 个。',
+    title: '关注数量已达上限',
+    content: '免费版最多关注 5 个项目，会员最多关注 30 个。',
     confirmText: '查看会员',
     success: result => {
       if (result.confirm) wx.switchTab({ url: '/pages/mine/mine' });

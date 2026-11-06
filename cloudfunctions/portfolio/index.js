@@ -144,7 +144,7 @@ function conditions(event, asset) {
   if (event.type === "close" && event.assetId === "gold-xauusd")
     fail("bad-rule", "国际黄金暂不支持收盘提醒，请使用定时提醒");
   if (event.type === "close" && event.enabled && asset && asset.supportsClose === false)
-    fail("bad-rule", "该标的暂不支持收盘提醒，请使用定时提醒");
+    fail("bad-rule", "该项目暂不支持收盘提醒，请使用定时提醒");
   const out = { enabled: event.enabled };
   const precision = asset && asset.precision != null ? asset.precision : 2;
   const pricePattern = precision === 0 ? /^\d+$/ : new RegExp("^\\d+(?:\\.\\d{1," + precision + "})?$");
@@ -223,7 +223,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
           !Number.isInteger(event.revision) ||
           event.revision < 0)
       )
-        fail("bad-order", "自选顺序格式不正确");
+        fail("bad-order", "关注顺序格式不正确");
       const metadata = { ...GOLD };
       async function asset(id, verify = false) {
         if (!metadata[id]) {
@@ -262,7 +262,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
             }
           : {
               openid,
-              items: Object.keys(GOLD),
+              items: [],
               rules: [],
               annotations: {},
               groups: [],
@@ -271,7 +271,6 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
             };
         delete doc._id;
         let changed = !existing;
-        if (workspace.apply(doc, workspacePatch, limits, timestamp)) changed = true;
         if (doc.migrationVersion !== 1) {
           // A legacy target may already have delivered even if its old auto-off failed.
           // Read deterministic task IDs in this transaction before persisting the migration.
@@ -289,7 +288,10 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
             );
             if (task) legacyStates[key] = task.status;
           }
-          const mapped = migrate(prefs, timestamp, legacyStates);
+          const mapped = migrate(prefs, timestamp, legacyStates)
+            .filter(rule => rule.enabled || hasOwn(rule, "value"));
+          // Preserve legacy gold subscriptions when migrating an old account.
+          if (!existing && mapped.length) doc.items = Object.keys(GOLD);
           for (const rule of mapped)
             if (
               !doc.rules.some(
@@ -300,17 +302,18 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
           doc.migrationVersion = 1;
           changed = true;
         }
+        if (workspace.apply(doc, workspacePatch, limits, timestamp)) changed = true;
         if (action === "add" && !doc.items.includes(event.assetId)) {
           if (doc.items.length >= limits.watchlist)
-            fail("watchlist-limit", limits.tier === "free" ? "免费版最多关注 5 个标的" : "自选数量已达上限，请先移除一项");
+            fail("watchlist-limit", limits.tier === "free" ? "免费版最多关注 5 个项目" : "关注数量已达上限，请先移除一项");
           doc.items.push(event.assetId);
           changed = true;
         }
         if (action === "saveAnnotation") {
           if (event.revision !== doc.revision)
-            fail("revision-conflict", "自选列表已更新，请刷新后重试");
+            fail("revision-conflict", "关注列表已更新，请刷新后重试");
           if (!doc.items.includes(event.assetId))
-            fail("not-watched", "请先将该品种加入自选");
+            fail("not-watched", "请先将该品种添加关注");
           const previous = doc.annotations[event.assetId];
           if (!annotationPatch.note && !annotationPatch.tags.length) {
             if (hasOwn(doc.annotations, event.assetId)) {
@@ -346,13 +349,13 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
         }
         if (action === "reorder") {
           if (event.revision !== doc.revision)
-            fail("revision-conflict", "自选列表已更新，请刷新后重试");
+            fail("revision-conflict", "关注列表已更新，请刷新后重试");
           if (
             event.assetIds.length !== doc.items.length ||
             new Set(event.assetIds).size !== doc.items.length ||
             event.assetIds.some((id) => !doc.items.includes(id))
           )
-            fail("bad-order", "排序必须包含全部自选且不能重复");
+            fail("bad-order", "排序必须包含全部关注且不能重复");
           if (event.assetIds.some((id, i) => id !== doc.items[i])) {
             doc.items = [...event.assetIds];
             changed = true;
@@ -360,7 +363,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
         }
         if (action === "saveRule") {
           if (patch.enabled && !doc.items.includes(event.assetId))
-            fail("not-watched", "请先将该品种加入自选");
+            fail("not-watched", "请先将该品种添加关注");
           const index = doc.rules.findIndex(
               (r) => r.assetId === event.assetId && r.type === event.type,
             ),
@@ -423,7 +426,7 @@ function createHandler({ db, getOpenid, resolve, now = Date.now }) {
       return {
         ok: false,
         err: e.businessCode || "portfolio-unavailable",
-        hint: e.businessCode ? e.message : "自选服务暂不可用，请稍后重试",
+        hint: e.businessCode ? e.message : "关注服务暂不可用，请稍后重试",
       };
     }
   };

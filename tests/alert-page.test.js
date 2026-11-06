@@ -127,7 +127,7 @@ test('clearing target price disables rule and sends null without server rule IDs
 });
 test('WXML exposes the ten controls with truthful shared quota and delay descriptions', () => {
   const markup = fs.readFileSync(require.resolve('../pages/alert/alert.wxml'), 'utf8');
-  for (const label of ['简报 / 定时播报', '到价 / 波动预警', '时效内顺延，过期预警不补发', '6 类', '15 分钟', 'type="digit"']) assert.ok(markup.includes(label), label);
+  for (const label of ['简报 / 定时通知', '价格 / 变化提醒', '时效内顺延，过期提醒不补发', '6 类', '15 分钟', 'type="digit"']) assert.ok(markup.includes(label), label);
   assert.ok(!markup.includes('合并发送'));
 });
 test('recent tasks explain actionable states, safe errors, and actual sent time', () => {

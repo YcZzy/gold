@@ -42,7 +42,7 @@ function parse(input) {
     const csv=csvRows(text),header=csv.shift().map(x=>x.trim());
     rows=csv.map(cells=>item(Object.fromEntries(header.map((h,i)=>[h==='代码'?'code':h,['tags','groups'].includes(h)?listCell(cells[i]||''):cells[i]||'']))));
   } else rows=text.split(/[,，;；\s]+/).filter(Boolean).map(keyword=>item({keyword}));
-  if((!rows.length && !groupSettings.length) || rows.length>30)throw Error('每次请导入 1–30 个标的，或包含分组的备份');
+  if((!rows.length && !groupSettings.length) || rows.length>30)throw Error('每次请导入 1–30 个项目，或包含分组的备份');
   if(groupSettings.length)rows.groupSettings=groupSettings;
   return rows;
 }

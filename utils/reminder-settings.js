@@ -189,7 +189,7 @@ module.exports = function createSettings({ market, portfolio, theme, fmt, wx, st
     async saveRule() {
       if (this.data.busy) return;
       if (!this.data.following) {
-        this.setData({ errorText: "请先加入自选，再保存提醒" });
+        this.setData({ errorText: "请先添加关注，再保存提醒" });
         return;
       }
       const r = this.cleanRule(this.data.draft);

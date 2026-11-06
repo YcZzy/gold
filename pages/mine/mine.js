@@ -184,7 +184,7 @@ Page({
   },
   openWorkspace(e) {
     const target=e.currentTarget.dataset.target;
-    if(['market','holdings','data'].includes(target))wx.navigateTo({url:'/pages/'+target+'/'+target});
+    if(['market','data'].includes(target))wx.navigateTo({url:'/pages/'+target+'/'+target});
   },
   openAuth() {
     wx.switchTab({ url: "/pages/reminders/reminders" });
@@ -202,7 +202,7 @@ Page({
       const rules = assets.rules || [];
       if (this._alive) this.setData({ check: {
         rules: assets.offline ? "暂时无法确认，请联网后重试" : `已开启 ${rules.filter(r => r.enabled).length} 条提醒`,
-        quota: `播报 ${Number((status.remaining || {})[templates.dailyBrief] || 0)} 次 · 异动 ${Number((status.remaining || {})[templates.volatility] || 0)} 次`,
+        quota: `播报 ${Number((status.remaining || {})[templates.dailyBrief] || 0)} 次 · 变化提醒 ${Number((status.remaining || {})[templates.volatility] || 0)} 次`,
         dnd: `${prefs.dndStart || "23:00"} – ${prefs.dndEnd || "07:30"}（北京时间）`,
         recent: (status.recentTasks || []).slice(0, 3).map(fmt.task),
       } });
@@ -220,7 +220,7 @@ Page({
       const result = response && response.result;
       if (!result || !result.ok) {
         const messages = {
-          "no-quota": "异动授权次数不足，请到「提醒」页增加授权。",
+          "no-quota": "变化提醒授权次数不足，请到「提醒」页增加授权。",
           "send-failed": `发送失败${result && result.code != null ? "（错误码 " + result.code + "）" : ""}，请检查微信订阅设置。`,
           "send-uncertain": "发送结果暂无法确认，请查看最近提醒，避免重复测试。",
         };

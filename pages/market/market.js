@@ -108,7 +108,7 @@ Page({
   try{const state=await portfolio.add(id);if(!this.active(n,'_addRequest'))return;this.setData({followingIds:(state.items||[]).map(i=>i.id),followingMap:Object.fromEntries((state.items||[]).map(i=>[i.id,true]))});}
   catch(error){
     if(this.active(n,'_addRequest')){
-      this.setData({rowErrorId:id,rowError:error.message||'加入自选失败，请重试'});
+      this.setData({rowErrorId:id,rowError:error.message||'添加关注失败，请重试'});
       if (error.code === 'watchlist-limit') require('../../utils/membership-client').offerUpgrade(wx, error);
     }
   }

@@ -347,7 +347,7 @@ Page({
     if (!this.data.followingReady) await this.loadPortfolio();
     if (!this._alive || !this._visible) return false;
     if (!this.data.followingReady) {
-      this.setData({ errorText: "自选状态暂时无法确认，请稍后重试" });
+      this.setData({ errorText: "关注状态暂时无法确认，请稍后重试" });
       return false;
     }
     return true;
@@ -609,8 +609,8 @@ Page({
     if (this.data.busy) return;
     if (!this.data.following) return this.follow();
     wx.showModal({
-      title: "删除自选",
-      content: "删除后，该标的的全部通知提醒也将一并删除，重新添加不会恢复。确定删除？",
+      title: "取消关注",
+      content: "删除后，该项目的全部通知提醒也将一并删除，重新添加不会恢复。确定删除？",
       success: async (r) => {
         if (!r.confirm || this.data.busy) return;
         this.setData({ busy: true });

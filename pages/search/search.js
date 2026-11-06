@@ -127,7 +127,7 @@ Page({
             added: a.id === id || a.added,
           })),
         });
-        wx.showToast({ title: "已加入自选", icon: "success" });
+        wx.showToast({ title: "已添加关注", icon: "success" });
       }
     } catch (e) {
       if (this._alive) {

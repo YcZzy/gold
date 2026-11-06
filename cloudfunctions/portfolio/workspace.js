@@ -26,7 +26,7 @@ function prepare(event) {
   }
   if (event.action === 'batchAdd') {
     if (!Array.isArray(event.assetIds) || (!event.assetIds.length && !event.groupSettings?.length) || event.assetIds.length > 30 || !event.assetIds.every(validId))
-      fail('bad-import','一次可导入 1–30 个有效标的');
+      fail('bad-import','一次可导入 1–30 个有效项目');
     out.assetIds = [...new Set(event.assetIds)];
     if(event.groupSettings!=null && (!Array.isArray(event.groupSettings)||event.groupSettings.length>10))fail('bad-import','导入分组格式无效');
     out.groupSettings=(event.groupSettings||[]).map(g=>{
@@ -38,21 +38,21 @@ function prepare(event) {
     out.entries = (event.entries || []).map(e => {
       if (!e || !out.assetIds.includes(e.assetId) || typeof e.note !== 'string' || !Array.isArray(e.tags) ||
         !e.tags.every(t => typeof t === 'string') || !Array.isArray(e.groups) || e.groups.length > 10)
-        fail('bad-import','导入记录需包含标的、备注、标签及分组');
+        fail('bad-import','导入记录需包含项目、备注、标签及分组');
       const note=e.note.trim(), tags=[...new Set(e.tags.map(t=>t.trim()).filter(Boolean))];
       if (Array.from(note).length > 120 || tags.length > 3 || tags.some(t=>Array.from(t).length>8)) fail('bad-import','导入备注或标签超出长度限制');
       return {assetId:e.assetId,note,tags,groups:[...new Set(e.groups.map(name))]};
     });
-    if (new Set(out.entries.map(e=>e.assetId)).size !== out.entries.length) fail('bad-import','导入记录不能包含重复标的');
+    if (new Set(out.entries.map(e=>e.assetId)).size !== out.entries.length) fail('bad-import','导入记录不能包含重复项目');
   }
   return out;
 }
 function apply(doc, input, limits, now) {
   if (!input) return false;
-  if (input.revision !== doc.revision) fail('revision-conflict','自选已更新，请刷新后重试');
+  if (input.revision !== doc.revision) fail('revision-conflict','关注已更新，请刷新后重试');
   if (input.action === 'saveGroup') {
     const group = input.group;
-    if (group.assetIds.some(id=>!doc.items.includes(id))) fail('not-watched','分组仅可包含已加入自选的标的');
+    if (group.assetIds.some(id=>!doc.items.includes(id))) fail('not-watched','分组仅可包含已添加关注的项目');
     const index = doc.groups.findIndex(g=>g.id===group.id);
     if (group.id && index<0) fail('unknown-group','分组已不存在，请刷新');
     if (doc.groups.some(g=>g.name===group.name && g.id!==group.id)) fail('duplicate-group','已有同名分组');
@@ -67,11 +67,11 @@ function apply(doc, input, limits, now) {
     return previous!==doc.groups.length;
   }
   const newIds=input.assetIds.filter(id=>!doc.items.includes(id));
-  if (newIds.length && doc.items.length + newIds.length > limits.watchlist) fail('watchlist-limit', limits.tier === 'free' ? '免费版最多关注 5 个标的，请减少导入条目' : '导入后超出自选数量上限，请减少条目');
+  if (newIds.length && doc.items.length + newIds.length > limits.watchlist) fail('watchlist-limit', limits.tier === 'free' ? '免费版最多关注 5 个项目，请减少导入条目' : '导入后超出关注数量上限，请减少条目');
   doc.items.push(...newIds);
   let changed=!!newIds.length;
   for(const settings of input.groupSettings) {
-    if(settings.assetIds.some(id=>!doc.items.includes(id)))fail('bad-import','导入分组包含未导入或未自选的标的');
+    if(settings.assetIds.some(id=>!doc.items.includes(id)))fail('bad-import','导入分组包含未导入或未关注的项目');
     if(!doc.groups.some(g=>g.name===settings.name)){
       if(doc.groups.length>=10)fail('group-limit','导入后超出 10 个分组');
       doc.groups.push({id:groupId(),...settings,assetIds:[...settings.assetIds]});changed=true;

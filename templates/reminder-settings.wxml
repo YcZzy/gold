@@ -4,10 +4,10 @@
       <view class="type-grid">
         <button wx:for="{{types}}" wx:key="value" class="type-button {{draft.type === item.value && editing ? 'selected' : ''}} ui-btn ui-choice {{draft.type === item.value && editing ? 'ui-selected' : ''}}" data-type="{{item.value}}" bindtap="editRule" disabled="{{busy}}" aria-pressed="{{draft.type === item.value && editing}}" hover-class="ui-pressed">
           <view class="type-label">{{item.label}}</view>
-          <view class="type-description">{{item.value === 'priceAbove' ? '达到目标高价' : item.value === 'priceBelow' ? '达到目标低价' : item.value === 'dailyMove' ? '关注日内涨跌' : item.value === 'rapidMove' ? '捕捉短时波动' : item.value === 'scheduled' ? '按设定时间播报' : '查看当日收盘'}}</view>
+          <view class="type-description">{{item.value === 'priceAbove' ? '价格达到设定上限' : item.value === 'priceBelow' ? '价格达到设定下限' : item.value === 'dailyMove' ? '较上一收盘价的变化' : item.value === 'rapidMove' ? '约 15 分钟内的变化' : item.value === 'scheduled' ? '按设定时间通知' : '查看当日收盘'}}</view>
         </button>
       </view>
-      <view class="helper">每个标的每类可设置一条提醒，点击已有类型可修改。股票与 ETF 按常规交易时段监测。</view>
+      <view class="helper">每个项目每类可设置一条提醒，点击已有类型可修改。股票与 ETF 按常规交易时段监测。</view>
     </view>
 
     <view wx:if="{{editing}}" id="reminder-editor" class="settings-card editor">

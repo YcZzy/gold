@@ -78,7 +78,7 @@ test("migration atomic, preserves prefs, carries old revision and is idempotent"
   assert.equal(a.ok, true);
   assert.equal(a.items.length, 2);
   assert.equal(a.rules.find((r) => r.type === "priceAbove").version, "legacy");
-  assert.equal(a.rules.find((r) => r.type === "close").enabled, false);
+  assert.equal(a.rules.some((r) => r.type === "close"), false);
   assert.equal(f.data().preferences.caller.theme, "blackgold");
   assert.equal(f.data().preferences.caller.remaining, 8);
   assert.equal(f.data().preferences.caller.multiAssetVersion, 1);
@@ -88,16 +88,18 @@ test("concurrent additions serialize free cap, duplicates idempotent and expired
   const f = setup({ entitlements: { caller: { tier: "vip", expiresAt: 1 } } });
   await f.main({ action: "list" });
   const results = await Promise.all(
-    ["sh600519", "sz000001", "sh600000", "sz000002"].map((assetId) =>
+    ["sh600519", "sz000001", "sh600000", "sz000002", "sh600001", "sz000003"].map((assetId) =>
       f.main({ action: "add", assetId }),
     ),
   );
-  assert.equal(results.filter((r) => r.ok).length, 3);
+  assert.equal(results.filter((r) => r.ok).length, 5);
   assert.equal(f.data().portfolios.caller.items.length, 5);
   assert.equal((await f.main({ action: "add", assetId: "sh600519" })).ok, true);
 });
 test("rule identity, rearm, removal deletes rules, reorder rejects stale/incomplete", async () => {
   const f = setup();
+  await f.main({ action: "add", assetId: "gold-au9999" });
+  await f.main({ action: "add", assetId: "gold-xauusd" });
   const first = await f.main({
     action: "saveRule",
     assetId: "gold-au9999",
@@ -215,6 +217,8 @@ test("migration rollback includes prefs marker and embedded rules", async () => 
 });
 test("concurrent engine consume and unrelated save cannot resurrect one-shot", async () => {
   const f = setup();
+  await f.main({ action: "add", assetId: "gold-au9999" });
+  await f.main({ action: "add", assetId: "gold-xauusd" });
   const initial = await f.main({
     action: "saveRule",
     assetId: "gold-au9999",
@@ -258,7 +262,7 @@ test("valid server VIP unlocks 30 items; client tier has no effect; full permuta
   let result;
   for (const id of ["sh600519", "sz000001", "sh600000", "sz000002"])
     result = await f.main({ action: "add", assetId: id });
-  assert.equal(result.items.length, 6);
+  assert.equal(result.items.length, 4);
   assert.equal(result.limits.tier, "vip");
   const ids = result.items.map((i) => i.id).reverse();
   const ordered = await f.main({
@@ -296,6 +300,8 @@ test("30 active rules enforced transactionally, removal frees active capacity", 
   const f = setup({
     entitlements: { caller: { tier: "vip", expiresAt: Date.now() + 60000 } },
   });
+  await f.main({ action: "add", assetId: "gold-au9999" });
+  await f.main({ action: "add", assetId: "gold-xauusd" });
   for (const assetId of ["sh600519", "sz000001", "sh600000", "sz000002"])
     await f.main({ action: "add", assetId });
   let last;
@@ -367,7 +373,7 @@ test("client offline list labelled; writes reject; server error hint retained", 
   });
   const result = await offline.list();
   assert.equal(result.offline, true);
-  assert.equal(result.items.length, 2);
+  assert.equal(result.items.length, 0);
   await assert.rejects(
     () => offline.add("sh600519"),
     (e) => !!e.hint,
@@ -386,6 +392,8 @@ test("client offline list labelled; writes reject; server error hint retained", 
 });
 test("threshold whitelist, price precision, and verified closing market scope", async () => {
   const f = setup();
+  await f.main({ action: "add", assetId: "gold-au9999" });
+  await f.main({ action: "add", assetId: "gold-xauusd" });
   for (const [assetId, type, value] of [
     ["gold-au9999", "dailyMove", 4],
     ["gold-au9999", "rapidMove", 0.001],
@@ -419,13 +427,13 @@ test("threshold whitelist, price precision, and verified closing market scope", 
   );
 });
 
-test("gold metadata matches market service and client defaults", () => {
+test("gold remains available for manual addition with no client defaults", () => {
   const { GOLD } = require("../cloudfunctions/portfolio");
   const { DEFAULT_ITEMS } = require("../utils/portfolio-client");
-  assert.deepEqual(DEFAULT_ITEMS, Object.values(GOLD));
+  assert.deepEqual(DEFAULT_ITEMS, []);
   assert.equal(GOLD["gold-au9999"].name, "沪金 Au99.99");
   assert.equal(GOLD["gold-xauusd"].code, "XAU");
-  assert.ok(DEFAULT_ITEMS.every((asset) => asset.quoteCode === null));
+  assert.ok(Object.values(GOLD).every((asset) => asset.quoteCode === null));
 });
 
 test("failed operation does not initialize portfolio when legacy marker already exists", async () => {
@@ -538,7 +546,10 @@ test('late portfolio list cannot overwrite cache after a newer mutation', async 
 
 test('new accounts have no enabled reminders and explicit legacy close subscriptions are preserved', async () => {
   const fresh = setup();
-  assert.equal((await fresh.main({action:'list'})).rules.some(r => r.enabled), false);
+  const state = await fresh.main({action:'list'});
+  assert.deepEqual(state.items, []);
+  assert.deepEqual(state.rules, []);
+  assert.deepEqual((await fresh.main({action:'list'})).items, []);
   const existing = setup({preferences:{caller:{dailyBrief:true}}});
   assert.equal((await existing.main({action:'list'})).rules.find(r => r.type === 'close').enabled, true);
 });
@@ -546,6 +557,7 @@ test('new accounts have no enabled reminders and explicit legacy close subscript
 test("free reminder cap blocks new enables and lets existing users reduce over-limit rules", async () => {
   const f = setup({ entitlements: { caller: { tier: "vip", expiresAt: Date.now() + 60000 } } });
   const assetId = "gold-au9999";
+  await f.main({ action: "add", assetId });
   const types = ["priceAbove", "priceBelow", "dailyMove", "rapidMove", "scheduled", "close"];
   const save = (type, enabled) => f.main({
     action: "saveRule", assetId, type, enabled, value: 1, time: "09:00",

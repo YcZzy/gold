@@ -2,44 +2,43 @@
 <view class="page home-page tab-page theme-{{theme}} {{display.quiet ? 'quiet-mode' : ''}} {{display.compact ? 'compact-mode' : ''}}">
   <view class="home-header">
     <view class="home-heading">
-      <view class="heading-eyebrow">WATCHLIST · 自选行情</view>
-      <view class="hero-title">我的自选</view>
-      <view class="hero-sub">让每一次关注，都有迹可循</view>
+      <view class="heading-eyebrow">MY LIST · 关注清单</view>
+      <view class="hero-title">我的关注</view>
+      <view class="hero-sub">集中查看，按需提醒</view>
     </view>
     <view class="home-share-actions">
-      <button class="home-add ui-btn ui-primary" hover-class="ui-pressed" bindtap="openSearch" aria-label="搜索并添加自选">
-        <view class="icon-plus" aria-hidden="true"></view><text>添加自选</text>
+      <button class="home-add ui-btn ui-primary" hover-class="ui-pressed" bindtap="openSearch" aria-label="搜索并添加关注">
+        <view class="icon-plus" aria-hidden="true"></view><text>添加关注</text>
       </button>
-      <button class="ui-icon share-icon-button" open-type="share" aria-label="分享自选" hover-class="ui-pressed" disabled="{{loading || busy}}"><image class="svg-action-icon" src="{{theme === 'blackgold' ? '/assets/icons/share-blackgold.svg' : '/assets/icons/share.svg'}}" mode="aspectFit" aria-hidden="true" /></button>
+      <button class="ui-icon share-icon-button" open-type="share" aria-label="分享关注" hover-class="ui-pressed" disabled="{{loading || busy}}"><image class="svg-action-icon" src="{{theme === 'blackgold' ? '/assets/icons/share-blackgold.svg' : '/assets/icons/share.svg'}}" mode="aspectFit" aria-hidden="true" /></button>
     </view>
   </view>
 
   <view class="workspace-shortcuts">
-    <button class="ui-row" data-target="market" bindtap="openWorkspace" hover-class="ui-pressed"><view class="shortcut-icon shortcut-market" aria-hidden="true"><view></view><view></view><view></view></view><view class="shortcut-copy"><view class="shortcut-title">行情发现</view><view class="shortcut-caption">指数 · 热点 · 榜单</view></view><view class="shortcut-chevron" aria-hidden="true"></view></button>
-    <button class="ui-row" data-target="holdings" bindtap="openWorkspace" hover-class="ui-pressed"><view class="shortcut-icon shortcut-holdings" aria-hidden="true"></view><view class="shortcut-copy"><view class="shortcut-title">我的持仓</view><view class="shortcut-caption">记录每一笔投资</view></view><view class="shortcut-chevron" aria-hidden="true"></view></button>
-    <button class="ui-row" data-target="data" bindtap="openWorkspace" hover-class="ui-pressed"><view class="shortcut-icon shortcut-groups" aria-hidden="true"></view><view class="shortcut-copy"><view class="shortcut-title">分组与备份</view><view class="shortcut-caption">整理 · 导入 · 备份</view></view><view class="shortcut-chevron" aria-hidden="true"></view></button>
+    <button class="ui-row" data-target="market" bindtap="openWorkspace" hover-class="ui-pressed"><view class="shortcut-icon shortcut-market" aria-hidden="true"><view></view><view></view><view></view></view><view class="shortcut-copy"><view class="shortcut-title">数据浏览</view><view class="shortcut-caption">分类查看 · 条件排序</view></view><view class="shortcut-chevron" aria-hidden="true"></view></button>
+    <button class="ui-row" data-target="data" bindtap="openWorkspace" hover-class="ui-pressed"><view class="shortcut-icon shortcut-groups" aria-hidden="true"></view><view class="shortcut-copy"><view class="shortcut-title">整理与备份</view><view class="shortcut-caption">分组 · 导入 · 导出</view></view><view class="shortcut-chevron" aria-hidden="true"></view></button>
   </view>
 
   <view class="watchlist-card {{manage ? 'is-editing' : ''}}">
     <view class="watchlist-heading {{!manage && groups.length ? 'has-group-tabs' : ''}}">
-      <scroll-view wx:if="{{!manage && groups.length}}" class="group-scroll" scroll-x enhanced show-scrollbar="{{false}}" aria-label="自选分组">
+      <scroll-view wx:if="{{!manage && groups.length}}" class="group-scroll" scroll-x enhanced show-scrollbar="{{false}}" aria-label="关注分组">
         <view class="group-chips">
-          <button class="{{!view.groupId ? 'selected' : ''}} ui-tab {{!view.groupId ? 'ui-selected' : ''}}" data-id="" bindtap="chooseGroup" hover-class="ui-pressed" aria-pressed="{{!view.groupId}}">全部自选</button>
+          <button class="{{!view.groupId ? 'selected' : ''}} ui-tab {{!view.groupId ? 'ui-selected' : ''}}" data-id="" bindtap="chooseGroup" hover-class="ui-pressed" aria-pressed="{{!view.groupId}}">全部关注</button>
           <button wx:for="{{groups}}" wx:key="id" class="{{view.groupId === item.id ? 'selected' : ''}} ui-tab {{view.groupId === item.id ? 'ui-selected' : ''}}" data-id="{{item.id}}" bindtap="chooseGroup" hover-class="ui-pressed" aria-pressed="{{view.groupId === item.id}}">{{item.name}}</button>
         </view>
       </scroll-view>
-      <view wx:else class="watchlist-title">{{manage ? '编辑自选' : groupName}}<text class="watchlist-count">{{manage ? rows.length : visibleRows.length}} 个</text></view>
+      <view wx:else class="watchlist-title">{{manage ? '编辑关注' : groupName}}<text class="watchlist-count">{{manage ? rows.length : visibleRows.length}} 个</text></view>
       <button wx:if="{{rows.length}}" class="home-manage {{manage ? 'is-managing' : ''}} ui-btn ui-text" bindtap="toggleManage" disabled="{{busy}}" hover-class="ui-pressed">{{manage ? '完成' : '管理'}}</button>
     </view>
 
     <view wx:if="{{filterOpen && !manage}}" id="watch-filter" class="watch-filter">
-      <view class="filter-heading"><text>筛选自选</text><button class="filter-reset ui-btn ui-text" bindtap="resetConditions" hover-class="ui-pressed">重置条件</button></view>
+      <view class="filter-heading"><text>筛选关注</text><button class="filter-reset ui-btn ui-text" bindtap="resetConditions" hover-class="ui-pressed">重置条件</button></view>
       <view class="filter-pickers">
         <view><view class="filter-label">市场</view><picker range="{{markets}}" value="{{marketIndex}}" bindchange="setMarket" aria-label="选择市场"><view class="filter-select"><text>{{markets[marketIndex]}}</text><view class="down-chevron" aria-hidden="true"></view></view></picker></view>
-        <view><view class="filter-label">类型</view><picker range="{{kinds}}" value="{{kindIndex}}" bindchange="setKind" aria-label="选择标的类型"><view class="filter-select"><text>{{kinds[kindIndex]}}</text><view class="down-chevron" aria-hidden="true"></view></view></picker></view>
+        <view><view class="filter-label">类型</view><picker range="{{kinds}}" value="{{kindIndex}}" bindchange="setKind" aria-label="选择关注项目类型"><view class="filter-select"><text>{{kinds[kindIndex]}}</text><view class="down-chevron" aria-hidden="true"></view></view></picker></view>
       </view>
       <label class="filter-label" for="watch-query">关键词</label>
-      <input id="watch-query" data-key="query" value="{{view.query}}" bindinput="setCondition" placeholder="搜索名称、代码、备注或标签" placeholder-class="filter-placeholder" confirm-type="done" aria-label="在自选中搜索名称代码备注标签" />
+      <input id="watch-query" data-key="query" value="{{view.query}}" bindinput="setCondition" placeholder="搜索名称、代码、备注或标签" placeholder-class="filter-placeholder" confirm-type="done" aria-label="在关注中搜索名称代码备注标签" />
       <view class="filter-inputs">
         <view><label class="filter-label" for="min-price">最低价格</label><input id="min-price" type="digit" data-key="minPrice" value="{{view.minPrice}}" bindinput="setCondition" placeholder="不限" placeholder-class="filter-placeholder" aria-label="最低价格" aria-invalid="{{!!filterError}}" aria-describedby="filter-error" /></view>
         <view><label class="filter-label" for="max-price">最高价格</label><input id="max-price" type="digit" data-key="maxPrice" value="{{view.maxPrice}}" bindinput="setCondition" placeholder="不限" placeholder-class="filter-placeholder" aria-label="最高价格" aria-invalid="{{!!filterError}}" aria-describedby="filter-error" /></view>
@@ -47,25 +46,25 @@
         <view><label class="filter-label" for="max-pct">最高涨跌幅 %</label><input id="max-pct" data-key="maxPct" value="{{view.maxPct}}" bindinput="setCondition" placeholder="例如 5" placeholder-class="filter-placeholder" aria-label="最高涨跌幅百分比，可输入负数" aria-invalid="{{!!filterError}}" aria-describedby="filter-error" /></view>
       </view>
       <view wx:if="{{filterError}}" id="filter-error" class="filter-error" role="alert">{{filterError}}</view>
-      <view class="filter-help">条件即时生效。仅筛选已取得的自选行情，不同币种价格不换汇。</view>
+      <view class="filter-help">条件即时生效。仅筛选已取得的关注助手，不同币种价格不换汇。</view>
       <button class="filter-done ui-btn ui-primary" bindtap="toggleFilters" hover-class="ui-pressed">查看 {{visibleRows.length}} 个结果</button>
     </view>
     <view wx:if="{{filterCount && !filterOpen && !manage}}" class="active-filter-note"><text>已启用 {{filterCount}} 项筛选 · {{visibleRows.length}} 个结果</text><button class="ui-btn ui-text" bindtap="resetConditions" hover-class="ui-pressed" aria-label="清空全部筛选条件">清空</button></view>
     <view wx:if="{{errorText}}" class="error-bar" role="alert">{{errorText}}</view>
-    <view wx:if="{{loading && !rows.length}}" class="empty loading-state" role="status"><view class="loading-mark" aria-hidden="true"></view><view class="empty-title">正在加载自选</view><view class="muted">为你整理关注的行情</view></view>
+    <view wx:if="{{loading && !rows.length}}" class="empty loading-state" role="status"><view class="loading-mark" aria-hidden="true"></view><view class="empty-title">正在加载关注</view><view class="muted">正在整理你的关注清单</view></view>
     <view wx:elif="{{!rows.length}}" class="empty">
       <view class="empty-illustration" aria-hidden="true"><view class="empty-line"></view><view class="empty-line short"></view></view>
-      <view class="empty-title">从第一个关注开始</view>
-      <view class="muted">把股票、ETF 或黄金加入自选<br />行情与提醒，在这里一目了然</view>
-      <button class="home-empty-add ui-btn ui-primary" hover-class="ui-pressed" bindtap="openSearch"><view class="icon-plus" aria-hidden="true"></view>搜索并添加</button>
+      <view class="empty-title">还没有关注内容</view>
+      <view class="muted">搜索并添加你想查看的项目<br />集中管理、按需设置提醒</view>
+      <button class="home-empty-add ui-btn ui-primary" hover-class="ui-pressed" bindtap="openSearch"><view class="icon-plus" aria-hidden="true"></view>添加关注</button>
     </view>
-    <view wx:if="{{manage && rows.length}}" class="manage-hint">拖动左侧手柄排序，松手自动保存。移除自选会一并删除该标的提醒；分组在「分组与备份」中设置。</view>
+    <view wx:if="{{manage && rows.length}}" class="manage-hint">拖动左侧手柄排序，松手自动保存。移除关注会一并删除该项目提醒；分组在「整理与备份」中设置。</view>
     <view wx:if="{{rows.length && !visibleRows.length && !manage}}" class="empty">
       <view class="empty-illustration" aria-hidden="true"><view class="empty-line"></view><view class="empty-line short"></view></view>
-      <view class="empty-title">{{filterCount ? '没有符合条件的自选' : '这个分组还没有自选'}}</view>
-      <view class="muted">{{filterCount ? '试着放宽条件，看看其他关注' : '到「分组与备份」添加分组成员'}}</view>
+      <view class="empty-title">{{filterCount ? '没有符合条件的关注' : '这个分组还没有关注'}}</view>
+      <view class="muted">{{filterCount ? '试着放宽条件，看看其他关注' : '到「整理与备份」添加分组成员'}}</view>
       <button wx:if="{{filterCount}}" class="empty-secondary ui-btn ui-text" bindtap="resetConditions" hover-class="ui-pressed">重置筛选</button>
-      <button wx:else class="empty-secondary ui-btn ui-text" data-id="" bindtap="chooseGroup" hover-class="ui-pressed">查看全部自选</button>
+      <button wx:else class="empty-secondary ui-btn ui-text" data-id="" bindtap="chooseGroup" hover-class="ui-pressed">查看全部关注</button>
     </view>
     <view class="list {{manage ? 'managing' : ''}}">
       <view wx:for="{{visibleRows}}" wx:key="id" class="list-item {{draggingId === item.id ? 'dragging' : ''}}" style="{{draggingId === item.id ? 'transform: translateY(' + dragOffset + 'px);' : ''}}">
@@ -83,8 +82,8 @@
         </button>
       </view>
     </view>
-    <view wx:if="{{rows.length}}" class="list-capacity"><text>已关注 {{rows.length}} / {{limits.watchlist}} 个标的</text><text>{{manage ? (busy ? '正在保存…' : '调整后自动保存') : '点击标的查看详情'}}</text></view>
+    <view wx:if="{{rows.length}}" class="list-capacity"><text>已关注 {{rows.length}} / {{limits.watchlist}} 项</text><text>{{manage ? (busy ? '正在保存…' : '调整后自动保存') : '点击查看详情'}}</text></view>
   </view>
   <ad-custom wx:if="{{showAd && rows.length && !manage && !adFailed}}" unit-id="adunit-5fae2b11bbb92149" binderror="hideAd" bindclose="hideAd"></ad-custom>
-  <view class="home-footer"><view class="update-note"><view class="update-dot" aria-hidden="true"></view><text>每分钟自动刷新 · 下拉可手动更新</text></view><view class="home-disclaimer">行情可能延迟，请留意各标的报价时间。</view><view class="home-disclaimer disclaimer">公开行情仅供参考，不构成投资建议。</view></view>
+  <view class="home-footer"><view class="update-note"><view class="update-dot" aria-hidden="true"></view><text>每分钟自动刷新 · 下拉可手动更新</text></view><view class="home-disclaimer">行情可能延迟，请留意各项目报价时间。</view><view class="home-disclaimer disclaimer">公开行情仅供参考，不构成投资建议。</view></view>
 </view>

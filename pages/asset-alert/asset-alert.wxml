@@ -13,8 +13,8 @@
   <view wx:if="{{loading}}" class="loading-note" role="status">正在加载提醒设置…</view>
   <view wx:if="{{asset && !following && !loading}}" class="settings-card follow-card">
     <view class="section-title">先关注，再设置提醒</view>
-    <view class="muted">加入自选后，即可为这个标的设置专属行情提醒。</view>
-    <button class="primary ui-btn ui-primary" bindtap="follow" loading="{{busy}}" disabled="{{busy}}" hover-class="ui-pressed">加入自选</button>
+    <view class="muted">添加关注后，即可为这个项目设置条件提醒。</view>
+    <button class="primary ui-btn ui-primary" bindtap="follow" loading="{{busy}}" disabled="{{busy}}" hover-class="ui-pressed">添加关注</button>
   </view>
   <view wx:if="{{errorText && !editing}}" class="error-bar" role="alert">{{errorText}}</view>
   <view wx:if="{{following}}">

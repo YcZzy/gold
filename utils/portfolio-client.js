@@ -1,31 +1,6 @@
 /** Server is authoritative; cached data is read-only and explicitly marked offline. */
 const CACHE_KEY = "portfolio-cache-v1";
-const DEFAULT_ITEMS = [
-  {
-    id: "gold-au9999",
-    name: "沪金 Au99.99",
-    code: "AU9999",
-    market: "SGE",
-    kind: "gold",
-    currency: "CNY",
-    unit: "元/克",
-    secid: "118.AU9999",
-    quoteCode: null,
-    precision: 2,
-  },
-  {
-    id: "gold-xauusd",
-    name: "伦敦金现",
-    code: "XAU",
-    market: "GLOBAL",
-    kind: "gold",
-    currency: "USD",
-    unit: "美元/盎司",
-    secid: "122.XAU",
-    quoteCode: null,
-    precision: 2,
-  },
-];
+const DEFAULT_ITEMS = [];
 function createClient(platform) {
   const pool = require("./read-pool").forPlatform(platform);
   let lastGood = null;
@@ -49,7 +24,7 @@ function createClient(platform) {
       const result = response && response.result;
       if (!result || result.ok !== true) {
         const error = new Error(
-          (result && result.hint) || "自选服务暂不可用，请稍后重试",
+          (result && result.hint) || "关注服务暂不可用，请稍后重试",
         );
         error.code = (result && result.err) || "portfolio-unavailable";
         error.business = !!(result && result.ok === false);
@@ -97,11 +72,11 @@ function createClient(platform) {
           annotations: fallback.annotations || {},
           groups: fallback.groups || [],
           offline: true,
-          hint: /^cloud-call-budget-/.test(error.code || "") ? error.message : "当前离线，显示上次保存的自选；联网后可修改",
+          hint: /^cloud-call-budget-/.test(error.code || "") ? error.message : "当前离线，显示上次保存的关注；联网后可修改",
         });
       }
       if (!error.hint)
-        error.hint = error.message || "自选服务暂不可用，请稍后重试";
+        error.hint = error.message || "关注服务暂不可用，请稍后重试";
       throw error;
     }
   }

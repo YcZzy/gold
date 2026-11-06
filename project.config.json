@@ -1,5 +1,5 @@
 {
-  "description": "金价行情小程序",
+  "description": "关注清单与数据提醒工具",
   "packOptions": {
     "ignore": [
       { "type": "folder", "value": "tests" },

@@ -102,7 +102,7 @@ Page({
     try {
       const state = await portfolio.list();
       if (!active()) return;
-      if (state.offline && !portfolio.getCached()) throw Error("自选状态暂时无法确认，请稍后重试");
+      if (state.offline && !portfolio.getCached()) throw Error("关注状态暂时无法确认，请稍后重试");
       await openAssetAlert(wx, {
         assetId,
         following: state.items.some(asset => asset.id === assetId),

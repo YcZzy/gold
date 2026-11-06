@@ -8,13 +8,12 @@
     "pages/asset-alert/asset-alert",
     "pages/alert/alert",
     "pages/data/data",
-    "pages/holdings/holdings",
     "pages/market/market",
     "pages/share/share"
   ],
   "window": {
     "navigationBarBackgroundColor": "#14120b",
-    "navigationBarTitleText": "自选行情",
+    "navigationBarTitleText": "关注助手",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#14120b",
     "backgroundColorContent": "#14120b",
@@ -29,7 +28,7 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "自选",
+        "text": "关注",
         "iconPath": "assets/icons/tabbar/watchlist-blackgold-normal.png",
         "selectedIconPath": "assets/icons/tabbar/watchlist-blackgold-selected.png"
       },

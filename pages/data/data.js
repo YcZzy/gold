@@ -19,7 +19,7 @@ Page({
   async loadState(){
     const request=this._request=(this._request||0)+1;
     try{const s=await portfolio.list();if(this.isCurrent(request))this.apply(s);}
-    catch(e){if(this.isCurrent(request))this.setData({errorText:e.message||'自选加载失败'});}
+    catch(e){if(this.isCurrent(request))this.setData({errorText:e.message||'关注加载失败'});}
   },
   editGroup(e){
     if(this.data.busy)return;
@@ -45,7 +45,7 @@ Page({
   deleteGroup(e){
     if(this.data.busy)return;
     const id=e.currentTarget.dataset.id;
-    wx.showModal({title:'删除分组',content:'仅删除此分组，自选、备注及提醒仍会保留。',success:async r=>{
+    wx.showModal({title:'删除分组',content:'仅删除此分组，关注、备注及提醒仍会保留。',success:async r=>{
       if(!r.confirm || this.data.busy || !this._visible)return;this.setData({busy:true,errorText:''});
       const request=this._request=(this._request||0)+1;
       try{const s=await portfolio.deleteGroup(id,this.data.revision);if(this.isCurrent(request)){this.apply(s);this.setData({notice:'分组已删除'});}}
@@ -97,7 +97,7 @@ Page({
         preview.push({...record,candidates,assetId:asset?.id||'',name:asset?.name||'',error:candidates.length?'':'未识别，请修改代码或移除此条'});
       }catch(e){preview.push({...record,candidates:[],assetId:'',name:'',error:e.message||'识别失败'});}
     }
-    if(this._alive && this._visible && request===this._previewRequest)this.setData({preview,pendingGroupCount:this._importGroupSettings.length,notice:'请确认所有标的。多市场同代码需选择具体市场；重复自选会跳过。已有备注不被覆盖。',busy:false});
+    if(this._alive && this._visible && request===this._previewRequest)this.setData({preview,pendingGroupCount:this._importGroupSettings.length,notice:'请确认所有项目。多市场同代码需选择具体市场；重复关注会跳过。已有备注不被覆盖。',busy:false});
   },
   selectCandidate(e){
     const row=Number(e.currentTarget.dataset.row),index=Number(e.currentTarget.dataset.index),preview=this.data.preview.slice();
@@ -107,7 +107,7 @@ Page({
   removeImportRow(e){this.setData({preview:this.data.preview.filter((_,i)=>i!==Number(e.currentTarget.dataset.row))});},
   async commitImport(){
     if(this.data.busy)return;
-    if((!this.data.preview.length && !this.data.pendingGroupCount) || this.data.preview.some(r=>!r.assetId))return this.setData({errorText:'请为每条记录选择明确标的，或移除未识别记录'});
+    if((!this.data.preview.length && !this.data.pendingGroupCount) || this.data.preview.some(r=>!r.assetId))return this.setData({errorText:'请为每条记录选择明确项目，或移除未识别记录'});
     const map=new Map();
     for(const r of this.data.preview)if(!map.has(r.assetId))map.set(r.assetId,r);
     const entries=[...map.values()].map(r=>({assetId:r.assetId,note:r.note,tags:r.tags,groups:r.groups}));
@@ -116,7 +116,7 @@ Page({
     this.setData({busy:true,errorText:''});const request=this._request=(this._request||0)+1;
     try{
       const s=await portfolio.batchAdd(entries.map(e=>e.assetId),this._importRevision,entries,groupSettings);
-      if(this.isCurrent(request)){this.apply(s);this.setData({preview:[],pendingGroupCount:0,raw:'',notice:'导入完成，重复标的已跳过；已有备注保留。'});}
+      if(this.isCurrent(request)){this.apply(s);this.setData({preview:[],pendingGroupCount:0,raw:'',notice:'导入完成，重复项目已跳过；已有备注保留。'});}
     }catch(e){
       if(this.isCurrent(request)){
         this.setData({errorText:e.message||'导入失败，尚未写入'});
@@ -126,7 +126,7 @@ Page({
     finally{if(this.isCurrent(request))this.setData({busy:false});}
   },
   makeExport(e){
-    if(!this._state || this.data.offline)return this.setData({errorText:'请联网取得最新自选后再导出'});
+    if(!this._state || this.data.offline)return this.setData({errorText:'请联网获取最新关注清单后再导出'});
     const format=e.currentTarget.dataset.format;
     this.setData({exportText:format==='csv'?transfer.exportCsv(this._state):transfer.exportJson(this._state),exportFormat:format,exportPath:'',errorText:''});
   },

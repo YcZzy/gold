@@ -6,15 +6,15 @@ const TPL_IDS = [templates.dailyBrief, templates.volatility];
 
 const TYPE_TEXT = {
   dailyBrief: "每日简报",
-  volAu: "沪金异动",
-  volXau: "伦敦金异动",
-  scheduledBrief: "定时播报",
-  shortAu: "沪金短时急变",
-  shortXau: "伦敦金短时急变",
-  targetAuLow: "沪金跌到价",
-  targetAuHigh: "沪金涨到价",
-  targetXauLow: "伦敦金跌到价",
-  targetXauHigh: "伦敦金涨到价"
+  volAu: "沪金变化提醒",
+  volXau: "伦敦金变化提醒",
+  scheduledBrief: "定时通知",
+  shortAu: "沪金短时变化",
+  shortXau: "伦敦金短时变化",
+  targetAuLow: "沪金价格达到下限",
+  targetAuHigh: "沪金价格达到上限",
+  targetXauLow: "伦敦金价格达到下限",
+  targetXauHigh: "伦敦金价格达到上限"
 };
 const STATUS_TEXT = {
   pending: "待发送",
@@ -31,7 +31,7 @@ const STATUS_TEXT = {
 
 const REASON_TEXT = {
   "settings-changed": "设置已变更，原提醒已取消",
-  "stale-alert": "行情预警已过时，不再补发",
+  "stale-alert": "条件提醒已过时，不再补发",
   "dnd-past-expiry": "免打扰结束时提醒已过期，不再补发",
   dnd: "免打扰期间，时效内顺延发送",
   "daily-cap": "该类提醒已达今日发送上限",
@@ -92,10 +92,10 @@ Page({
     shortPctIndex: 1,
     quotaCap: quotaCapPerTemplate,
     targetRules: [
-      { key: "targetAuLow", label: "沪金跌到价", unit: "元/克" },
-      { key: "targetAuHigh", label: "沪金涨到价", unit: "元/克" },
-      { key: "targetXauLow", label: "伦敦金跌到价", unit: "美元/盎司" },
-      { key: "targetXauHigh", label: "伦敦金涨到价", unit: "美元/盎司" }
+      { key: "targetAuLow", label: "沪金价格达到下限", unit: "元/克" },
+      { key: "targetAuHigh", label: "沪金价格达到上限", unit: "元/克" },
+      { key: "targetXauLow", label: "伦敦金价格达到下限", unit: "美元/盎司" },
+      { key: "targetXauHigh", label: "伦敦金价格达到上限", unit: "美元/盎司" }
     ],
     priceDrafts: { targetAuLow: "", targetAuHigh: "", targetXauLow: "", targetXauHigh: "" },
     priceErrors: {},

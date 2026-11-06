@@ -1,10 +1,10 @@
 const TYPES = [
-  { value: "priceAbove", label: "涨到价" },
-  { value: "priceBelow", label: "跌到价" },
-  { value: "dailyMove", label: "日涨跌幅" },
-  { value: "rapidMove", label: "15 分钟急变" },
-  { value: "scheduled", label: "定时播报" },
-  { value: "close", label: "收盘提醒" },
+  { value: "priceAbove", label: "价格达到上限" },
+  { value: "priceBelow", label: "价格达到下限" },
+  { value: "dailyMove", label: "当日变化提醒" },
+  { value: "rapidMove", label: "短时变化提醒" },
+  { value: "scheduled", label: "定时数据通知" },
+  { value: "close", label: "每日收盘通知" },
 ];
 function number(v, p = 2) {
   return v == null || !Number.isFinite(Number(v)) ? "--" : Number(v).toFixed(p);
@@ -64,7 +64,7 @@ function task(task) {
   };
   const reasons = {
     "settings-changed": "设置已变更，原提醒已取消",
-    "stale-alert": "行情提醒已过时，不再补发",
+    "stale-alert": "条件提醒已过时，不再补发",
     "dnd-past-expiry": "免打扰结束时提醒已过期，不再补发",
     dnd: "免打扰期间，时效内顺延发送",
     "daily-cap": "该类提醒已达今日发送上限",
@@ -77,7 +77,7 @@ function task(task) {
   if (task.status === "pending-check")
     reasonText = "发送结果待核查，请联系维护者";
   if (task.status === "expired" && !reasonText)
-    reasonText = "行情提醒已过期，不再补发";
+    reasonText = "条件提醒已过期，不再补发";
   if (task.status === "failed" && !reasonText)
     reasonText = "发送失败，请稍后刷新或联系维护者";
   const code = String(task.lastError || "");
@@ -86,7 +86,7 @@ function task(task) {
   return {
     taskId: task.taskId,
     assetId: task.assetId,
-    assetName: task.assetName || (task.type === "testNotification" ? "测试通知" : "行情提醒"),
+    assetName: task.assetName || (task.type === "testNotification" ? "测试通知" : "条件提醒"),
     statusText: statuses[task.status] || "状态待确认",
     reasonText,
     timeText: time(task.sentAt || task.triggerTime || task.createdAt),

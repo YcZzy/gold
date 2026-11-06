@@ -1,7 +1,7 @@
 const theme = require("../utils/theme");
 
 const TABS = [
-  { pagePath: "pages/index/index", text: "自选", icon: "watchlist" },
+  { pagePath: "pages/index/index", text: "关注", icon: "watchlist" },
   { pagePath: "pages/reminders/reminders", text: "提醒", icon: "reminders" },
   { pagePath: "pages/mine/mine", text: "我的", icon: "mine" },
 ];

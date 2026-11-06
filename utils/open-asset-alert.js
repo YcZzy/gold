@@ -5,15 +5,15 @@ module.exports = async function openAssetAlert(wx, { assetId, following, follow,
     let confirmed;
     try {
       confirmed = await new Promise((resolve, reject) => wx.showModal({
-        title: "先加入自选",
-        content: "加入自选后才可设置提醒",
-        confirmText: "加入自选",
+        title: "先添加关注",
+        content: "添加关注后才可设置提醒",
+        confirmText: "添加关注",
         cancelText: "暂不加入",
         success: result => resolve(result.confirm),
         fail: reject,
       }));
     } catch (error) {
-      if (active()) onError("加入自选后才可设置提醒，请稍后重试");
+      if (active()) onError("添加关注后才可设置提醒，请稍后重试");
       return;
     }
     if (!confirmed || !active() || !(await follow())) return;

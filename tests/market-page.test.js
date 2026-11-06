@@ -30,7 +30,7 @@ test('listing an error keeps the previous snapshot and retry restores it',async(
  fail=false;await page.loadList();assert.equal(page.data.listError,'');
 });
 test('rows navigate to existing detail and adding enforces server watchlist errors inline',async()=>{
- const {page,routes}=fixture({portfolio:{add:async()=>{throw Error('自选额度已满')}}});page.onLoad();await page.onShow();
+ const {page,routes}=fixture({portfolio:{add:async()=>{throw Error('关注额度已满')}}});page.onLoad();await page.onShow();
  page.openAsset({currentTarget:{dataset:{id:'sh600519'}}});assert.equal(routes[0],'/pages/detail/detail?assetId=sh600519');
  await page.addAsset({currentTarget:{dataset:{id:'sh600519'}}});assert.equal(page.data.rowErrorId,'sh600519');assert.match(page.data.rowError,/额度已满/);
  assert.equal(page.data.rowBusy,'');

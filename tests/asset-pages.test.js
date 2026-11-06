@@ -412,7 +412,7 @@ test("watchlist reorder sends a complete permutation with server revision and ke
       list: async () => ({ ...state, items: [a, b] }),
       reorder: async (ids, rev) => {
         received = { ids: Array.from(ids), rev };
-        throw Error("自选已更新，请重试");
+        throw Error("关注已更新，请重试");
       },
     },
     market: { quotes: async () => ({ quotes: [] }) },
@@ -425,7 +425,7 @@ test("watchlist reorder sends a complete permutation with server revision and ke
   await page.endDrag();
   assert.deepEqual(received, { ids: [b.id, a.id], rev: 2 });
   assert.equal(page.data.rows[0].id, a.id);
-  assert.match(page.data.errorText, /自选已更新/);
+  assert.match(page.data.errorText, /关注已更新/);
   page.onHide();
 });
 test("search empty input invalidates pending response and unload cancels debounce", async () => {
@@ -789,8 +789,8 @@ test("unfollowed detail asks before adding and opening reminder settings", async
     modal = options;
   };
   const opening = page.openAlert();
-  assert.equal(modal.content, "加入自选后才可设置提醒");
-  assert.equal(modal.confirmText, "加入自选");
+  assert.equal(modal.content, "添加关注后才可设置提醒");
+  assert.equal(modal.confirmText, "添加关注");
   assert.equal(adds.length, 0);
   assert.equal(routes.length, 0);
   modal.success({ confirm: false });
@@ -808,7 +808,7 @@ test("unfollowed detail asks before adding and opening reminder settings", async
 test("failed follow never opens reminders, followed asset opens directly", async () => {
   let modal;
   const { page, wx, routes } = load("pages/detail/detail.js", {
-    portfolio: { add: async () => { throw Error("自选已达上限"); } },
+    portfolio: { add: async () => { throw Error("关注已达上限"); } },
   });
   page.assetId = a.id;
   page._alive = true;
@@ -824,7 +824,7 @@ test("failed follow never opens reminders, followed asset opens directly", async
   await opening;
   assert.equal(routes.length, 0);
   assert.equal(page.data.following, false);
-  assert.equal(page.data.errorText, "自选已达上限");
+  assert.equal(page.data.errorText, "关注已达上限");
   modal = null;
   page.data.following = true;
   await page.openAlert();
@@ -839,7 +839,7 @@ test("reminder prerequisite stays visible if native dialog fails", async () => {
   page.data.followingReady = true;
   wx.showModal = options => options.fail({ errMsg: "showModal:fail" });
   await page.openAlert();
-  assert.match(page.data.errorText, /加入自选后才可设置提醒/);
+  assert.match(page.data.errorText, /添加关注后才可设置提醒/);
   assert.equal(routes.length, 0);
 });
 

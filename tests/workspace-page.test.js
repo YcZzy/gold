@@ -55,7 +55,7 @@ test('returning from an empty group to all keeps filters and exposes the matchin
  page.chooseGroup({currentTarget:{dataset:{id:'empty'}}});
  assert.equal(page.data.visibleRows.length,0);
  page.chooseGroup({currentTarget:{dataset:{id:''}}});
- assert.equal(page.data.groupName,'全部自选');
+ assert.equal(page.data.groupName,'全部关注');
  assert.equal(page.data.filterCount,1);
  assert.equal(page.data.visibleRows.length,1);
 });
@@ -63,7 +63,7 @@ test('returning from an empty group to all keeps filters and exposes the matchin
 test('group navigation starts with an accessible all-watchlist tab before custom groups',()=>{
  const fs=require('node:fs'),w=fs.readFileSync('pages/index/index.wxml','utf8');
  const chips=w.slice(w.indexOf('<view class="group-chips">'),w.indexOf('</scroll-view>'));
- const all=chips.match(/<button\b[^>]*data-id=""[^>]*>全部自选<\/button>/);
+ const all=chips.match(/<button\b[^>]*data-id=""[^>]*>全部关注<\/button>/);
  assert.ok(all,'all-watchlist tab must be present even for nonempty groups');
  assert.ok(all.index<chips.indexOf('wx:for="{{groups}}"'),'all-watchlist tab must precede custom groups');
  assert.match(all[0],/bindtap="chooseGroup"/);assert.match(all[0],/aria-pressed="{{!view.groupId}}"/);
@@ -72,5 +72,5 @@ test('switching a populated group to all restores grouped and ungrouped master r
  const {page}=pageHarness('pages/index/index.js');page.onLoad();
  page.applyState({items:[{id:'a',name:'甲',market:'SH',kind:'stock'},{id:'b',name:'乙',market:'SH',kind:'stock'},{id:'c',name:'丙',market:'US',kind:'stock'}],groups:[{id:'g',name:'组',assetIds:['a']}],rules:[],limits:{watchlist:5},revision:1});
  page.chooseGroup({currentTarget:{dataset:{id:'g'}}});assert.deepEqual(Array.from(page.data.visibleRows,r=>r.id),['a']);
- page.chooseGroup({currentTarget:{dataset:{id:''}}});assert.equal(page.data.groupName,'全部自选');assert.deepEqual(Array.from(page.data.visibleRows,r=>r.id),['a','b','c']);assert.equal(page.data.rows.length,3);
+ page.chooseGroup({currentTarget:{dataset:{id:''}}});assert.equal(page.data.groupName,'全部关注');assert.deepEqual(Array.from(page.data.visibleRows,r=>r.id),['a','b','c']);assert.equal(page.data.rows.length,3);
 });

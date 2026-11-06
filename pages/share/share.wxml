@@ -1,22 +1,22 @@
 <page-meta page-style="background-color: {{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}};" background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" root-background-color="{{theme === 'blackgold' ? '#14120b' : '#f4f1ea'}}" />
 <view class="page share-page theme-{{theme}}">
   <view wx:if="{{heading}}" class="share-heading">
-    <view class="share-label">{{heading.label}} · 自选行情</view>
+    <view class="share-label">{{heading.label}} · 关注助手</view>
     <view class="share-title">{{selected ? selected.name : heading.title}}</view>
     <view class="share-description">{{selected && selected.code ? selected.code + ' · ' + selected.market : heading.description}}</view>
   </view>
 
   <view wx:if="{{invalid}}" class="share-panel share-hero">
     <view class="share-title">暂时无法打开分享</view>
-    <view class="share-description">可以进入小程序搜索行情或设置提醒。</view>
-    <button class="share-primary ui-btn ui-primary" bindtap="openHome" hover-class="ui-pressed">进入自选行情</button>
+    <view class="share-description">可以进入小程序搜索项目或设置提醒。</view>
+    <button class="share-primary ui-btn ui-primary" bindtap="openHome" hover-class="ui-pressed">进入关注助手</button>
   </view>
 
   <block wx:elif="{{kind === 'reminders'}}">
-    <button class="reminder-entry ui-row" bindtap="openSearch" hover-class="ui-pressed" aria-label="选择标的并设置行情提醒">
+    <button class="reminder-entry ui-row" bindtap="openSearch" hover-class="ui-pressed" aria-label="选择关注项目并设置条件提醒">
       <view class="reminder-icon-wrap"><image class="notice-img" src="{{bell}}" mode="aspectFit" aria-hidden="true" /></view>
       <view class="reminder-copy">
-        <view class="reminder-title">选择标的</view>
+        <view class="reminder-title">选择关注项目</view>
         <view class="notice-text">设置目标价或涨跌幅提醒</view>
       </view>
       <view class="reminder-chevron" aria-hidden="true"></view>
@@ -37,13 +37,13 @@
         <view class="share-quote-footer">
           <text class="share-meta">{{selected.time}}</text>
           <button class="ui-btn ui-text" bindtap="openDetail" data-id="{{selected.id}}" hover-class="ui-pressed">
-            查看行情详情<view class="share-arrow" aria-hidden="true"></view>
+            查看数据详情<view class="share-arrow" aria-hidden="true"></view>
           </button>
         </view>
       </view>
       <button class="reminder-entry ui-row" bindtap="openAlert" data-id="{{selected.id}}" disabled="{{!!alertId}}" loading="{{alertId === selected.id}}" hover-class="ui-pressed">
         <view class="reminder-icon-wrap"><image class="notice-img" src="{{bell}}" mode="aspectFit" aria-hidden="true" /></view>
-        <view class="reminder-copy"><view class="reminder-title">设置行情提醒</view><view class="notice-text">关注的价格变化，让提醒替你盯盘</view></view>
+        <view class="reminder-copy"><view class="reminder-title">设置条件提醒</view><view class="notice-text">设定条件，按需接收变化通知</view></view>
         <view class="reminder-chevron" aria-hidden="true"></view>
       </button>
     </block>
@@ -57,7 +57,7 @@
     <block wx:if="{{kind !== 'quote'}}">
       <view wx:if="{{rows.length}}" class="share-panel share-list">
         <view class="share-list-title">
-          <text>标的清单 <text class="share-meta">{{rows.length}} 个</text></text>
+          <text>关注清单 <text class="share-meta">{{rows.length}} 个</text></text>
           <text class="share-meta">报价 · 提醒</text>
         </view>
         <view wx:for="{{rows}}" wx:key="id" class="share-list-item">
@@ -72,18 +72,18 @@
                 <view class="share-pct {{item.changeClass}}">{{item.pctText}}</view>
               </view>
             </button>
-            <button class="ui-icon share-alert-icon" bindtap="openAlert" data-id="{{item.id}}" disabled="{{!!alertId}}" loading="{{alertId === item.id}}" hover-class="ui-pressed" aria-label="为{{item.name}}设置行情提醒">
+            <button class="ui-icon share-alert-icon" bindtap="openAlert" data-id="{{item.id}}" disabled="{{!!alertId}}" loading="{{alertId === item.id}}" hover-class="ui-pressed" aria-label="为{{item.name}}设置条件提醒">
               <image wx:if="{{alertId !== item.id}}" class="share-bell" src="{{bell}}" mode="aspectFit" aria-hidden="true" />
             </button>
           </view>
           <view class="share-meta share-list-time">{{item.status}}{{item.time ? ' · ' + item.time : ''}}</view>
         </view>
       </view>
-      <view wx:if="{{!rows.length}}" class="share-status">这份清单暂无标的</view>
+      <view wx:if="{{!rows.length}}" class="share-status">这份清单暂无项目</view>
     </block>
   </block>
 
   <view wx:if="{{!invalid}}" class="share-footer">
-    <button class="ui-btn ui-text" bindtap="openHome" hover-class="ui-pressed">进入我的自选</button>
+    <button class="ui-btn ui-text" bindtap="openHome" hover-class="ui-pressed">进入我的关注</button>
   </view>
 </view>

@@ -23,7 +23,7 @@ Page({
     filterOpen: false,
     filterCount: 0,
     filterError: '',
-    groupName: '全部自选',
+    groupName: '全部关注',
     markets: ['全部市场','沪市','深市','北交所','港股','美股','上金所','国际黄金'],
     marketIndex:0,
     kinds:['全部类型','股票','ETF','LOF','黄金'],
@@ -152,7 +152,7 @@ Page({
   },
   openWorkspace(e) {
     const target=e.currentTarget.dataset.target;
-    if(['data','holdings','market'].includes(target))wx.navigateTo({url:'/pages/'+target+'/'+target});
+    if(['data','market'].includes(target))wx.navigateTo({url:'/pages/'+target+'/'+target});
   },
   updateView() {
     const view={...this.data.view};
@@ -167,7 +167,7 @@ Page({
     let filterError='';
     if(hasNumber('minPrice') && hasNumber('maxPrice') && Number(view.minPrice)>Number(view.maxPrice)) filterError='最低价格不能高于最高价格';
     else if(hasNumber('minPct') && hasNumber('maxPct') && Number(view.minPct)>Number(view.maxPct)) filterError='最低涨跌幅不能高于最高涨跌幅';
-    this.setData({view,sortIndex,filterCount,filterError,groupName:group ? group.name : '全部自选',marketIndex:Math.max(0,['all','SH','SZ','BJ','HK','US','SGE','GLOBAL'].indexOf(view.market)),
+    this.setData({view,sortIndex,filterCount,filterError,groupName:group ? group.name : '全部关注',marketIndex:Math.max(0,['all','SH','SZ','BJ','HK','US','SGE','GLOBAL'].indexOf(view.market)),
       kindIndex:Math.max(0,['all','stock','etf','lof','gold'].indexOf(view.kind)),
       visibleRows:this.data.manage ? this.data.rows : watchView.select(this.data.rows,this.data.groups,{...view,query,sortBy:by,sortDirection:direction})});
   },
@@ -275,8 +275,8 @@ Page({
     if (this.data.busy || this._drag) return;
     const id = e.currentTarget.dataset.id;
     wx.showModal({
-      title: "删除自选",
-      content: "删除后，该标的的全部通知提醒也将一并删除，重新添加不会恢复。确定删除？",
+      title: "取消关注",
+      content: "删除后，该项目的全部通知提醒也将一并删除，重新添加不会恢复。确定删除？",
       success: async (r) => {
         if (!r.confirm || this.data.busy) return;
         this.setData({ busy: true });

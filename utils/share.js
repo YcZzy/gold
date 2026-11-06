@@ -1,8 +1,8 @@
 const TYPES = Object.freeze({
-  watchlist: { title: "自选清单", label: "WATCHLIST", description: "好友分享的全部自选" },
+  watchlist: { title: "关注清单", label: "MY LIST", description: "好友分享的关注清单" },
   holdings: { title: "持仓清单", label: "HOLDINGS", description: "好友分享的在持标的" },
-  quote: { title: "标的行情", label: "MARKET QUOTE", description: "好友分享的行情" },
-  reminders: { title: "行情提醒", label: "PRICE ALERTS", description: "设好价格或涨跌幅条件，触发后可通过微信订阅消息接收提醒。" },
+  quote: { title: "数据详情", label: "DETAILS", description: "好友分享的数据" },
+  reminders: { title: "条件提醒", label: "REMINDERS", description: "设好价格或涨跌幅条件，触发后可通过微信订阅消息接收提醒。" },
 });
 const MAX_ASSETS = 30;
 const ASSET_ID = /^(?:gold-(?:au9999|xauusd)|(?:sh|sz|bj)\d{6}|hk\d{5}|us[A-Z][A-Z0-9]{0,19}(?:\.[A-Z])?)$/;
@@ -11,8 +11,8 @@ const validKind = (kind) => Object.prototype.hasOwnProperty.call(TYPES, kind);
 
 function card(kind, ids = [], name = "", theme = "blackgold") {
   const list = [...new Set(ids.filter(validId))];
-  const title = kind === "quote" && name ? name + " · 行情与提醒" :
-    kind === "reminders" ? "行情提醒 · 价格触发时通知你" : TYPES[kind].title;
+  const title = kind === "quote" && name ? name + " · 数据与提醒" :
+    kind === "reminders" ? "条件提醒 · 达到设定条件时通知你" : TYPES[kind].title;
   return {
     title,
     imageUrl: "/assets/share/" + kind + (theme === "paper" ? "-paper" : "") + ".png",
