@@ -1,16 +1,24 @@
 const { createHmac, createHash } = require('crypto');
 
+const OFFER_ID = '1450698745';
+const PRODUCT_ID = '74587613';
+const PRICE = 990;
 const TERM = 30 * 86400000;
+// signData.attach 官方标记为必填，发货推送会原样透传，用于核对订单来源。
+const ATTACH = 'membership-30d';
+// 基础库调用的支付签名 uri 固定为 requestVirtualPayment，不可替换为接口路径。
+const SIGN_URI = 'requestVirtualPayment';
 const hmac = (key, body) => createHmac('sha256', key).update(body).digest('hex');
 
 function signPurchase(order, appKey, sessionKey) {
   const signData = JSON.stringify({
-    offerId: '1450698745', buyQuantity: 1, env: order.env, currencyType: 'CNY',
+    offerId: OFFER_ID, buyQuantity: 1, env: order.env, currencyType: 'CNY',
     productId: order.productId, goodsPrice: order.price, outTradeNo: order._id,
+    attach: order.attach || ATTACH,
   });
   return {
     mode: 'short_series_goods', signData,
-    paySig: hmac(appKey, 'requestVirtualPayment&' + signData),
+    paySig: hmac(appKey, SIGN_URI + '&' + signData),
     signature: hmac(sessionKey, signData),
   };
 }
@@ -61,4 +69,4 @@ async function deliver(db, order, remote, now) {
   });
 }
 
-module.exports = { TERM, hmac, signPurchase, read, isPaid, deliver };
+module.exports = { OFFER_ID, PRODUCT_ID, PRICE, ATTACH, TERM, hmac, signPurchase, read, isPaid, deliver };

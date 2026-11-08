@@ -9,12 +9,62 @@ test('signs the exact fixed-price purchase payload for the selected environment'
   const result = signPurchase(order, 'test-app-key', 'test-session-key');
   const hmac = (key, body) => require('crypto').createHmac('sha256', key).update(body).digest('hex');
   assert.equal(result.mode, 'short_series_goods');
+  // attach 是官方 signData 的必填透传字段，发货推送会原样返回。
   assert.deepEqual(JSON.parse(result.signData), {
     offerId: '1450698745', buyQuantity: 1, env: 1, currencyType: 'CNY',
-    productId: '74587613', goodsPrice: 990, outTradeNo: order._id,
+    productId: '74587613', goodsPrice: 990, outTradeNo: order._id, attach: 'membership-30d',
   });
   assert.equal(result.paySig, hmac('test-app-key', 'requestVirtualPayment&' + result.signData));
   assert.equal(result.signature, hmac('test-session-key', result.signData));
+});
+
+test('virtual payment failures surface the documented reason and keep uncertain orders', async () => {
+  const client = require('../utils/membership-client');
+  const storage = new Map();
+  let fail;
+  let createResult = null;
+  const wx = {
+    login: ({ success }) => success({ code: 'login-code' }),
+    getDeviceInfo: () => ({ platform: 'ios' }),
+    cloud: { callFunction: async ({ data }) => {
+      if (data.action === 'create') return { result: createResult || { ok: true, orderId: order._id, payData: {} } };
+      return { result: { ok: true } };
+    } },
+    setStorageSync: (key, value) => storage.set(key, value),
+    getStorageSync: key => storage.get(key),
+    removeStorageSync: key => storage.delete(key),
+    requestVirtualPayment: ({ fail: reject }) => reject(fail),
+  };
+
+  // iOS 在沙箱环境无法使用 Apple 支付，服务端直接拒绝并给出原因。
+  createResult = { ok: false, err: 'payment-ios-sandbox' };
+  await assert.rejects(client.purchase(wx), /iOS 端暂不支持测试环境支付/);
+  assert.equal(client.pendingOrder(wx), '');
+  createResult = null;
+
+  // 明确的失败码：给出可执行提示并放弃本次订单，避免重复占用。
+  fail = { errCode: -15011 };
+  await assert.rejects(client.purchase(wx), { message: '当前为测试环境，暂不支持 iOS 支付' });
+  assert.equal(client.pendingOrder(wx), '');
+
+  // 结果未知的失败：保留订单等待核对，不能当作用户放弃。
+  fail = { errCode: -1 };
+  await assert.rejects(client.purchase(wx), { message: '支付未完成，请稍后查询订单确认结果' });
+  assert.equal(client.pendingOrder(wx), order._id);
+  storage.clear();
+
+  // 未收录的失败码保留原始错误，便于日志定位。
+  fail = { errCode: -99999, errMsg: 'unknown failure' };
+  await assert.rejects(client.purchase(wx), { errMsg: 'unknown failure' });
+});
+
+test('outTradeNo stays inside the documented 8-32 character alphabet', () => {
+  const { randomBytes } = require('crypto');
+  for (let i = 0; i < 50; i++) {
+    const id = 'v' + randomBytes(15).toString('hex');
+    assert.match(id, /^[0-9a-zA-Z_\-|*@]{8,32}$/);
+    assert.equal(id.startsWith('_'), false);
+  }
 });
 
 test('only accepts matching paid purchase orders', () => {

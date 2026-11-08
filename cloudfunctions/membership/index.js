@@ -1,6 +1,6 @@
 const cloud = require('wx-server-sdk');
 const { randomBytes } = require('crypto');
-const { signPurchase, read, isPaid, deliver } = require('./payment');
+const { signPurchase, read, isPaid, deliver, PRODUCT_ID, PRICE, ATTACH } = require('./payment');
 const wechat = require('./wechat');
 const { reward } = require('./reward');
 
@@ -83,6 +83,8 @@ exports.main = async (event = {}) => {
       const configuredEnv = process.env.XPAY_ENV;
       const env = Number(configuredEnv);
       if (!['0', '1'].includes(configuredEnv) || !process.env.WECHAT_APP_SECRET) throw Error('payment-not-configured');
+      // Apple 支付不支持沙箱环境，iOS 在 env=1 下无法下单，直接给出可识别的原因。
+      if (env === 1 && event.platform === 'ios') return { ok: false, err: 'payment-ios-sandbox' };
       const key = wechat.appKey(env);
       if (typeof event.code !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(event.code)) throw Error('invalid-login-code');
       const session = await wechat.session(event.code);
@@ -90,7 +92,7 @@ exports.main = async (event = {}) => {
       const createdAt = Date.now();
       const order = {
         _id: 'v' + randomBytes(15).toString('hex'), openid: context.OPENID,
-        env, productId: '74587613', price: 990, createdAt, nextCheckAt: createdAt + CHECK_INTERVAL,
+        env, productId: PRODUCT_ID, price: PRICE, attach: ATTACH, createdAt, nextCheckAt: createdAt + CHECK_INTERVAL,
       };
       await orders.add({ data: order });
       return { ok: true, orderId: order._id, payData: signPurchase(order, key, session.session_key) };

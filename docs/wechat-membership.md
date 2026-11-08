@@ -2,6 +2,33 @@
 
 小程序 `wx892f2174d0293f28` 使用支付应用 `1450698745`。在微信后台发布道具 `74587613`，售价设为 990 分，开启道具发货推送。每笔购买开通 30 天，会员可添加最多 30 个自选标的。
 
+## 审核驳回整改（2026-11-08）
+
+审核意见为「提供虚拟商品购买服务，需接入官方小程序虚拟支付（含 iOS 全终端）」。核对后确认支付链路本身已使用 `wx.requestVirtualPayment`（`mode: short_series_goods`），签名算法与官方一致（`paySig = hmac_sha256(appKey, 'requestVirtualPayment&' + signData)`，`signature = hmac_sha256(session_key, signData)`），问题出在 iOS 端实际无法付款与参数缺失：
+
+1. `signData` 缺 `attach`。官方标记为**必填**透传字段，发货推送原样返回。已补为 `membership-30d`，并写入订单文档。
+2. 沙箱环境不支持 Apple 支付。`XPAY_ENV=1` 时 iOS 必然失败（微信返回 -15011「现网版本 env 只能是 0」）。云函数 `create` 现在会在 `env=1` 且 `platform=ios` 时直接返回 `payment-ios-sandbox`，前端给出「iOS 端暂不支持测试环境支付」，避免把配置问题伪装成支付失败。
+3. 失败码只映射了 10 个，其余落到原始 errMsg。现按官方错误码表全量映射，并区分「结果未知（-1 / -5，保留订单待核对）」与「明确未扣款（丢弃本次订单）」。
+
+代码不能替代平台配置。**提审前必须在 iOS 真机用体验版真实支付一次 9.90 元并确认到账**，否则审核员同样无法付款。
+
+### iOS 端必须同时满足
+
+| 条件 | 说明 |
+| --- | --- |
+| 已开通虚拟支付并完成签约 | 未完成二级商户进件时下单失败，微信返回 -15008 |
+| 已配置小程序简称 | 微信公众平台 → 虚拟支付 → 基础配置；Apple 支付展示 display name 依赖该项 |
+| 道具已在现网发布且审核通过 | 未发布 -15010，发布后约 10 分钟生效，否则 -15014；审核不通过 -15018 |
+| 道具价格与 `goodsPrice` 一致 | 后台 990 分，代码 `PRICE = 990`，不一致报 -15013 |
+| 云函数 `XPAY_ENV=0` | 现网版本只能填 0；iOS 不支持沙箱 |
+| 用户环境 | iPhone / iPad、iOS 15+、微信 8.0.68+、中国大陆 App Store 账户、单笔金额 ≥ 1 元 |
+
+`offerId`、`productId`、价格与 `attach` 已集中在 `cloudfunctions/membership/payment.js` 常量，避免多处硬编码漂移。
+
+### 提审说明建议
+
+> 小程序内「高级会员」为虚拟商品，已完整接入小程序虚拟支付（`wx.requestVirtualPayment`，道具直购模式，道具 ID 74587613，售价 9.90 元 / 30 天），Android 与 iOS 均通过该官方能力收款，未使用任何外部或自有支付渠道，也未在 iOS 端隐藏购买入口。会员权益为关注数量上限 5 → 30、同时启用提醒上限 5 → 30。发货由 `xpay_goods_deliver_notify` 推送与定时查单双重确认，权益仅由云函数按 openid 写入。
+
 ## 云开发配置
 
 1. 准备独立的沙箱云环境。部署并运行 `initDb`，创建 `membershipOrders` 和 `membershipReceipts`。这两个集合和 `entitlements` 均设为所有客户端不可读写。为 `membershipOrders.nextCheckAt` 配置升序索引，并为订单恢复配置 `openid` 升序、`createdAt` 降序的组合索引。
